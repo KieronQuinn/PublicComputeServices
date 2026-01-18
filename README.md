@@ -30,7 +30,7 @@ day and applying them.
 
 ## Frequently Asked Questions
 FAQs can be found [here](https://github.com/KieronQuinn/PublicComputeServices/blob/main/app/src/main/res/raw/faq.md). 
-They are also available in the app, from the uTag settings.
+They are also available in the app, from the Public Compute Services settings.
 
 ## Screenshots
 
