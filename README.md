@@ -1,4 +1,4 @@
-[![Public Compute Services Banner](https://i.imgur.com/ov7bR6dl.png)](https://i.imgur.com/ov7bR6d.png)
+[![Public Compute Services Banner](https://i.imgur.com/drmF4WCl.png)](https://i.imgur.com/drmF4WC.png)
 
 Public Compute Services is an Xposed module which allows the use of alternative repositories to 
 download AICore models. This allows local AI features to work on rooted devices.
