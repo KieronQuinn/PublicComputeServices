@@ -67,7 +67,7 @@ keyHash=<hash of your keystore>
 ```
 5. Open app/sekret.properties and set it up as follows:
 ```properties
-MANIFEST_KEY=<extracted encryption key>
+MANIFEST_KEY=<extracted decryption key>
 ```
 6. Run the Gradle task `createAndCopySekretNativeBinary`
 7. Compile the app as normal
