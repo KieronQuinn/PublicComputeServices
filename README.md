@@ -3,6 +3,8 @@
 Public Compute Services is an Xposed module which allows the use of alternative repositories to 
 download AICore models. This allows local AI features to work on rooted devices.
 
+[![Crowdin](https://badges.crowdin.net/publiccomputeservices/localized.svg)](https://crowdin.com/project/publiccomputeservices)
+
 ## Download & Installation
 
 Installing Public Compute Services is simple:
