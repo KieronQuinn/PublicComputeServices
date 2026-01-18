@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <plurals name="screen_build_label_devices">
+        <item quantity="one">@string/screen_build_label_device</item>
+        <item quantity="other">@string/screen_build_label_devices</item>
+    </plurals>
+</resources>

@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="shared_axis_x_slide_distance">96dp</dimen>
+</resources>

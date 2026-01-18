@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package com.kieronquinn.app.astreadumper.model;
+
+import "protected_download.proto";
+
+option java_multiple_files = true;
+option java_package = "com.kieronquinn.app.astreadumper.model";
+option java_outer_classname = "ManifestProto";
+
+message Manifests {
+    repeated Manifest manifest = 1;
+}
+
+message Manifest {
+    com.google.android.apps.miphone.astrea.pd.api.BlobConstraints constraints = 1;
+    string name = 2;
+    bytes encryption_key = 3;
+}

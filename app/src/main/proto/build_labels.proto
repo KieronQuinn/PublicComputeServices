@@ -1,0 +1,19 @@
+syntax = "proto3";
+import "protected_download.proto";
+
+package com.kieronquinn.app.pcs.model.proto;
+
+option java_multiple_files = true;
+option java_package = "com.kieronquinn.app.pcs.model.proto";
+option java_outer_classname = "BuildLabels";
+
+/*
+  Build information is stored in the device config flag `AicDataRelease__build_labels` (namespace
+  aicore), encoded in base64. It contains the device tier and variant, used for downloading the
+  big client 16 manifest.
+ */
+
+message Labels {
+  com.google.android.apps.miphone.astrea.pd.api.BlobConstraints.DeviceTier device_tier = 1;
+  com.google.android.apps.miphone.astrea.pd.api.BlobConstraints.Variant variant = 2;
+}
