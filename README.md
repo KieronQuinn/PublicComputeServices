@@ -27,7 +27,7 @@ features, please see the [FAQs](https://github.com/KieronQuinn/PublicComputeServ
 - Set or change the Device Configuration, selecting which AI models to download for your device
 - Automatically keep manifests in sync with your selected repository by checking for updates once a 
 day and applying them.
-- Enable AI features in Google Phone that are normally not available in your region
+- Experiments to tweak Google Phone and Magic Cue's features
 - Enable debug logging for hooked Google apps, useful for observing features such as Magic Cue
 
 ## Frequently Asked Questions
@@ -36,7 +36,8 @@ They are also available in the app, from the Public Compute Services settings.
 
 ## Screenshots
 
-[![Main Settings](https://i.imgur.com/VyLnHY1l.png)](https://i.imgur.com/VyLnHY1.png)
+[![Main Settings](https://i.imgur.com/xGsnSAHl.png)](https://i.imgur.com/xGsnSAH.png)
+[![Experiments](https://i.imgur.com/m9Ml4Nql.png)](https://i.imgur.com/m9Ml4Nq.png)
 [![Device Configuration](https://i.imgur.com/at3kKIOl.png)](https://i.imgur.com/at3kKIO.png)
 
 ## Building
