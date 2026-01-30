@@ -86,7 +86,7 @@
     <string name="device_tier_high">High</string>
     <string name="device_tier_ultra">Ultra</string>
 
-    <string name="error_no_root">Root is not granted, please grant root to Private Compute Services.</string>
+    <string name="error_no_root">Root is not granted, please grant root to Public Compute Services.</string>
     <string name="error_no_xposed">The Xposed module is not enabled. Please make sure you have enabled the Xposed module and rebooted.</string>
     <string name="error_retry">Retry</string>
 
