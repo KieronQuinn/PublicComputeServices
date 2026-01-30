@@ -10,6 +10,7 @@ import com.kieronquinn.app.pcs.ui.BaseUrlScreen
 import com.kieronquinn.app.pcs.ui.screens.buildlabel.BuildLabelScreen
 import com.kieronquinn.app.pcs.ui.screens.contributors.ContributorsScreen
 import com.kieronquinn.app.pcs.ui.screens.error.ErrorScreen
+import com.kieronquinn.app.pcs.ui.screens.experiments.ExperimentsScreen
 import com.kieronquinn.app.pcs.ui.screens.faq.FaqScreen
 import com.kieronquinn.app.pcs.ui.screens.libraries.LibrariesScreen
 import com.kieronquinn.app.pcs.ui.screens.loading.LoadingScreen
@@ -48,6 +49,7 @@ interface NavigationRepository {
             )
         )
         data object Settings: Destination()
+        data object Experiments: Destination(R.string.screen_settings_experiments_title)
         data object FAQ: Destination(R.string.screen_settings_faq_title)
         data object Libraries: Destination(R.string.screen_settings_footer_libraries)
         data object Contributors: Destination(R.string.screen_settings_footer_contributors)
@@ -89,6 +91,10 @@ class NavigationRepositoryImpl: NavigationRepository {
 
             is Destination.Settings -> NavEntry(destination) {
                 SettingsScreen()
+            }
+
+            is Destination.Experiments -> NavEntry(destination) {
+                ExperimentsScreen()
             }
 
             is Destination.FAQ -> NavEntry(destination) {

@@ -34,8 +34,8 @@ private fun getLocalProperties(): Properties? {
 
 val currentLocalProperties = getLocalProperties()
 
-val tagName = "1.0"
-val tagCode = 100
+val tagName = "1.0.1"
+val tagCode = 101
 
 android {
     namespace = "com.kieronquinn.app.pcs"
@@ -59,7 +59,7 @@ android {
         create("release") {
             if (currentLocalProperties != null) {
                 storeFile = file(currentLocalProperties.getProperty("storeFile"))
-                storePassword  = currentLocalProperties.getProperty("storePassword")
+                storePassword = currentLocalProperties.getProperty("storePassword")
                 keyAlias = currentLocalProperties.getProperty("keyAlias")
                 keyPassword = currentLocalProperties.getProperty("keyPassword")
             }
@@ -97,13 +97,13 @@ android {
         compose = true
         aidl = true
     }
+}
 
-    packaging {
-        jniLibs {
-            // x86 + x86_64 are not supported by Private Compute Services so no point including them
-            excludes += "/lib/x86/*.so"
-            excludes += "/lib/x86_64/*.so"
-        }
+androidComponents {
+    onVariants(selector().withBuildType("release")) { variant ->
+        // x86 + x86_64 are not supported by Private Compute Services so no point including them
+        variant.packaging.jniLibs.excludes.add("/lib/x86/*.so")
+        variant.packaging.jniLibs.excludes.add("/lib/x86_64/*.so")
     }
 }
 

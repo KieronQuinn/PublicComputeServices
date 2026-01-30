@@ -43,6 +43,14 @@
             android:process=":xposed"
             android:exported="false" />
 
+        <!-- Caller enforced in provider -->
+        <provider
+            android:authorities="${applicationId}.config"
+            android:name=".providers.ConfigProvider"
+            android:process=":config"
+            android:exported="true"
+            tools:ignore="ExportedContentProvider" />
+
         <meta-data
             android:name="xposedmodule"
             android:value="true" />
@@ -57,5 +65,10 @@
             android:resource="@array/xposed_scope" />
 
     </application>
+
+    <queries>
+        <package android:name="com.google.android.apps.pixel.psi"/>
+        <package android:name="com.google.android.dialer"/>
+    </queries>
 
 </manifest>

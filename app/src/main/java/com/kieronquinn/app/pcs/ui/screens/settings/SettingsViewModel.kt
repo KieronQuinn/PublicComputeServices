@@ -37,7 +37,7 @@ abstract class SettingsViewModel: ViewModel() {
     abstract fun onFaqClicked()
     abstract fun onBuildLabelClicked()
     abstract fun onDebugChanged(enabled: Boolean)
-    abstract fun onPhoneFlagsChanged(enabled: Boolean)
+    abstract fun onExperimentsClicked()
     abstract fun onAutoSyncChanged(enabled: Boolean)
     abstract fun onDestinationSelected(destination: Destination)
 
@@ -124,7 +124,8 @@ class SettingsViewModelImpl(
     override fun onSyncClicked() {
         viewModelScope.launch {
             val versions = syncRequired.value ?: return@launch
-            syncRepository.performSync(versions)
+            syncRepository.performSync(versions, true)
+            refreshBus.emit(System.currentTimeMillis())
         }
     }
 
@@ -146,9 +147,9 @@ class SettingsViewModelImpl(
         }
     }
 
-    override fun onPhoneFlagsChanged(enabled: Boolean) {
+    override fun onExperimentsClicked() {
         viewModelScope.launch {
-            propertiesRepository.setPhoneFlags(enabled)
+            navigationRepository.navigateTo(Destination.Experiments)
         }
     }
 

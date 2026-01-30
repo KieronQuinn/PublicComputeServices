@@ -5,7 +5,7 @@ import com.google.android.`as`.oss.pd.api.proto.BlobConstraints
 import com.google.android.`as`.oss.pd.manifest.api.proto.GetManifestConfigRequest
 import com.google.android.`as`.oss.pd.manifest.api.proto.ManifestConfigConstraints
 import com.google.crypto.tink.KeysetHandle
-import com.kieronquinn.app.astreadumper.model.Manifests
+import com.kieronquinn.app.pcs.model.Manifests
 import com.kieronquinn.app.pcs.model.PcsClient
 import com.kieronquinn.app.pcs.repositories.ManifestRepository.ManifestState
 import com.kieronquinn.app.pcs.repositories.PhenotypeRepository.PhenotypeState
@@ -36,6 +36,7 @@ interface ManifestRepository {
     suspend fun refreshAndWait(): Boolean
     suspend fun checkRepositoryUrl(url: String): Boolean
     suspend fun getManifest(url: String, request: GetManifestConfigRequest): ByteArray?
+    suspend fun getStaticManifest(url: String, clientId: String): ByteArray?
 
     sealed class ManifestState {
         data object Loading: ManifestState()
@@ -134,6 +135,14 @@ class ManifestRepositoryImpl(
         val mainManifest = getManifests(url) ?: return null
         val manifest = mainManifest.manifestList.firstOrNull {
             request.constraints.matches(it.constraints)
+        } ?: return null
+        return getManifest(url, manifest.name, manifest.encryptionKey.toByteArray().toKeysetHandle())
+    }
+
+    override suspend fun getStaticManifest(url: String, clientId: String): ByteArray? {
+        val mainManifest = getManifests(url) ?: return null
+        val manifest = mainManifest.staticManifestList.firstOrNull {
+            clientId == it.clientId
         } ?: return null
         return getManifest(url, manifest.name, manifest.encryptionKey.toByteArray().toKeysetHandle())
     }

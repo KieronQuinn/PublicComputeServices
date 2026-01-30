@@ -6,7 +6,6 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.util.Log
 import androidx.annotation.RequiresPermission
 import androidx.core.app.NotificationChannelCompat
 import androidx.core.app.NotificationCompat
@@ -73,7 +72,7 @@ class RefreshWorker(appContext: Context, workerParams: WorkerParameters):
         val syncVersions = syncRepository.getSyncRequired()
         return if (syncVersions != null) {
             if (syncVersions.isNotEmpty()) {
-                syncRepository.performSync(syncVersions)
+                syncRepository.performSync(syncVersions, false)
             }
             if (applicationContext.hasPermission(Manifest.permission.POST_NOTIFICATIONS)) {
                 updateRepository.getUpdate()?.let {
@@ -137,8 +136,6 @@ class RefreshWorker(appContext: Context, workerParams: WorkerParameters):
                     .atStartOfDay(ZoneId.systemDefault()).plusDays(1)
                     .plusHours(HOUR)).toMinutes()
             }
-            val scheduleTime = LocalDateTime.now().plusMinutes(delay)
-            Log.d("RefreshWorker", "Scheduling refresh worker at $scheduleTime")
             val constraints: Constraints = Constraints.Builder()
                 .setRequiredNetworkType(NetworkType.CONNECTED)
                 .build()
