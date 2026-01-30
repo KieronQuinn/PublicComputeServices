@@ -14,6 +14,12 @@ val ManifestConfigConstraints.clientGroup
 val ManifestConfigConstraints.buildId
     get() = labelList.first { it.attribute == "build_id" }.value.toLong()
 
+val ManifestConfigConstraints.country: String?
+    get() = labelList.first { it.attribute == "country" }.value
+
+val ManifestConfigConstraints.version: String?
+    get() = labelList.first { it.attribute == "version" }.value
+
 val ManifestConfigConstraints.variant
     get() = labelList.firstOrNull { it.attribute == "variant" }?.value?.let { variant ->
         Variant.entries.firstOrNull { v -> v.name == variant }

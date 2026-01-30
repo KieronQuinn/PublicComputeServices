@@ -1,6 +1,8 @@
 package com.kieronquinn.app.pcs.grpc
 
+import android.content.Context
 import android.util.Log
+import com.google.android.`as`.oss.pd.manifest.api.proto.CryptoKeys
 import com.google.android.`as`.oss.pd.manifest.api.proto.GetManifestConfigRequest
 import com.google.android.`as`.oss.pd.manifest.api.proto.GetManifestConfigResponse
 import com.google.android.`as`.oss.pd.manifest.api.proto.ManifestTransformResult
@@ -9,6 +11,7 @@ import com.google.crypto.tink.HybridEncrypt
 import com.google.crypto.tink.RegistryConfiguration
 import com.google.protobuf.ByteString
 import com.kieronquinn.app.pcs.model.PcsClient
+import com.kieronquinn.app.pcs.providers.ConfigProvider
 import com.kieronquinn.app.pcs.repositories.DeviceConfigPropertiesRepository.Companion.DEBUG_PROPERTY_NAME
 import com.kieronquinn.app.pcs.repositories.ManifestRepository
 import com.kieronquinn.app.pcs.repositories.PhenotypeRepositoryImpl.Companion.FLAG_REPOSITORY
@@ -17,9 +20,11 @@ import com.kieronquinn.app.pcs.utils.extensions.SystemProperties_getBoolean
 import com.kieronquinn.app.pcs.utils.extensions.buildId
 import com.kieronquinn.app.pcs.utils.extensions.client
 import com.kieronquinn.app.pcs.utils.extensions.clientGroup
+import com.kieronquinn.app.pcs.utils.extensions.country
 import com.kieronquinn.app.pcs.utils.extensions.deviceTier
 import com.kieronquinn.app.pcs.utils.extensions.toKeysetHandle
 import com.kieronquinn.app.pcs.utils.extensions.variant
+import com.kieronquinn.app.pcs.utils.extensions.version
 import io.grpc.stub.StreamObserver
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
@@ -32,7 +37,9 @@ import org.koin.core.component.inject
  *  to the specified manifest repository, decrypts the manifest with the known key, and then
  *  re-encrypts it with the key provided in the call and sends it back to the caller.
  */
-class ProtectedDownloadGrpcService: ProtectedDownloadServiceGrpc.ProtectedDownloadServiceImplBase(), KoinComponent {
+class ProtectedDownloadGrpcService(
+    private val context: Context
+): ProtectedDownloadServiceGrpc.ProtectedDownloadServiceImplBase(), KoinComponent {
 
     private val scope = MainScope()
     private val manifestRepository by inject<ManifestRepository>()
@@ -41,8 +48,23 @@ class ProtectedDownloadGrpcService: ProtectedDownloadServiceGrpc.ProtectedDownlo
         request: GetManifestConfigRequest,
         responseObserver: StreamObserver<GetManifestConfigResponse>
     ) {
+        when (request.getType()) {
+            RequestType.AICORE -> getManifestConfigAiCore(request, responseObserver)
+            RequestType.PHONE -> getManifestConfigPhone(request, responseObserver)
+            null -> {
+                Log.e("AstreaServiceError", "Unknown request type")
+                Log.e("AstreaServiceError", request.toString())
+                responseObserver.onError(Throwable())
+            }
+        }
+    }
+
+    private fun getManifestConfigAiCore(
+        request: GetManifestConfigRequest,
+        responseObserver: StreamObserver<GetManifestConfigResponse>
+    ) {
         if (SystemProperties_getBoolean(DEBUG_PROPERTY_NAME, false)) {
-            request.log()
+            request.logAiCore()
         }
         scope.launch(Dispatchers.IO) {
             val url = DeviceConfig_getString(
@@ -55,30 +77,73 @@ class ProtectedDownloadGrpcService: ProtectedDownloadServiceGrpc.ProtectedDownlo
                 return@launch
             }
             val manifest = manifestRepository.getManifest(url, request)
-            if (manifest == null) {
-                Log.e("AstreaServiceError", "No suitable manifest found for ${request.constraints.client}")
+            responseObserver.sendBackManifest(
+                manifest,
+                request.constraints.clientId,
+                request.cryptoKeys
+            )
+        }
+    }
+
+    private fun getManifestConfigPhone(
+        request: GetManifestConfigRequest,
+        responseObserver: StreamObserver<GetManifestConfigResponse>
+    ) {
+        if (SystemProperties_getBoolean(DEBUG_PROPERTY_NAME, false)) {
+            request.logPhone()
+        }
+        scope.launch(Dispatchers.IO) {
+            val url = ConfigProvider.getRepositoryUrl(context) ?: run {
+                Log.e("AstreaServiceError", "No URL set, unable to download manifest")
                 responseObserver.onError(Throwable())
                 return@launch
             }
-            val key = request.cryptoKeys.publicKey.toByteArray().toKeysetHandle()
-            val encrypted = key.getPrimitive(
-                RegistryConfiguration.get(),
-                HybridEncrypt::class.java
-            ).encrypt(manifest, request.constraints.clientId.toByteArray())
-            val response = GetManifestConfigResponse.newBuilder()
-                .setEncryptedManifestConfig(ByteString.copyFrom(encrypted))
-                .setManifestTransformResult(ManifestTransformResult.newBuilder()
-                    .setCompressedManifest(false)
-                    .build()
-                ).build()
-            responseObserver.onNext(response)
-            responseObserver.onCompleted()
+            val manifest = manifestRepository.getStaticManifest(url, request.constraints.clientId)
+            responseObserver.sendBackManifest(
+                manifest,
+                request.constraints.clientId,
+                request.cryptoKeys
+            )
         }
     }
-    
+
+    private fun StreamObserver<GetManifestConfigResponse>.sendBackManifest(
+        manifest: ByteArray?,
+        clientId: String,
+        cryptoKeys: CryptoKeys
+    ) {
+        if (manifest == null) {
+            Log.e("AstreaServiceError", "No suitable manifest found for $clientId")
+            onError(Throwable())
+            return
+        }
+        val key = cryptoKeys.publicKey.toByteArray().toKeysetHandle()
+        val encrypted = key.getPrimitive(
+            RegistryConfiguration.get(),
+            HybridEncrypt::class.java
+        ).encrypt(manifest, clientId.toByteArray())
+        val response = GetManifestConfigResponse.newBuilder()
+            .setEncryptedManifestConfig(ByteString.copyFrom(encrypted))
+            .setManifestTransformResult(ManifestTransformResult.newBuilder()
+                .setCompressedManifest(false)
+                .build()
+            ).build()
+        onNext(response)
+        onCompleted()
+    }
+
+    private fun GetManifestConfigRequest.getType(): RequestType? {
+        val constraintLabels = constraints.labelList.map { it.attribute }
+        return when {
+            constraintLabels.contains("device_tier") -> RequestType.AICORE
+            constraintLabels.contains("country") -> RequestType.PHONE
+            else -> null
+        }
+    }
+
     @Synchronized
-    private fun GetManifestConfigRequest.log() {
-        Log.d("AstreaService", "==== Get Manifest Config Request ====")
+    private fun GetManifestConfigRequest.logAiCore() {
+        Log.d("AstreaService", "==== Get Manifest Config Request (AICore) ====")
         Log.d("AstreaService", "Device tier: ${constraints.deviceTier}")
         Log.d("AstreaService", "Client: ${constraints.client}")
         Log.d("AstreaService", "Client Group: ${constraints.clientGroup}")
@@ -87,6 +152,21 @@ class ProtectedDownloadGrpcService: ProtectedDownloadServiceGrpc.ProtectedDownlo
         Log.d("AstreaService", "Build ID: ${constraints.buildId}")
         Log.d("AstreaService", "Compress: ${manifestTransform.compressManifest}")
         Log.d("AstreaService", "==== End Manifest Config Request ====")
+    }
+
+    @Synchronized
+    private fun GetManifestConfigRequest.logPhone() {
+        Log.d("AstreaService", "==== Get Manifest Config Request (Phone) ====")
+        Log.d("AstreaService", "Client ID: ${constraints.clientId}")
+        Log.d("AstreaService", "Client Version: ${constraints.clientVersion.version}")
+        Log.d("AstreaService", "Country: ${constraints.country}")
+        Log.d("AstreaService", "Version: ${constraints.version}")
+        Log.d("AstreaService", "Compress: ${manifestTransform.compressManifest}")
+        Log.d("AstreaService", "==== End Manifest Config Request ====")
+    }
+
+    private enum class RequestType {
+        AICORE, PHONE
     }
 
 }

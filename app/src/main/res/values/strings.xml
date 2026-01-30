@@ -49,8 +49,9 @@
     <string name="screen_settings_change_repository_content">Change the repository to download manifests from</string>
     <string name="screen_settings_auto_sync_title">Auto Sync</string>
     <string name="screen_settings_auto_sync_content">Automatically check for updates once a day, and sync manifest updates automatically. Apps using these models will then download model updates automatically in the background, which may use data.</string>
-    <string name="screen_settings_phone_flags_title">Enable Google Phone Features</string>
-    <string name="screen_settings_phone_flags_content">Enable AI features in Google Phone, even if they are not supported on this device or in this region. May cause crashes or errors, use with caution.\n<b>Note:</b> Voice Translate is not currently supported.</string>
+    <string name="screen_settings_category_advanced">Advanced</string>
+    <string name="screen_settings_experiments_title">Experiments</string>
+    <string name="screen_settings_experiments_content">Tweaks &amp; experiments for PCS-powered AI apps</string>
     <string name="screen_settings_debug_title">Debug Logging</string>
     <string name="screen_settings_debug_content">Enable debug logging for hooked apps.\n<b>Note:</b> You must also enable the Xposed module for apps you wish to have extra logging for, such as AICore or Device Intelligence.</string>
     <string name="screen_settings_debug_toast">Force stop hooked apps for this change to take effect</string>
@@ -67,6 +68,20 @@
     <string name="screen_settings_footer_bluesky">Follow me on Bluesky</string>
     <string name="screen_settings_footer_xda">XDA Thread</string>
     <string name="screen_settings_footer_libraries">Third party libraries</string>
+
+    <string name="screen_experiments_info">These options may cause crashes or errors, use at your own risk</string>
+    <string name="screen_experiments_category_google_phone">Google Phone</string>
+    <string name="screen_experiments_phone_flags_title">Enable Features</string>
+    <string name="screen_experiments_phone_flags_content">Enable features in Google Phone, even if they are not supported on this device or in this region. May cause crashes or errors, use with caution.\n<b>Note:</b> Voice Translate is not currently supported.</string>
+    <string name="screen_experiments_category_psi">Magic Cue</string>
+    <string name="screen_experiments_psi_enable_apps_title">Enable Hidden Apps</string>
+    <string name="screen_experiments_psi_enable_apps_content">Show Google Tasks &amp; Google Wallet in the app data list\n<b>Note:</b> These sources may not work yet. Please reply to the XDA thread if you get them working!</string>
+    <string name="screen_experiments_psi_force_account_presence_title">Disable Google Account Requirement</string>
+    <string name="screen_experiments_psi_force_account_presence_content">Allow access to the Magic Cue settings without a Google account. Other features likely won\'t work, but this is useful for testing.</string>
+    <string name="screen_experiments_psi_force_account_type_title">Disable Google Account Type Requirements</string>
+    <string name="screen_experiments_psi_force_account_type_content">Allow Magic Cue to work on all Google account types</string>
+    <string name="screen_experiments_psi_force_admin_allowance_title">Disable Admin Restrictions</string>
+    <string name="screen_experiments_psi_force_admin_allowance_content">Allow Magic Cue to work if your device administrator has disallowed content suggestions and content capture\n<b>Note:</b> I take no responsibility if this gets you fired, use at your own risk.</string>
 
     <string name="screen_contributors_astrea_title">Private Compute Services</string>
     <string name="screen_contributors_astrea_content">Contains code from Private Compute Services, under the Apache-2.0 licence</string>

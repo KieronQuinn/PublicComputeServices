@@ -30,6 +30,8 @@ import com.kieronquinn.app.pcs.ui.screens.container.ContainerViewModel
 import com.kieronquinn.app.pcs.ui.screens.container.ContainerViewModelImpl
 import com.kieronquinn.app.pcs.ui.screens.error.ErrorScreenViewModel
 import com.kieronquinn.app.pcs.ui.screens.error.ErrorScreenViewModelImpl
+import com.kieronquinn.app.pcs.ui.screens.experiments.ExperimentsViewModel
+import com.kieronquinn.app.pcs.ui.screens.experiments.ExperimentsViewModelImpl
 import com.kieronquinn.app.pcs.ui.screens.settings.SettingsViewModel
 import com.kieronquinn.app.pcs.ui.screens.settings.SettingsViewModelImpl
 import org.koin.android.ext.koin.androidContext
@@ -44,6 +46,7 @@ class PcsApplication: Application() {
     companion object {
         const val PACKAGE_NAME_PCS = "com.google.android.as.oss"
         const val PACKAGE_NAME_PHONE = "com.google.android.dialer"
+        const val PACKAGE_NAME_PSI = "com.google.android.apps.pixel.psi"
     }
 
     override fun onCreate() {
@@ -88,6 +91,7 @@ class PcsApplication: Application() {
         viewModel<BaseUrlDialogViewModel> { BaseUrlDialogViewModelImpl(get(), get()) }
         viewModel<BuildLabelViewModel> { BuildLabelViewModelImpl(get()) }
         viewModel<SettingsViewModel> { SettingsViewModelImpl(get(), get(), get(), get(), get(), get(), get(), get()) }
+        viewModel<ExperimentsViewModel> { ExperimentsViewModelImpl(get(), get()) }
     }
 
     private fun getRetrofit() = Retrofit.Builder()

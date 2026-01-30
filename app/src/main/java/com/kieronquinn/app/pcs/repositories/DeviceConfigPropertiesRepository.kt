@@ -17,6 +17,10 @@ interface DeviceConfigPropertiesRepository {
     companion object {
         const val DEBUG_PROPERTY_NAME = "persist.pcs.debug"
         const val PHONE_FLAGS_PROPERTY_NAME = "persist.pcs.phone_flags"
+        const val PSI_ENABLE_APPS_PROPERTY_NAME = "persist.psi.enable_apps"
+        const val PSI_FORCE_ACCOUNT_PRESENCE_PROPERTY_NAME = "persist.psi.force_account_presence"
+        const val PSI_FORCE_ACCOUNT_TYPE_PROPERTY_NAME = "persist.psi.force_account_type"
+        const val PSI_FORCE_ADMIN_ALLOWANCE_PROPERTY_NAME = "persist.psi.force_admin_allowance"
     }
 
     /**
@@ -46,6 +50,11 @@ interface DeviceConfigPropertiesRepository {
      *  Sets a system property as root to a given value
      */
     suspend fun setProperty(name: String, value: String)
+
+    /**
+     *  Force stop a package using root
+     */
+    suspend fun forceStopPackage(packageName: String)
 
     data class DeviceConfigEntry(
         val namespace: String,
@@ -128,6 +137,12 @@ class DeviceConfigPropertiesRepositoryImpl : DeviceConfigPropertiesRepository {
     override suspend fun setProperty(name: String, value: String) {
         withContext(Dispatchers.IO) {
             shell.newJob().add("setprop $name $value").exec()
+        }
+    }
+
+    override suspend fun forceStopPackage(packageName: String) {
+        withContext(Dispatchers.IO) {
+            shell.newJob().add("am force-stop $packageName").exec()
         }
     }
 

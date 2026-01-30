@@ -16,7 +16,7 @@ interface PhenotypeRepository {
 
     fun refresh()
     suspend fun refreshAndWait()
-    suspend fun setVersions(versions: Map<PcsClient, Long>)
+    suspend fun setVersions(versions: Map<PcsClient, Long>, waitForRefresh: Boolean)
     suspend fun setLabels(labels: Labels)
     suspend fun resetLabels()
     suspend fun setRepository(url: String)
@@ -51,7 +51,7 @@ object PhenotypeRepositoryStub: PhenotypeRepository {
         // No-op
     }
 
-    override suspend fun setVersions(versions: Map<PcsClient, Long>) {
+    override suspend fun setVersions(versions: Map<PcsClient, Long>, wait: Boolean) {
         // No-op
     }
 
@@ -113,7 +113,7 @@ class PhenotypeRepositoryImpl(
         state.emit(PhenotypeState.Loaded(labels, repository, flags))
     }
 
-    override suspend fun setVersions(versions: Map<PcsClient, Long>) {
+    override suspend fun setVersions(versions: Map<PcsClient, Long>, waitForRefresh: Boolean) {
         if (state.value is PhenotypeState.Applying) return
         state.emit(PhenotypeState.Applying)
         val entries = versions.map { (client, version) ->
@@ -124,7 +124,11 @@ class PhenotypeRepositoryImpl(
             )
         }
         deviceConfigPropertiesRepository.overrideConfig(entries)
-        refresh()
+        if (waitForRefresh) {
+            refreshAndWait()
+        } else {
+            refresh()
+        }
     }
 
     override suspend fun setLabels(labels: Labels) {
@@ -148,7 +152,7 @@ class PhenotypeRepositoryImpl(
             )
         )
         deviceConfigPropertiesRepository.clearConfigOverrides(entries)
-        refresh()
+        refreshAndWait()
     }
 
     override suspend fun setRepository(url: String) {

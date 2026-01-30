@@ -1,7 +1,7 @@
 package com.kieronquinn.app.pcs.repositories
 
+import android.content.Context
 import com.kieronquinn.app.pcs.grpc.ProtectedDownloadGrpcService
-import com.kieronquinn.app.pcs.repositories.AstreaRepository.Companion.PORT
 import com.kieronquinn.app.pcs.utils.extensions.fromBase64
 import io.grpc.TlsServerCredentials
 import io.grpc.okhttp.OkHttpServerBuilder
@@ -15,14 +15,18 @@ interface AstreaRepository {
 
     companion object {
         const val HOST = "127.0.0.1"
-        const val PORT = 7270 //PCS0
+        const val PORT_PCS = 7270 //PCS0
+        const val PORT_PHONE = 7271 //PCS1
     }
 
     fun start()
 
 }
 
-class AstreaRepositoryImpl: AstreaRepository {
+class AstreaRepositoryImpl(
+    private val port: Int,
+    context: Context
+): AstreaRepository {
 
     companion object {
 
@@ -92,9 +96,9 @@ TWdnT0FtKzkzU01GYzVGVzdKYjlmQjQ9Ci0tLS0tRU5EIFBSSVZBVEUgS0VZLS0tLS0K""".fromBase
             .build()
         key.close()
         pem.close()
-        OkHttpServerBuilder.forPort(PORT, credentials)
+        OkHttpServerBuilder.forPort(port, credentials)
             .maxInboundMessageSize(MAX_RESPONSE_SIZE_IN_BYTES)
-            .addService(ProtectedDownloadGrpcService())
+            .addService(ProtectedDownloadGrpcService(context))
             .build()
     }
 

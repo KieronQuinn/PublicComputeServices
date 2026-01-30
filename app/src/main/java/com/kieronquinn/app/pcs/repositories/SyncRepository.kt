@@ -16,7 +16,7 @@ interface SyncRepository {
     /**
      *  Updates the versions in the local Device Config with the given map
      */
-    suspend fun performSync(versions: Map<PcsClient, Long>)
+    suspend fun performSync(versions: Map<PcsClient, Long>, waitForRefresh: Boolean)
 
 }
 
@@ -41,8 +41,8 @@ class SyncRepositoryImpl(
         }
     }
 
-    override suspend fun performSync(versions: Map<PcsClient, Long>) {
-        phenotypeRepository.setVersions(versions)
+    override suspend fun performSync(versions: Map<PcsClient, Long>, waitForRefresh: Boolean) {
+        phenotypeRepository.setVersions(versions, waitForRefresh)
     }
 
 }

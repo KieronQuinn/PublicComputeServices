@@ -1,7 +1,6 @@
 package com.kieronquinn.app.pcs.ui.screens.settings
 
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
-import android.util.Log
 import android.widget.Toast
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
@@ -71,8 +70,8 @@ private data class Interactions (
     val onSyncClicked: () -> Unit,
     val onRefreshClicked: () -> Unit,
     val onFaqClicked: () -> Unit,
+    val onExperimentsClicked: () -> Unit,
     val onDebugChanged: (Boolean) -> Unit,
-    val onPhoneFlagsChanged: (Boolean) -> Unit,
     val onAutoSyncChanged: (Boolean) -> Unit,
     val onFooterChipClicked: (FooterChip) -> Unit
 ) {
@@ -83,7 +82,7 @@ private data class Interactions (
             onRefreshClicked = {},
             onFaqClicked = {},
             onDebugChanged = {},
-            onPhoneFlagsChanged = {},
+            onExperimentsClicked = {},
             onAutoSyncChanged = { _ -> },
             onFooterChipClicked = {}
         )
@@ -105,7 +104,7 @@ fun SettingsScreen() {
         onSyncClicked = viewModel::onSyncClicked,
         onRefreshClicked = viewModel::onRefreshClicked,
         onFaqClicked = viewModel::onFaqClicked,
-        onPhoneFlagsChanged = viewModel::onPhoneFlagsChanged,
+        onExperimentsClicked = viewModel::onExperimentsClicked,
         onDebugChanged = {
             viewModel.onDebugChanged(it)
             Toast.makeText(context, R.string.screen_settings_debug_toast, Toast.LENGTH_LONG).show()
@@ -274,8 +273,8 @@ private fun LoadedContent(
             }
         )
 
-        val itemCount = 5
-        val buildLabelShape = Shape(itemCount, 0)
+        val settingsItemCount = 3
+        val buildLabelShape = Shape(settingsItemCount, 0)
         preference(
             modifier = Modifier
                 .padding(horizontal = 8.dp)
@@ -301,7 +300,7 @@ private fun LoadedContent(
             Spacer(Modifier.height(2.dp))
         }
 
-        val repositoryShape = Shape(itemCount, 1)
+        val repositoryShape = Shape(settingsItemCount, 1)
         preference(
             modifier = Modifier
                 .padding(horizontal = 8.dp)
@@ -329,7 +328,7 @@ private fun LoadedContent(
             Spacer(Modifier.height(2.dp))
         }
 
-        val autoSyncShape = Shape(itemCount, 2)
+        val autoSyncShape = Shape(settingsItemCount, 2)
         switchPreference(
             modifier = Modifier
                 .padding(horizontal = 8.dp)
@@ -356,34 +355,41 @@ private fun LoadedContent(
             Spacer(Modifier.height(2.dp))
         }
 
-        val phoneShape = Shape(itemCount, 3)
-        switchPreference(
+        preferenceCategory(
+            key = "category_advanced",
+            title = {
+                Text(stringResource(R.string.screen_settings_category_advanced))
+            }
+        )
+
+        val advancedCategoryItemCount = 2
+        val experimentsShape = Shape(advancedCategoryItemCount, 0)
+        preference(
             modifier = Modifier
                 .padding(horizontal = 8.dp)
-                .background(color = surface, shape = phoneShape)
-                .clip(phoneShape),
-            value = state.propertiesState.phoneFlags,
-            key = "phone_flags",
+                .background(color = surface, shape = experimentsShape)
+                .clip(experimentsShape),
+            key = "experiments",
             icon = {
-                Icon(painter = painterResource(R.drawable.ic_phone), contentDescription = null)
+                Icon(painter = painterResource(R.drawable.ic_experiments), contentDescription = null)
             },
             title = {
                 Text(
-                    text = stringResource(R.string.screen_settings_phone_flags_title),
+                    text = stringResource(R.string.screen_settings_experiments_title),
                     style = MaterialTheme.typography.bodyLarge
                 )
             },
             summary = {
-                Text(text = textResource(R.string.screen_settings_phone_flags_content))
+                Text(text = textResource(R.string.screen_settings_experiments_content))
             },
-            onValueChange = interactions.onPhoneFlagsChanged
+            onClick = interactions.onExperimentsClicked
         )
 
         item {
             Spacer(Modifier.height(2.dp))
         }
 
-        val debugShape = Shape(itemCount, 4)
+        val debugShape = Shape(advancedCategoryItemCount, 1)
         switchPreference(
             modifier = Modifier
                 .padding(horizontal = 8.dp)
@@ -447,7 +453,8 @@ private fun LoadedContent(
         }
 
         item {
-            Spacer(Modifier.navigationBarsPadding())
+            Spacer(Modifier.navigationBarsPadding()
+                .padding(bottom = 16.dp))
         }
     }
 
@@ -606,7 +613,7 @@ private fun ContentPreviewLight() {
                 repository = null,
                 versions = emptyMap()
             ),
-            propertiesState = PropertiesRepository.State(debug = true, phoneFlags = true),
+            propertiesState = PropertiesRepository.State(),
             updateState = Release("2.0", "", "", "", "", ""),
             autoSync = true
         )
