@@ -90,10 +90,10 @@
     <string name="screen_contributors_google_sans_title">Google Sans Flex</string>
     <string name="screen_contributors_google_sans_content">Licenced under the SIL Open Font Licence, Version 1.1</string>
 
-    <string name="notification_channel_updates_title">Private Compute Services Updates</string>
-    <string name="notification_channel_updates_content">Notifications shown when there is an update for Private Compute Services</string>
-    <string name="update_notification_title">Private Compute Services update available</string>
-    <string name="update_notification_content">An update is available for Private Compute Services (%1s to %1s)</string>
+    <string name="notification_channel_updates_title">Public Compute Services Updates</string>
+    <string name="notification_channel_updates_content">Notifications shown when there is an update for Public Compute Services</string>
+    <string name="update_notification_title">Public Compute Services update available</string>
+    <string name="update_notification_content">An update is available for Public Compute Services (%1s to %1s)</string>
 
     <string name="device_tier_ultra_low">Ultra Low</string>
     <string name="device_tier_low">Low</string>
