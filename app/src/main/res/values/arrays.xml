@@ -4,5 +4,6 @@
         <item>com.google.android.as.oss</item>
         <item>com.google.android.dialer</item>
         <item>com.google.android.apps.pixel.psi</item>
+        <item>com.google.android.tts</item>
     </string-array>
 </resources>

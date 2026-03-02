@@ -47,6 +47,7 @@ class PcsApplication: Application() {
         const val PACKAGE_NAME_PCS = "com.google.android.as.oss"
         const val PACKAGE_NAME_PHONE = "com.google.android.dialer"
         const val PACKAGE_NAME_PSI = "com.google.android.apps.pixel.psi"
+        const val PACKAGE_NAME_TTS = "com.google.android.tts"
     }
 
     override fun onCreate() {
@@ -75,7 +76,7 @@ class PcsApplication: Application() {
         }
         single<XposedRepository>(createdAtStart = true) { XposedRepositoryImpl(get()) }
         single<SyncRepository> {
-            SyncRepositoryImpl(get(), get())
+            SyncRepositoryImpl(get(), get(), get(), get())
         }
         single<NavigationRepository> {
             NavigationRepositoryImpl()
@@ -91,7 +92,7 @@ class PcsApplication: Application() {
         viewModel<BaseUrlDialogViewModel> { BaseUrlDialogViewModelImpl(get(), get()) }
         viewModel<BuildLabelViewModel> { BuildLabelViewModelImpl(get()) }
         viewModel<SettingsViewModel> { SettingsViewModelImpl(get(), get(), get(), get(), get(), get(), get(), get()) }
-        viewModel<ExperimentsViewModel> { ExperimentsViewModelImpl(get(), get()) }
+        viewModel<ExperimentsViewModel> { ExperimentsViewModelImpl(get(), get(), get(), get()) }
     }
 
     private fun getRetrofit() = Retrofit.Builder()

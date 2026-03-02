@@ -22,7 +22,7 @@ Compute Services applies overrides to these configuration values, which requires
 
 ## Which AI features work with Public Compute Services?
 
-With a correctly configured repository, almost all features are functional, except Voice Translate. 
+With a correctly configured repository, all current AI features are functional. 
 The state of features and the devices they have been tested on are listed below:
 
 | Feature              | Device          | Working |
@@ -38,12 +38,11 @@ The state of features and the devices they have been tested on are listed below:
 | Call Notes           | Pixel 10 Pro XL | ✅       |
 | Call Screen          | Pixel 10 Pro XL | ✅       |
 | Scam Detection       | Pixel 10 Pro XL | ✅       |
+| Voice Translate      | Pixel 10 Pro XL | ✅       |
 | Gboard Writing Tools | Pixel 10 Pro XL | ✅       |
-| Voice Translate      | Pixel 10 Pro XL | ❌       |
 
-> Voice Translate is unsupported due to a different method of fetching its AI models. It may be
-> supported in the future. Please note that the devices listed above are just those which the 
-> features were tested on, they will also work on other supported devices.
+> Please note that the devices listed above are just those which the features were tested on, they 
+> will also work on other supported devices.
 
 ## Which devices are supported by Public Compute Services?
 

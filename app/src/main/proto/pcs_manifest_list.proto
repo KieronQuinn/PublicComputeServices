@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package com.kieronquinn.app.pcs.model;
+
+option java_multiple_files = true;
+option java_package = "com.kieronquinn.app.pcs.model";
+option java_outer_classname = "PcsManifestListProto";
+
+message PcsManifestList {
+  message Manifest {
+    string id = 1;
+    bytes manifest = 2;
+  }
+  repeated Manifest manifest = 1;
+}
