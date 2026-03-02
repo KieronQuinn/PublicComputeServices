@@ -20,6 +20,12 @@ val ManifestConfigConstraints.country: String?
 val ManifestConfigConstraints.version: String?
     get() = labelList.first { it.attribute == "version" }.value
 
+val ManifestConfigConstraints.deviceModel: String?
+    get() = labelList.first { it.attribute == "device_model" }.value
+
+val ManifestConfigConstraints.modelType: String?
+    get() = labelList.first { it.attribute == "model_type" }.value
+
 val ManifestConfigConstraints.variant
     get() = labelList.firstOrNull { it.attribute == "variant" }?.value?.let { variant ->
         Variant.entries.firstOrNull { v -> v.name == variant }

@@ -63,10 +63,8 @@
     <string name="screen_settings_footer_bluesky">Follow me on Bluesky</string>
     <string name="screen_settings_footer_xda">XDA Thread</string>
     <string name="screen_settings_footer_libraries">Third party libraries</string>
-    <string name="screen_experiments_info">These options may cause crashes or errors, use at your own risk</string>
+    <string name="screen_experiments_info">These options may cause crashes or errors, use at your own risk\n<b>Note: Changing settings will restart the apps they are applied to!</b></string>
     <string name="screen_experiments_category_google_phone">Google Phone</string>
-    <string name="screen_experiments_phone_flags_title">Enable Features</string>
-    <string name="screen_experiments_phone_flags_content">Enable features in Google Phone, even if they are not supported on this device or in this region. May cause crashes or errors, use with caution.\n<b>Note:</b> Voice Translate is not currently supported.</string>
     <string name="screen_experiments_category_psi">Magic Cue</string>
     <string name="screen_experiments_psi_enable_apps_title">Enable Hidden Apps</string>
     <string name="screen_experiments_psi_enable_apps_content">Show Google Tasks &amp; Google Wallet in the app data list\n<b>Note:</b> These sources may not work yet. Please reply to the XDA thread if you get them working!</string>

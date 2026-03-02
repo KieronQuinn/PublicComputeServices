@@ -1,0 +1,55 @@
+package com.kieronquinn.app.pcs.model.phone
+
+import com.kieronquinn.app.pcs.model.FlagPackage
+
+enum class PhoneFlag(val flagPackage: FlagPackage, val flag: String) {
+    DOBBY_DUPLEX_FILES(FlagPackage.DIALER_DIRECTBOOT, "45381883"),
+    DOBBY_DOWNLOAD_PATH(FlagPackage.DIALER_DIRECTBOOT, "45628211"),
+    DOBBY_IS_USER_IN_US(FlagPackage.DIALER_DIRECTBOOT, "45628184"),
+    DOBBY_IS_USER_IN_UK(FlagPackage.DIALER_DIRECTBOOT, "45628185"),
+    DOBBY_IS_USER_IN_JP(FlagPackage.DIALER_DIRECTBOOT, "45633861"),
+    DOBBY_IS_USER_IN_CA(FlagPackage.DIALER_DIRECTBOOT, "45645737"), // Uses US
+    DOBBY_IS_USER_IN_IE(FlagPackage.DIALER_DIRECTBOOT, "45667116"), // Uses UK
+    DOBBY_IS_USER_IN_AU(FlagPackage.DIALER_DIRECTBOOT, "45667117"),
+    DOBBY_IS_USER_IN_IN(FlagPackage.DIALER_DIRECTBOOT, "45667118"),
+    DOBBY_ENABLE_V57_INDIA(FlagPackage.DIALER_DIRECTBOOT, "45740943"),
+    DOBBY_INDIA_PB_FIX(FlagPackage.DIALER_DIRECTBOOT, "45748547"),
+    ATLAS_MODELS(FlagPackage.DIALER_DIRECTBOOT, "45413189"),
+    BEESLY_MODEL_FILENAME_US(FlagPackage.DIALER_DIRECTBOOT, "45698934"),
+    BEESLY_MODEL_FILENAME_UK(FlagPackage.DIALER_DIRECTBOOT, "45727034"),
+    BEESLY_IS_USER_IN_US(FlagPackage.DIALER_DIRECTBOOT, "45667177"),
+    BEESLY_IS_USER_IN_CA(FlagPackage.DIALER_DIRECTBOOT, "45676588"), // Uses US
+    BEESLY_IS_USER_IN_UK(FlagPackage.DIALER_DIRECTBOOT, "45676586"),
+    BEESLY_IS_USER_IN_IE(FlagPackage.DIALER_DIRECTBOOT, "45676587"), // Uses US
+    BEESLY_IS_USER_IN_AU(FlagPackage.DIALER_DIRECTBOOT, "45676589"), // Uses US
+    XATU_MODELS(FlagPackage.DIALER_DIRECTBOOT, "45417183"),
+    SHARPIE_ENABLED(FlagPackage.DIALER_DIRECTBOOT, "45684804"),
+    DOBBY_ENABLED(FlagPackage.DIALER_DIRECTBOOT, "45624401"), // enableModeSupportsAutoAndManualScreeningInUs
+    ATLAS_ENABLED(FlagPackage.DIALER_DIRECTBOOT, "45413174"),
+    BEESLY_ENABLED(FlagPackage.DIALER_DIRECTBOOT, "45629794"),
+    BEESLY_ACTIONS_ENABLED(FlagPackage.DIALER_DIRECTBOOT, "45684179"),
+    NAUTILUS_ENABLED(FlagPackage.DIALER_DIRECTBOOT, "45665235"),
+    SONIC_ENABLED(FlagPackage.DIALER_DIRECTBOOT, "45408594"),
+    XATU_ENABLED(FlagPackage.DIALER_DIRECTBOOT, "45417169"),
+    CALLER_TAG_EXPERIMENT_ID(FlagPackage.DIALER, "caller_tag_experiment_id"),
+    FERMAT_ENABLED(FlagPackage.DIALER_DIRECTBOOT, "45661721"),
+    FERMAT_GEOFENCE(FlagPackage.DIALER_DIRECTBOOT, "45731943"),
+    EXPRESSO_ENABLED(FlagPackage.DIALER_DIRECTBOOT, "45664158"),
+    PATRICK_ENABLED(FlagPackage.DIALER_DIRECTBOOT, "45727673"),
+    PATRICK_PHASE_ONE_ENABLED(FlagPackage.DIALER_DIRECTBOOT, "45661436"),
+    PATRICK_PHASE_TWO_ENABLED(FlagPackage.DIALER_DIRECTBOOT, "45684622"),
+    PATRICK_PHASE_TWO_ENABLE_REPOSITORY(FlagPackage.DIALER_DIRECTBOOT, "45728331"),
+    CALL_RECORDING_OVERRIDE_ENABLED(FlagPackage.DIALER, "G__use_call_recording_geofence_overrides"),
+    CALL_RECORDING_ENABLED(FlagPackage.DIALER, "G__enable_call_recording"),
+    CALL_RECORDING_FORCE_OVERRIDE_ENABLED(FlagPackage.DIALER, "G__force_within_call_recording_geofence_value"),
+    CALL_RECORDING_CROSBY_ENABLED(FlagPackage.DIALER, "G__force_within_crosby_geofence_value"),
+    ;
+
+    companion object {
+        fun getOrNull(flagPackage: String, flag: String): PhoneFlag? {
+            return entries.firstOrNull {
+                it.flagPackage.packageName == flagPackage && it.flag == flag
+            }
+        }
+    }
+}

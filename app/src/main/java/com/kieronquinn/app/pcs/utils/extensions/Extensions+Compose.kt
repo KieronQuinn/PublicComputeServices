@@ -11,6 +11,8 @@ import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.text.AnnotatedString
 import androidx.core.text.toSpanned
 import com.aghajari.compose.text.asAnnotatedString
+import me.zhanghai.compose.preference.ListPreference
+import me.zhanghai.compose.preference.ListPreferenceType
 import me.zhanghai.compose.preference.SwitchPreference
 
 @Composable
@@ -43,6 +45,35 @@ inline fun LazyListScope.switchPreference(
             icon = icon?.let { { it(value) } },
             summary = summary?.let { { it(value) } },
             onValueChange = onValueChange
+        )
+    }
+}
+
+inline fun <T> LazyListScope.listPreference(
+    key: String,
+    value: T,
+    values: List<T>,
+    noinline title: @Composable (T) -> Unit,
+    modifier: Modifier = Modifier.fillMaxWidth(),
+    crossinline enabled: (T) -> Boolean = { true },
+    noinline icon: @Composable ((T) -> Unit)? = null,
+    noinline summary: @Composable ((T) -> Unit)? = null,
+    type: ListPreferenceType = ListPreferenceType.ALERT_DIALOG,
+    noinline valueToText: (T) -> AnnotatedString = { AnnotatedString(it.toString()) },
+    noinline onValueChange: (T) -> Unit
+) {
+    item(key = key, contentType = "ListPreference") {
+        ListPreference(
+            value = value,
+            onValueChange = onValueChange,
+            values = values,
+            title = { title(value) },
+            modifier = modifier,
+            enabled = enabled(value),
+            icon = icon?.let { { it(value) } },
+            summary = summary?.let { { it(value) } },
+            type = type,
+            valueToText = valueToText
         )
     }
 }

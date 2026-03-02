@@ -7,6 +7,7 @@ import com.google.android.`as`.oss.pd.manifest.api.proto.ManifestConfigConstrain
 import com.google.crypto.tink.KeysetHandle
 import com.kieronquinn.app.pcs.model.Manifests
 import com.kieronquinn.app.pcs.model.PcsClient
+import com.kieronquinn.app.pcs.model.phone.PhoneManifest
 import com.kieronquinn.app.pcs.repositories.ManifestRepository.ManifestState
 import com.kieronquinn.app.pcs.repositories.PhenotypeRepository.PhenotypeState
 import com.kieronquinn.app.pcs.service.ManifestService
@@ -36,15 +37,24 @@ interface ManifestRepository {
     suspend fun refreshAndWait(): Boolean
     suspend fun checkRepositoryUrl(url: String): Boolean
     suspend fun getManifest(url: String, request: GetManifestConfigRequest): ByteArray?
-    suspend fun getStaticManifest(url: String, clientId: String): ByteArray?
+    suspend fun getPhoneManifest(url: String, clientId: String): ByteArray?
+    suspend fun getTtsManifest(url: String, id: String): ByteArray?
 
     sealed class ManifestState {
         data object Loading: ManifestState()
         data object NotConfigured: ManifestState()
         data class Loaded(
-            val versions: Map<PcsClient, Long>
+            val versions: Map<PcsClient, Long>,
+            val phoneManifests: Map<PhoneManifestData, String>
         ): ManifestState()
         data object Error: ManifestState()
+    }
+
+    data class PhoneManifestData(
+        val manifest: PhoneManifest,
+        val hash: String?
+    ) {
+        fun getId() = "${manifest.id}:$hash"
     }
 
 }
@@ -102,25 +112,37 @@ class ManifestRepositoryImpl(
             }?.constraints?.buildId ?: return@mapNotNull null
             it to version
         }.toMap()
-        state.emit(ManifestState.Loaded(clients))
+        val phoneManifests = manifests.phoneManifestList.mapNotNull {
+            if (!it.id.contains(":")) return@mapNotNull null
+            val id = it.id.split(":")[0]
+            val hash = it.id.split(":")[1]
+            val manifest = PhoneManifest.entries.firstOrNull { m -> id == m.id }
+                ?: return@mapNotNull null
+            ManifestRepository.PhoneManifestData(manifest, hash) to it.name
+        }.toMap()
+        state.emit(ManifestState.Loaded(clients, phoneManifests))
         return false
     }
 
     private suspend fun getManifests(url: String): Manifests? {
-        return manifestService.getManifest(url)
-            ?.decryptManifest(context, manifestKey)
-            ?.let {
-                try {
+        return try {
+            manifestService.getManifest(url)
+                ?.decryptManifest(context, manifestKey)
+                ?.let {
                     Manifests.parseFrom(it)
-                } catch (e: Exception) {
-                    null
                 }
-            }
+        } catch (e: Exception) {
+            null
+        }
     }
 
     private suspend fun getManifest(url: String, name: String, key: KeysetHandle): ByteArray? {
-        return manifestService.getManifest(url, name)
-            ?.decryptManifest(null, key)
+        return try {
+            manifestService.getManifest(url, name)
+                ?.decryptManifest(null, key)
+        } catch (e: Exception) {
+            null
+        }
     }
 
     override suspend fun checkRepositoryUrl(url: String): Boolean {
@@ -139,10 +161,18 @@ class ManifestRepositoryImpl(
         return getManifest(url, manifest.name, manifest.encryptionKey.toByteArray().toKeysetHandle())
     }
 
-    override suspend fun getStaticManifest(url: String, clientId: String): ByteArray? {
+    override suspend fun getPhoneManifest(url: String, clientId: String): ByteArray? {
         val mainManifest = getManifests(url) ?: return null
-        val manifest = mainManifest.staticManifestList.firstOrNull {
-            clientId == it.clientId
+        val manifest = mainManifest.phoneManifestList.firstOrNull {
+            clientId == it.id
+        } ?: return null
+        return getManifest(url, manifest.name, manifest.encryptionKey.toByteArray().toKeysetHandle())
+    }
+
+    override suspend fun getTtsManifest(url: String, id: String): ByteArray? {
+        val mainManifest = getManifests(url) ?: return null
+        val manifest = mainManifest.ttsManifestList.firstOrNull {
+            id == it.id
         } ?: return null
         return getManifest(url, manifest.name, manifest.encryptionKey.toByteArray().toKeysetHandle())
     }
