@@ -71,7 +71,6 @@
 
     <string name="screen_experiments_info">These options may cause crashes or errors, use at your own risk\n<b>Note: Changing settings will restart the apps they are applied to!</b></string>
     <string name="screen_experiments_category_google_phone">Google Phone</string>
-    <string name="screen_experiments_info_google_phone">Google Phone</string>
     <string name="screen_experiments_phone_feature_disabled">Necessary manifests not downloaded, sync manifest updates to fix</string>
     <string name="screen_experiments_phone_subtitle">Force enable %1s</string>
     <string name="screen_experiments_phone_feature_sharpie">Scam Detection</string>
