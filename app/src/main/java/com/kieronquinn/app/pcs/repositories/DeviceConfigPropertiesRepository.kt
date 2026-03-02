@@ -16,7 +16,7 @@ interface DeviceConfigPropertiesRepository {
 
     companion object {
         const val DEBUG_PROPERTY_NAME = "persist.pcs.debug"
-        const val PHONE_FLAGS_PROPERTY_NAME = "persist.pcs.phone_flags"
+        const val PHONE_FLAGS_PROPERTY_NAME = "persist.pcs.enabled_phone_flags"
         const val PSI_ENABLE_APPS_PROPERTY_NAME = "persist.psi.enable_apps"
         const val PSI_FORCE_ACCOUNT_PRESENCE_PROPERTY_NAME = "persist.psi.force_account_presence"
         const val PSI_FORCE_ACCOUNT_TYPE_PROPERTY_NAME = "persist.psi.force_account_type"

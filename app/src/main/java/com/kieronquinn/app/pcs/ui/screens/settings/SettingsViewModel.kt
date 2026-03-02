@@ -76,7 +76,7 @@ class SettingsViewModelImpl(
 
     private val syncRequired = refreshBus.mapLatest {
         // We use the raw state to show the error in the UI, so don't emit null
-        syncRepository.getSyncRequired() ?: emptyMap()
+        syncRepository.getSyncRequired() ?: SyncRepository.SyncRequirements()
     }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     private val syncState = combine(
@@ -90,7 +90,8 @@ class SettingsViewModelImpl(
             phenotype is PhenotypeState.Loading -> SyncState.LOADING
             phenotype is PhenotypeState.Applying -> SyncState.SYNCING
             manifest is ManifestState.Error -> SyncState.ERROR
-            syncRequired.isNotEmpty() -> SyncState.REQUIRED
+            syncRequired.phenotype.isNotEmpty() -> SyncState.REQUIRED
+            syncRequired.phoneManifests.isNotEmpty() -> SyncState.REQUIRED
             else -> SyncState.NOT_REQUIRED
         }
     }

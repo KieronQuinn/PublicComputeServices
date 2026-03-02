@@ -10,11 +10,11 @@ import androidx.core.net.toUri
 import androidx.core.os.bundleOf
 import com.kieronquinn.app.pcs.BuildConfig
 import com.kieronquinn.app.pcs.PcsApplication.Companion.PACKAGE_NAME_PHONE
+import com.kieronquinn.app.pcs.PcsApplication.Companion.PACKAGE_NAME_TTS
 import com.kieronquinn.app.pcs.model.PcsClient.BuildId.Namespace.DEVICE_PERSONALIZATION_SERVICES
 import com.kieronquinn.app.pcs.repositories.PhenotypeRepositoryImpl.Companion.FLAG_REPOSITORY
 import com.kieronquinn.app.pcs.utils.extensions.callSafely
 import com.topjohnwu.superuser.Shell
-import kotlin.system.exitProcess
 
 /**
  *  Not all apps have Device Config permission so can't read the repository URL. However, those
@@ -30,7 +30,9 @@ class ConfigProvider: ContentProvider() {
         private val URI_CONFIG = "content://${BuildConfig.APPLICATION_ID}.config".toUri()
 
         private val PACKAGE_ALLOWLIST = setOf(
-            PACKAGE_NAME_PHONE
+            PACKAGE_NAME_PHONE,
+            PACKAGE_NAME_TTS,
+            BuildConfig.APPLICATION_ID
         )
 
         fun getRepositoryUrl(context: Context): String? {
@@ -55,8 +57,6 @@ class ConfigProvider: ContentProvider() {
         return when(method) {
             METHOD_GET -> bundleOf(EXTRA_REPOSITORY_URL to getRepositoryUrl())
             else -> null
-        }.also {
-            killAfterDelay()
         }
     }
 
@@ -71,11 +71,6 @@ class ConfigProvider: ContentProvider() {
             out.first()
         } else null
     }
-
-    private fun killAfterDelay() = Thread {
-        Thread.sleep(500L)
-        exitProcess(0)
-    }.start()
 
     override fun query(
         uri: Uri,

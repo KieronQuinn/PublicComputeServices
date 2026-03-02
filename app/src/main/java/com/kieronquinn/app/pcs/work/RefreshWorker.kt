@@ -71,8 +71,11 @@ class RefreshWorker(appContext: Context, workerParams: WorkerParameters):
     override suspend fun doWork(): Result {
         val syncVersions = syncRepository.getSyncRequired()
         return if (syncVersions != null) {
-            if (syncVersions.isNotEmpty()) {
-                syncRepository.performSync(syncVersions, false)
+            if (syncVersions.phenotype.isNotEmpty() || syncVersions.phoneManifests.isNotEmpty()) {
+                syncRepository.performSync(
+                    syncVersions,
+                    false
+                )
             }
             if (applicationContext.hasPermission(Manifest.permission.POST_NOTIFICATIONS)) {
                 updateRepository.getUpdate()?.let {

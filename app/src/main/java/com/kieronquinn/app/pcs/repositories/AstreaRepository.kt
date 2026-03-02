@@ -17,6 +17,7 @@ interface AstreaRepository {
         const val HOST = "127.0.0.1"
         const val PORT_PCS = 7270 //PCS0
         const val PORT_PHONE = 7271 //PCS1
+        const val PORT_TTS = 7272
     }
 
     fun start()

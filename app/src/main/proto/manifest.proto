@@ -9,18 +9,19 @@ option java_package = "com.kieronquinn.app.pcs.model";
 option java_outer_classname = "ManifestProto";
 
 message Manifests {
-    repeated Manifest manifest = 1;
-    repeated StaticManifest static_manifest = 2;
+  repeated Manifest manifest = 1;
+  repeated StaticManifest phone_manifest = 2;
+  repeated StaticManifest tts_manifest = 3;
 }
 
 message Manifest {
-    com.google.android.apps.miphone.astrea.pd.api.BlobConstraints constraints = 1;
-    string name = 2;
-    bytes encryption_key = 3;
+  com.google.android.apps.miphone.astrea.pd.api.BlobConstraints constraints = 1;
+  string name = 2;
+  bytes encryption_key = 3;
 }
 
 message StaticManifest {
-    string client_id = 1;
-    string name = 2;
-    bytes encryption_key = 3;
+  string id = 1;
+  string name = 2;
+  bytes encryption_key = 3;
 }
