@@ -77,6 +77,8 @@
     <queries>
         <package android:name="com.google.android.apps.pixel.psi"/>
         <package android:name="com.google.android.dialer"/>
+        <package android:name="com.google.android.as"/>
+        <package android:name="com.google.android.aicore"/>
     </queries>
 
 </manifest>

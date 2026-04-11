@@ -141,15 +141,16 @@ abstract class BaseSettingsRepositoryImpl: BaseSettingsRepository {
         }
     }
 
+    @Suppress("UNNECESSARY_SAFE_CALL")
     private val onPrefsChange = callbackFlow {
-        sharedPreferences.registerOnSharedPreferenceChangeListener(listener)
+        sharedPreferences?.registerOnSharedPreferenceChangeListener(listener)
         launch {
             onKeyChanged.collect { key ->
                 trySend(key)
             }
         }
         awaitClose {
-            sharedPreferences.unregisterOnSharedPreferenceChangeListener(listener)
+            sharedPreferences?.unregisterOnSharedPreferenceChangeListener(listener)
         }
     }.shareIn(scope, SharingStarted.Eagerly)
 

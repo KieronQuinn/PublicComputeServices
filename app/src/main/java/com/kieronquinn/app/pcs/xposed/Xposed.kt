@@ -1,6 +1,7 @@
 package com.kieronquinn.app.pcs.xposed
 
 import com.kieronquinn.app.pcs.BuildConfig
+import com.kieronquinn.app.pcs.PcsApplication.Companion.PACKAGE_NAME_AS
 import com.kieronquinn.app.pcs.PcsApplication.Companion.PACKAGE_NAME_PCS
 import com.kieronquinn.app.pcs.PcsApplication.Companion.PACKAGE_NAME_PHONE
 import com.kieronquinn.app.pcs.PcsApplication.Companion.PACKAGE_NAME_PSI
@@ -26,6 +27,9 @@ class Xposed: IXposedHookLoadPackage {
             }
             PACKAGE_NAME_TTS -> {
                 TtsHooks.hook(lpparam)
+            }
+            PACKAGE_NAME_AS -> {
+                AsHooks.hook(lpparam)
             }
         }
         if (lpparam.packageName != BuildConfig.APPLICATION_ID) {

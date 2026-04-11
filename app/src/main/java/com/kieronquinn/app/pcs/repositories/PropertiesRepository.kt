@@ -1,12 +1,16 @@
 package com.kieronquinn.app.pcs.repositories
 
 import com.kieronquinn.app.pcs.PcsApplication.Companion.PACKAGE_NAME_PSI
+import com.kieronquinn.app.pcs.model.ClientGroupOverride
+import com.kieronquinn.app.pcs.repositories.DeviceConfigPropertiesRepository.Companion.AS_SHOW_NOW_PLAYING_NOTIFICATION
 import com.kieronquinn.app.pcs.repositories.DeviceConfigPropertiesRepository.Companion.DEBUG_PROPERTY_NAME
+import com.kieronquinn.app.pcs.repositories.DeviceConfigPropertiesRepository.Companion.PSI_CLIENT_GROUP_OVERRIDE_PROPERTY_NAME
 import com.kieronquinn.app.pcs.repositories.DeviceConfigPropertiesRepository.Companion.PSI_ENABLE_APPS_PROPERTY_NAME
 import com.kieronquinn.app.pcs.repositories.DeviceConfigPropertiesRepository.Companion.PSI_FORCE_ACCOUNT_PRESENCE_PROPERTY_NAME
 import com.kieronquinn.app.pcs.repositories.DeviceConfigPropertiesRepository.Companion.PSI_FORCE_ACCOUNT_TYPE_PROPERTY_NAME
 import com.kieronquinn.app.pcs.repositories.DeviceConfigPropertiesRepository.Companion.PSI_FORCE_ADMIN_ALLOWANCE_PROPERTY_NAME
 import com.kieronquinn.app.pcs.repositories.PropertiesRepository.State
+import com.kieronquinn.app.pcs.utils.extensions.SystemProperties_get
 import com.kieronquinn.app.pcs.utils.extensions.SystemProperties_getBoolean
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
@@ -26,13 +30,17 @@ interface PropertiesRepository {
     suspend fun setPsiForceAccountPresence(enabled: Boolean)
     suspend fun setPsiForceAccountType(enabled: Boolean)
     suspend fun setPsiForceAdminAllowance(enabled: Boolean)
+    suspend fun setAsNowPlayingNotificationEnabled(enabled: Boolean)
+    suspend fun setClientGroupOverride(override: ClientGroupOverride)
 
     data class State(
         val debug: Boolean = false,
         val psiApps: Boolean = false,
         val psiForceAccountPresence: Boolean = false,
         val psiForceAccountType: Boolean = false,
-        val psiForceAdminAllowance: Boolean = false
+        val psiForceAdminAllowance: Boolean = false,
+        val asNowPlayingNotificationEnabled: Boolean = false,
+        val clientGroupOverride: ClientGroupOverride = ClientGroupOverride.DISABLED
     )
 
 }
@@ -75,13 +83,25 @@ class PropertiesRepositoryImpl(
         refreshBus.emit(System.currentTimeMillis())
     }
 
+    override suspend fun setAsNowPlayingNotificationEnabled(enabled: Boolean) {
+        deviceConfigPropertiesRepository.setProperty(AS_SHOW_NOW_PLAYING_NOTIFICATION, enabled.toString())
+        refreshBus.emit(System.currentTimeMillis())
+    }
+
+    override suspend fun setClientGroupOverride(override: ClientGroupOverride) {
+        deviceConfigPropertiesRepository.setProperty(PSI_CLIENT_GROUP_OVERRIDE_PROPERTY_NAME, override.name)
+        refreshBus.emit(System.currentTimeMillis())
+    }
+
     private fun getState(): State {
         return State(
             SystemProperties_getBoolean(DEBUG_PROPERTY_NAME, false),
             SystemProperties_getBoolean(PSI_ENABLE_APPS_PROPERTY_NAME, false),
             SystemProperties_getBoolean(PSI_FORCE_ACCOUNT_PRESENCE_PROPERTY_NAME, false),
             SystemProperties_getBoolean(PSI_FORCE_ACCOUNT_TYPE_PROPERTY_NAME, false),
-            SystemProperties_getBoolean(PSI_FORCE_ADMIN_ALLOWANCE_PROPERTY_NAME, false)
+            SystemProperties_getBoolean(PSI_FORCE_ADMIN_ALLOWANCE_PROPERTY_NAME, false),
+            SystemProperties_getBoolean(AS_SHOW_NOW_PLAYING_NOTIFICATION, false),
+            ClientGroupOverride.from(SystemProperties_get(PSI_CLIENT_GROUP_OVERRIDE_PROPERTY_NAME))
         )
     }
 

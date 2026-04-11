@@ -2,6 +2,7 @@ package com.kieronquinn.app.pcs.repositories
 
 import android.content.Context
 import com.google.android.`as`.oss.pd.api.proto.BlobConstraints
+import com.google.android.`as`.oss.pd.api.proto.BlobConstraints.ClientGroup
 import com.google.android.`as`.oss.pd.manifest.api.proto.GetManifestConfigRequest
 import com.google.android.`as`.oss.pd.manifest.api.proto.ManifestConfigConstraints
 import com.google.crypto.tink.KeysetHandle
@@ -13,6 +14,7 @@ import com.kieronquinn.app.pcs.repositories.PhenotypeRepository.PhenotypeState
 import com.kieronquinn.app.pcs.service.ManifestService
 import com.kieronquinn.app.pcs.utils.extensions.buildId
 import com.kieronquinn.app.pcs.utils.extensions.client
+import com.kieronquinn.app.pcs.utils.extensions.clientGroup
 import com.kieronquinn.app.pcs.utils.extensions.decryptManifest
 import com.kieronquinn.app.pcs.utils.extensions.deviceTier
 import com.kieronquinn.app.pcs.utils.extensions.getManifestKey
@@ -36,7 +38,11 @@ interface ManifestRepository {
     fun refresh()
     suspend fun refreshAndWait(): Boolean
     suspend fun checkRepositoryUrl(url: String): Boolean
-    suspend fun getManifest(url: String, request: GetManifestConfigRequest): ByteArray?
+    suspend fun getManifest(
+        url: String,
+        request: GetManifestConfigRequest,
+        clientGroupOverride: ClientGroup? = null
+    ): ByteArray?
     suspend fun getPhoneManifest(url: String, clientId: String): ByteArray?
     suspend fun getTtsManifest(url: String, id: String): ByteArray?
 
@@ -153,10 +159,30 @@ class ManifestRepositoryImpl(
         }
     }
 
-    override suspend fun getManifest(url: String, request: GetManifestConfigRequest): ByteArray? {
+    override suspend fun getManifest(
+        url: String,
+        request: GetManifestConfigRequest,
+        clientGroupOverride: ClientGroup?
+    ): ByteArray? {
         val mainManifest = getManifests(url) ?: return null
         val manifest = mainManifest.manifestList.firstOrNull {
-            request.constraints.matches(it.constraints)
+            // Ideal search: results matching either the search or the override
+            request.constraints.matches(
+                other = it.constraints,
+                clientGroupOverride = clientGroupOverride
+            )
+        } ?: mainManifest.manifestList.firstOrNull {
+            // Fallback 1: result with ALL client group (usually available)
+            request.constraints.matches(
+                other = it.constraints,
+                clientGroupFallbackToAll = true
+            )
+        } ?: mainManifest.manifestList.firstOrNull {
+            // Fallback 2: first result
+            request.constraints.matches(
+                other = it.constraints,
+                clientGroupFallbackToFirst = true
+            )
         } ?: return null
         return getManifest(url, manifest.name, manifest.encryptionKey.toByteArray().toKeysetHandle())
     }
@@ -190,15 +216,42 @@ class ManifestRepositoryImpl(
         setupUrlRefresh()
     }
 
-    /**
-     *  Checks fields we actually care about
-     */
-    private fun ManifestConfigConstraints.matches(other: BlobConstraints): Boolean {
+    private fun ManifestConfigConstraints.matches(
+        other: BlobConstraints,
+        clientGroupFallbackToAll: Boolean = false,
+        clientGroupFallbackToFirst: Boolean = false,
+        clientGroupOverride: ClientGroup? = null
+    ): Boolean {
         if (client?.client != other.client) return false
         if (variant != other.variant) return false
         if (deviceTier != other.deviceTier)  return false
+        val clientGroupMatches = clientGroup.matches(
+            other.clientGroup,
+            clientGroupFallbackToAll,
+            clientGroupFallbackToFirst,
+            clientGroupOverride
+        )
+        if (!clientGroupMatches) return false
         // Only check the build ID if it's actually specified
         return buildId == 0L || buildId == other.buildId
+    }
+
+    private fun ClientGroup?.matches(
+        other: ClientGroup,
+        fallbackToAll: Boolean,
+        fallbackToFirst: Boolean,
+        override: ClientGroup?
+    ): Boolean {
+        return when {
+            // If our group is null, we should also try to fall back to all if available
+            (this == null || fallbackToAll) && other == ClientGroup.ALL -> true
+            // If fallback to first is set, all other options have been exhausted, take first option
+            fallbackToFirst -> true
+            // If override is set, try to match it
+            override != null -> other == override
+            // Otherwise, match the request
+            else -> other == this
+        }
     }
 
 }

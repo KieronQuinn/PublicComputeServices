@@ -10,12 +10,15 @@ import com.google.android.`as`.oss.pd.manifest.api.proto.ProtectedDownloadServic
 import com.google.crypto.tink.HybridEncrypt
 import com.google.crypto.tink.RegistryConfiguration
 import com.google.protobuf.ByteString
+import com.kieronquinn.app.pcs.model.ClientGroupOverride
 import com.kieronquinn.app.pcs.model.PcsClient
 import com.kieronquinn.app.pcs.providers.ConfigProvider
 import com.kieronquinn.app.pcs.repositories.DeviceConfigPropertiesRepository.Companion.DEBUG_PROPERTY_NAME
+import com.kieronquinn.app.pcs.repositories.DeviceConfigPropertiesRepository.Companion.PSI_CLIENT_GROUP_OVERRIDE_PROPERTY_NAME
 import com.kieronquinn.app.pcs.repositories.ManifestRepository
 import com.kieronquinn.app.pcs.repositories.PhenotypeRepositoryImpl.Companion.FLAG_REPOSITORY
 import com.kieronquinn.app.pcs.utils.extensions.DeviceConfig_getString
+import com.kieronquinn.app.pcs.utils.extensions.SystemProperties_get
 import com.kieronquinn.app.pcs.utils.extensions.SystemProperties_getBoolean
 import com.kieronquinn.app.pcs.utils.extensions.buildId
 import com.kieronquinn.app.pcs.utils.extensions.client
@@ -42,6 +45,10 @@ import org.koin.core.component.inject
 class ProtectedDownloadGrpcService(
     private val context: Context
 ): ProtectedDownloadServiceGrpc.ProtectedDownloadServiceImplBase(), KoinComponent {
+    
+    companion object {
+        private const val TAG = "AstreaService"
+    }
 
     private val scope = MainScope()
     private val manifestRepository by inject<ManifestRepository>()
@@ -79,7 +86,10 @@ class ProtectedDownloadGrpcService(
                 responseObserver.onError(Throwable())
                 return@launch
             }
-            val manifest = manifestRepository.getManifest(url, request)
+            val clientGroupOverride = ClientGroupOverride.from(
+                SystemProperties_get(PSI_CLIENT_GROUP_OVERRIDE_PROPERTY_NAME)
+            ).clientGroup
+            val manifest = manifestRepository.getManifest(url, request, clientGroupOverride)
             responseObserver.sendBackManifest(
                 manifest,
                 request.constraints.clientId,
@@ -143,6 +153,8 @@ class ProtectedDownloadGrpcService(
             Log.e("AstreaServiceError", "No suitable manifest found for $clientId")
             onError(Throwable())
             return
+        } else {
+            Log.d(TAG, "Sending back manifest for $clientId")
         }
         val key = cryptoKeys.publicKey.toByteArray().toKeysetHandle()
         val encrypted = key.getPrimitive(
@@ -171,38 +183,38 @@ class ProtectedDownloadGrpcService(
 
     @Synchronized
     private fun GetManifestConfigRequest.logAiCore() {
-        Log.d("AstreaService", "==== Get Manifest Config Request (AICore) ====")
-        Log.d("AstreaService", "Device tier: ${constraints.deviceTier}")
-        Log.d("AstreaService", "Client: ${constraints.client}")
-        Log.d("AstreaService", "Client Group: ${constraints.clientGroup}")
-        Log.d("AstreaService", "Client Version: ${constraints.clientVersion.version}")
-        Log.d("AstreaService", "Variant: ${constraints.variant}")
-        Log.d("AstreaService", "Build ID: ${constraints.buildId}")
-        Log.d("AstreaService", "Compress: ${manifestTransform.compressManifest}")
-        Log.d("AstreaService", "==== End Manifest Config Request ====")
+        Log.d(TAG, "==== Get Manifest Config Request (AICore) ====")
+        Log.d(TAG, "Device tier: ${constraints.deviceTier}")
+        Log.d(TAG, "Client: ${constraints.client}")
+        Log.d(TAG, "Client Group: ${constraints.clientGroup}")
+        Log.d(TAG, "Client Version: ${constraints.clientVersion.version}")
+        Log.d(TAG, "Variant: ${constraints.variant}")
+        Log.d(TAG, "Build ID: ${constraints.buildId}")
+        Log.d(TAG, "Compress: ${manifestTransform.compressManifest}")
+        Log.d(TAG, "==== End Manifest Config Request ====")
     }
 
     @Synchronized
     private fun GetManifestConfigRequest.logPhone() {
-        Log.d("AstreaService", "==== Get Manifest Config Request (Phone) ====")
-        Log.d("AstreaService", "Client ID: ${constraints.clientId}")
-        Log.d("AstreaService", "Client Version: ${constraints.clientVersion.version}")
-        Log.d("AstreaService", "Country: ${constraints.country}")
-        Log.d("AstreaService", "Version: ${constraints.version}")
-        Log.d("AstreaService", "Compress: ${manifestTransform.compressManifest}")
-        Log.d("AstreaService", "==== End Manifest Config Request ====")
+        Log.d(TAG, "==== Get Manifest Config Request (Phone) ====")
+        Log.d(TAG, "Client ID: ${constraints.clientId}")
+        Log.d(TAG, "Client Version: ${constraints.clientVersion.version}")
+        Log.d(TAG, "Country: ${constraints.country}")
+        Log.d(TAG, "Version: ${constraints.version}")
+        Log.d(TAG, "Compress: ${manifestTransform.compressManifest}")
+        Log.d(TAG, "==== End Manifest Config Request ====")
     }
 
     @Synchronized
     private fun GetManifestConfigRequest.logTts() {
-        Log.d("AstreaService", "==== Get Manifest Config Request (TTS) ====")
-        Log.d("AstreaService", "Client ID: ${constraints.clientId}")
-        Log.d("AstreaService", "Client Version: ${constraints.clientVersion.version}")
-        Log.d("AstreaService", "Device Model: ${constraints.deviceModel}")
-        Log.d("AstreaService", "Model Type: ${constraints.modelType}")
-        Log.d("AstreaService", "Build ID: ${constraints.buildId}")
-        Log.d("AstreaService", "Compress: ${manifestTransform.compressManifest}")
-        Log.d("AstreaService", "==== End Manifest Config Request ====")
+        Log.d(TAG, "==== Get Manifest Config Request (TTS) ====")
+        Log.d(TAG, "Client ID: ${constraints.clientId}")
+        Log.d(TAG, "Client Version: ${constraints.clientVersion.version}")
+        Log.d(TAG, "Device Model: ${constraints.deviceModel}")
+        Log.d(TAG, "Model Type: ${constraints.modelType}")
+        Log.d(TAG, "Build ID: ${constraints.buildId}")
+        Log.d(TAG, "Compress: ${manifestTransform.compressManifest}")
+        Log.d(TAG, "==== End Manifest Config Request ====")
     }
 
     private enum class RequestType {
