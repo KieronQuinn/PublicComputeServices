@@ -255,6 +255,9 @@ object PhoneHooks: GrpcHooks() {
             PhoneFlag.BEESLY_ACTIONS_ENABLED -> if (settings.beeslyEnabled) {
                 true
             } else null
+            PhoneFlag.BEESLY_GREETING_ENABLED -> if (settings.beeslyEnabled) {
+                true
+            } else null
             PhoneFlag.NAUTILUS_ENABLED -> if (settings.nautilusEnabled) {
                 true
             } else null
@@ -290,17 +293,20 @@ object PhoneHooks: GrpcHooks() {
             PhoneFlag.PATRICK_PHASE_TWO_ENABLE_REPOSITORY -> if (settings.patrickPhase >= PatrickPhase.PHASE_TWO) {
                 true
             } else null
-            PhoneFlag.CALL_RECORDING_OVERRIDE_ENABLED -> if (settings.callRecordingEnabled && settings.fermatEnabled) {
+            PhoneFlag.CALL_RECORDING_OVERRIDE_ENABLED -> if (settings.callRecordingEnabled) {
                 true
             } else null
-            PhoneFlag.CALL_RECORDING_ENABLED -> if (settings.callRecordingEnabled && settings.fermatEnabled) {
+            PhoneFlag.CALL_RECORDING_ENABLED -> if (settings.callRecordingEnabled) {
                 true
             } else null
-            PhoneFlag.CALL_RECORDING_FORCE_OVERRIDE_ENABLED -> if (settings.callRecordingEnabled && settings.fermatEnabled) {
+            PhoneFlag.CALL_RECORDING_FORCE_OVERRIDE_ENABLED -> if (settings.callRecordingEnabled) {
                 true
             } else null
-            PhoneFlag.CALL_RECORDING_CROSBY_ENABLED -> if (settings.callRecordingEnabled && settings.fermatEnabled) {
+            PhoneFlag.CALL_RECORDING_CROSBY_ENABLED -> if (settings.callRecordingEnabled) {
                 true
+            } else null
+            PhoneFlag.CALL_RECORDING_FERMAT_DISABLE -> if (settings.callRecordingEnabled) {
+                false
             } else null
         }
     }

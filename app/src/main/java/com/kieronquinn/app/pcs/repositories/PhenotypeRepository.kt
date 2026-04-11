@@ -6,17 +6,22 @@ import com.kieronquinn.app.pcs.model.PcsClient.BuildId.Namespace
 import com.kieronquinn.app.pcs.model.proto.Labels
 import com.kieronquinn.app.pcs.repositories.PhenotypeRepository.PhenotypeState
 import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.launch
 
 interface PhenotypeRepository {
 
     val state: StateFlow<PhenotypeState?>
+    val onVersionsReset: Flow<Unit>
 
     fun refresh()
     suspend fun refreshAndWait()
     suspend fun setVersions(versions: Map<PcsClient, Long>, waitForRefresh: Boolean)
+    suspend fun resetVersions()
     suspend fun setLabels(labels: Labels)
     suspend fun resetLabels()
     suspend fun setRepository(url: String)
@@ -42,6 +47,7 @@ interface PhenotypeRepository {
 object PhenotypeRepositoryStub: PhenotypeRepository {
 
     override val state = MutableStateFlow<PhenotypeState?>(PhenotypeState.Unavailable)
+    override val onVersionsReset = emptyFlow<Unit>()
 
     override fun refresh() {
         // No-op
@@ -52,6 +58,10 @@ object PhenotypeRepositoryStub: PhenotypeRepository {
     }
 
     override suspend fun setVersions(versions: Map<PcsClient, Long>, wait: Boolean) {
+        // No-op
+    }
+
+    override suspend fun resetVersions() {
         // No-op
     }
 
@@ -81,6 +91,7 @@ class PhenotypeRepositoryImpl(
     private val scope = MainScope()
 
     override val state = MutableStateFlow<PhenotypeState?>(null)
+    override val onVersionsReset = MutableSharedFlow<Unit>()
 
     override fun refresh() {
         scope.launch {
@@ -129,6 +140,19 @@ class PhenotypeRepositoryImpl(
         } else {
             refresh()
         }
+    }
+
+    override suspend fun resetVersions() {
+        val entries = PcsClient.entries.map {
+            DeviceConfigPropertiesRepository.DeviceConfigEntry(
+                namespace = it.buildId.namespace.value,
+                flag = it.buildId.flag,
+                value = ""
+            )
+        }
+        deviceConfigPropertiesRepository.clearConfigOverrides(entries)
+        refreshAndWait()
+        onVersionsReset.emit(Unit)
     }
 
     override suspend fun setLabels(labels: Labels) {

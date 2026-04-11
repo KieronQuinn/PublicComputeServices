@@ -48,6 +48,8 @@ class PcsApplication: Application() {
         const val PACKAGE_NAME_PHONE = "com.google.android.dialer"
         const val PACKAGE_NAME_PSI = "com.google.android.apps.pixel.psi"
         const val PACKAGE_NAME_TTS = "com.google.android.tts"
+        const val PACKAGE_NAME_AS = "com.google.android.as"
+        const val PACKAGE_NAME_AIC = "com.google.android.aicore"
     }
 
     override fun onCreate() {
@@ -67,7 +69,7 @@ class PcsApplication: Application() {
         single<ManifestRepository>(createdAtStart = true) {
             ManifestRepositoryImpl(get(), get(), get())
         }
-        single<DeviceConfigPropertiesRepository> { DeviceConfigPropertiesRepositoryImpl() }
+        single<DeviceConfigPropertiesRepository> { DeviceConfigPropertiesRepositoryImpl(get()) }
         single<PhenotypeRepository>(createdAtStart = true) {
             PhenotypeRepositoryImpl(get())
         }
@@ -92,7 +94,7 @@ class PcsApplication: Application() {
         viewModel<BaseUrlDialogViewModel> { BaseUrlDialogViewModelImpl(get(), get()) }
         viewModel<BuildLabelViewModel> { BuildLabelViewModelImpl(get()) }
         viewModel<SettingsViewModel> { SettingsViewModelImpl(get(), get(), get(), get(), get(), get(), get(), get()) }
-        viewModel<ExperimentsViewModel> { ExperimentsViewModelImpl(get(), get(), get(), get()) }
+        viewModel<ExperimentsViewModel> { ExperimentsViewModelImpl(get(), get(), get(), get(), get()) }
     }
 
     private fun getRetrofit() = Retrofit.Builder()

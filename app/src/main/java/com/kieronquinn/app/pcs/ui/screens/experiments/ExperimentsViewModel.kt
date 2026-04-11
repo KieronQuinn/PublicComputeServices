@@ -1,18 +1,25 @@
 package com.kieronquinn.app.pcs.ui.screens.experiments
 
+import android.content.ComponentName
 import android.content.Context
 import android.content.pm.PackageManager
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.kieronquinn.app.pcs.PcsApplication.Companion.PACKAGE_NAME_AIC
+import com.kieronquinn.app.pcs.PcsApplication.Companion.PACKAGE_NAME_AS
 import com.kieronquinn.app.pcs.PcsApplication.Companion.PACKAGE_NAME_PHONE
 import com.kieronquinn.app.pcs.PcsApplication.Companion.PACKAGE_NAME_PSI
+import com.kieronquinn.app.pcs.model.ClientGroupOverride
 import com.kieronquinn.app.pcs.model.phone.PhoneSettings
 import com.kieronquinn.app.pcs.repositories.DeviceConfigPropertiesRepository
+import com.kieronquinn.app.pcs.repositories.PhenotypeRepository
 import com.kieronquinn.app.pcs.repositories.PropertiesRepository
 import com.kieronquinn.app.pcs.repositories.SettingsRepository
 import com.kieronquinn.app.pcs.repositories.SettingsRepository.BeeslyRegion
 import com.kieronquinn.app.pcs.repositories.SettingsRepository.DobbyRegion
 import com.kieronquinn.app.pcs.repositories.SettingsRepository.PatrickPhase
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -23,6 +30,7 @@ import kotlinx.coroutines.launch
 abstract class ExperimentsViewModel: ViewModel() {
 
     abstract val state: StateFlow<State>
+    abstract val events: Flow<Event>
 
     abstract fun onPhoneSharpieEnabledChanged(enabled: Boolean)
     abstract fun onPhoneDobbyEnabledChanged(enabled: Boolean)
@@ -44,13 +52,25 @@ abstract class ExperimentsViewModel: ViewModel() {
     abstract fun onPsiForceAccountTypeChanged(enabled: Boolean)
     abstract fun onPsiForceAdminAllowanceChanged(enabled: Boolean)
 
+    abstract fun onAsNowPlayingChanged(enabled: Boolean)
+
+    abstract fun onClearMddClicked()
+    abstract fun onClearOverridesClicked()
+    abstract fun onClientGroupOverrideChanged(override: ClientGroupOverride)
+
     sealed class State {
         data object Loading: State()
         data class Loaded(
             val magicCueAvailable: Boolean,
+            val nowPlayingAvailable: Boolean,
+            val phoneAvailable: Boolean,
             val phoneSettings: PhoneSettings,
             val propertiesState: PropertiesRepository.State
         ): State()
+    }
+
+    enum class Event {
+        MANIFESTS_PURGED, MANIFEST_OVERRIDES_CLEARED
     }
 
 }
@@ -58,6 +78,7 @@ abstract class ExperimentsViewModel: ViewModel() {
 class ExperimentsViewModelImpl(
     private val propertiesRepository: PropertiesRepository,
     private val deviceConfigPropertiesRepository: DeviceConfigPropertiesRepository,
+    private val phenotypeRepository: PhenotypeRepository,
     settingsRepository: SettingsRepository,
     context: Context
 ): ExperimentsViewModel() {
@@ -90,6 +111,31 @@ class ExperimentsViewModelImpl(
             null
         }
         emit(versionName != null && !versionName.contains("stub"))
+    }
+
+    private val isPhoneAvailable = flow {
+        val versionName = try {
+            context.packageManager.getPackageInfo(PACKAGE_NAME_PHONE, 0)
+                ?.versionName
+        } catch (e: PackageManager.NameNotFoundException) {
+            null
+        }
+        emit(versionName != null && versionName.contains("pixel"))
+    }
+
+    private val isNowPlayingAvailable = flow {
+        try {
+            context.packageManager.getServiceInfo(
+                ComponentName(
+                    PACKAGE_NAME_AS,
+                    "com.google.android.apps.miphone.aiai.nowplaying.api.NowPlayingService"
+                ),
+                0
+            )
+            emit(true)
+        } catch (e: PackageManager.NameNotFoundException) {
+            emit(false)
+        }
     }
 
     private val phoneBooleanSettings = combine(
@@ -156,15 +202,21 @@ class ExperimentsViewModelImpl(
 
     override val state = combine(
         isMagicCueAvailable,
+        isNowPlayingAvailable,
+        isPhoneAvailable,
         propertiesRepository.state,
         phoneSettings
-    ) { magicCueAvailable, propertiesState, phoneSettings ->
+    ) { magicCueAvailable, nowPlayingAvailable, isPhoneAvailable, propertiesState, phoneSettings ->
         State.Loaded(
             magicCueAvailable = magicCueAvailable,
+            nowPlayingAvailable = nowPlayingAvailable,
+            phoneAvailable = isPhoneAvailable,
             phoneSettings = phoneSettings,
             propertiesState = propertiesState
         )
     }.stateIn(viewModelScope, SharingStarted.Eagerly, State.Loading)
+
+    override val events = MutableSharedFlow<Event>()
 
     override fun onPhoneSharpieEnabledChanged(enabled: Boolean) {
         viewModelScope.launch {
@@ -285,6 +337,34 @@ class ExperimentsViewModelImpl(
     override fun onPsiForceAdminAllowanceChanged(enabled: Boolean) {
         viewModelScope.launch {
             propertiesRepository.setPsiForceAdminAllowance(enabled)
+        }
+    }
+
+    override fun onAsNowPlayingChanged(enabled: Boolean) {
+        viewModelScope.launch {
+            propertiesRepository.setAsNowPlayingNotificationEnabled(enabled)
+        }
+    }
+
+    override fun onClearMddClicked() {
+        viewModelScope.launch {
+            deviceConfigPropertiesRepository.clearMdd(PACKAGE_NAME_AIC)
+            deviceConfigPropertiesRepository.clearMdd(PACKAGE_NAME_PSI)
+            deviceConfigPropertiesRepository.clearMdd(PACKAGE_NAME_PHONE)
+            events.emit(Event.MANIFESTS_PURGED)
+        }
+    }
+
+    override fun onClearOverridesClicked() {
+        viewModelScope.launch {
+            phenotypeRepository.resetVersions()
+            events.emit(Event.MANIFEST_OVERRIDES_CLEARED)
+        }
+    }
+
+    override fun onClientGroupOverrideChanged(override: ClientGroupOverride) {
+        viewModelScope.launch {
+            propertiesRepository.setClientGroupOverride(override)
         }
     }
 

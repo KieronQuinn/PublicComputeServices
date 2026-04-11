@@ -2,6 +2,7 @@
 <resources>
     <string-array name="xposed_scope">
         <item>com.google.android.as.oss</item>
+        <item>com.google.android.as</item>
         <item>com.google.android.dialer</item>
         <item>com.google.android.apps.pixel.psi</item>
         <item>com.google.android.tts</item>

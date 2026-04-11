@@ -1,10 +1,13 @@
 package com.kieronquinn.app.pcs.repositories
 
+import android.content.Context
+import android.content.pm.PackageManager
 import android.util.Base64
 import com.kieronquinn.app.pcs.repositories.DeviceConfigPropertiesRepository.DeviceConfigEntry
 import com.topjohnwu.superuser.Shell
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.io.File
 
 /**
  *  Uses libsu to get/override/clear DeviceConfig and SystemProperties entries. Due to the backend
@@ -16,11 +19,12 @@ interface DeviceConfigPropertiesRepository {
 
     companion object {
         const val DEBUG_PROPERTY_NAME = "persist.pcs.debug"
-        const val PHONE_FLAGS_PROPERTY_NAME = "persist.pcs.enabled_phone_flags"
         const val PSI_ENABLE_APPS_PROPERTY_NAME = "persist.psi.enable_apps"
         const val PSI_FORCE_ACCOUNT_PRESENCE_PROPERTY_NAME = "persist.psi.force_account_presence"
         const val PSI_FORCE_ACCOUNT_TYPE_PROPERTY_NAME = "persist.psi.force_account_type"
         const val PSI_FORCE_ADMIN_ALLOWANCE_PROPERTY_NAME = "persist.psi.force_admin_allowance"
+        const val PSI_CLIENT_GROUP_OVERRIDE_PROPERTY_NAME = "persist.psi.client_group_override"
+        const val AS_SHOW_NOW_PLAYING_NOTIFICATION = "persist.as.show_now_playing_notification"
     }
 
     /**
@@ -56,6 +60,11 @@ interface DeviceConfigPropertiesRepository {
      */
     suspend fun forceStopPackage(packageName: String)
 
+    /**
+     *  Deletes MDD-related shared prefs for a package to force a redownload of manifests
+     */
+    suspend fun clearMdd(packageName: String)
+
     data class DeviceConfigEntry(
         val namespace: String,
         val flag: String,
@@ -74,7 +83,7 @@ interface DeviceConfigPropertiesRepository {
 
 }
 
-class DeviceConfigPropertiesRepositoryImpl : DeviceConfigPropertiesRepository {
+class DeviceConfigPropertiesRepositoryImpl(context: Context) : DeviceConfigPropertiesRepository {
 
     companion object {
         private const val LIST = "device_config list"
@@ -84,10 +93,11 @@ class DeviceConfigPropertiesRepositoryImpl : DeviceConfigPropertiesRepository {
     }
 
     private var _shell: Shell? = null
+    private val packageManager = context.packageManager
 
     private val shell
         get() = _shell ?: run {
-            Shell.Builder.create().build().also {
+            Shell.Builder.create().setFlags(Shell.FLAG_MOUNT_MASTER).build().also {
                 _shell = it
             }
         }
@@ -143,6 +153,19 @@ class DeviceConfigPropertiesRepositoryImpl : DeviceConfigPropertiesRepository {
     override suspend fun forceStopPackage(packageName: String) {
         withContext(Dispatchers.IO) {
             shell.newJob().add("am force-stop $packageName").exec()
+        }
+    }
+
+    override suspend fun clearMdd(packageName: String) {
+        withContext(Dispatchers.IO) {
+            val sharedPrefsDir = try {
+                val dataDir = packageManager.getApplicationInfo(packageName, 0).dataDir
+                File(dataDir, "shared_prefs")
+            } catch (e: PackageManager.NameNotFoundException) {
+                return@withContext
+            }
+            shell.newJob().add("rm ${sharedPrefsDir.absolutePath}/gms_icing_mdd_*.xml").exec()
+            forceStopPackage(packageName)
         }
     }
 

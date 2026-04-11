@@ -15,3 +15,17 @@ fun SystemProperties_getBoolean(key: String, defaultValue: Boolean): Boolean {
     }
     return defaultValue
 }
+
+@SuppressLint("PrivateApi")
+fun SystemProperties_get(key: String): String? {
+    runCatching {
+        val systemProperties = Class.forName("android.os.SystemProperties")
+        systemProperties.getMethod("get", String::class.java)
+            .invoke(null, key) as? String
+    }.onSuccess {
+        return it
+    }.onFailure {
+        return null
+    }
+    return null
+}

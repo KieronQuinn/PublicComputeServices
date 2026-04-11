@@ -28,6 +28,7 @@ enum class PhoneFlag(val flagPackage: FlagPackage, val flag: String) {
     ATLAS_ENABLED(FlagPackage.DIALER_DIRECTBOOT, "45413174"),
     BEESLY_ENABLED(FlagPackage.DIALER_DIRECTBOOT, "45629794"),
     BEESLY_ACTIONS_ENABLED(FlagPackage.DIALER_DIRECTBOOT, "45684179"),
+    BEESLY_GREETING_ENABLED(FlagPackage.DIALER_DIRECTBOOT, "45722860"),
     NAUTILUS_ENABLED(FlagPackage.DIALER_DIRECTBOOT, "45665235"),
     SONIC_ENABLED(FlagPackage.DIALER_DIRECTBOOT, "45408594"),
     XATU_ENABLED(FlagPackage.DIALER_DIRECTBOOT, "45417169"),
@@ -43,6 +44,7 @@ enum class PhoneFlag(val flagPackage: FlagPackage, val flag: String) {
     CALL_RECORDING_ENABLED(FlagPackage.DIALER, "G__enable_call_recording"),
     CALL_RECORDING_FORCE_OVERRIDE_ENABLED(FlagPackage.DIALER, "G__force_within_call_recording_geofence_value"),
     CALL_RECORDING_CROSBY_ENABLED(FlagPackage.DIALER, "G__force_within_crosby_geofence_value"),
+    CALL_RECORDING_FERMAT_DISABLE(FlagPackage.DIALER_DIRECTBOOT, "45730953"),
     ;
 
     companion object {

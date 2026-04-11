@@ -63,7 +63,7 @@ class SettingsViewModelImpl(
     private val propertiesRepository: PropertiesRepository,
     private val syncRepository: SyncRepository,
     private val settingsRepository: SettingsRepository,
-    phenotypeRepository: PhenotypeRepository,
+    private val phenotypeRepository: PhenotypeRepository,
     manifestRepository: ManifestRepository,
     updateRepository: UpdateRepository,
     context: Context
@@ -172,8 +172,15 @@ class SettingsViewModelImpl(
         RefreshWorker.setEnabled(workManager, enabled)
     }
 
+    private fun setupLabelResetListener() = viewModelScope.launch {
+        phenotypeRepository.onVersionsReset.collect {
+            refreshBus.emit(System.currentTimeMillis())
+        }
+    }
+
     init {
         syncWorker()
+        setupLabelResetListener()
         manifestRepository.refresh()
     }
 
