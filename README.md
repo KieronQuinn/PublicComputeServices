@@ -22,12 +22,13 @@ repositories on the [XDA thread](https://kieronquinn.co.uk/redirect/pcs/xda).
 
 ## Features
 
-- Supports enabling almost all AI features with a correctly set up repository, for a list of 
+- Supports enabling all AI features with a correctly set up repository, for a list of 
 features, please see the [FAQs](https://github.com/KieronQuinn/PublicComputeServices/blob/main/app/src/main/res/raw/faq.md)
 - Set or change the Device Configuration, selecting which AI models to download for your device
 - Automatically keep manifests in sync with your selected repository by checking for updates once a 
 day and applying them.
 - Experiments to tweak Google Phone and Magic Cue's features
+- Enable Now Playing notification when new Now Playing is enabled, allowing Now Playing history apps to work again
 - Enable debug logging for hooked Google apps, useful for observing features such as Magic Cue
 
 ## Frequently Asked Questions
