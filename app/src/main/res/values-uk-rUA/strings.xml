@@ -109,6 +109,12 @@
     <string name="screen_experiments_as_show_notification_title">Now Playing Notification</string>
     <string name="screen_experiments_as_show_notification_content">Show notification of currently detected song, which was removed with new Now Playing. This will also make Now Playing History apps work again.</string>
     <string name="screen_experiments_category_advanced">Advanced</string>
+    <string name="screen_experiments_enable_phone_title">Handle Phone Manifests</string>
+    <string name="screen_experiments_enable_phone_content">Enable manifest handling for Google Phone (scam detection <b>only</b>). This is not required on most devices, so is disabled by default.</string>
+    <string name="screen_experiments_enable_tts_title">Handle TTS Manifests</string>
+    <string name="screen_experiments_enable_tts_content">Enable manifest handling for TTS (voice translate <b>only</b>). This is not required on most devices, so is disabled by default.</string>
+    <string name="screen_experiments_enable_agent_title">Handle Pixel Screenshots Manifests</string>
+    <string name="screen_experiments_enable_agent_content">Enable manifest handling for Pixel Screenshots. This is not required on most devices, so is disabled by default.</string>
     <string name="screen_experiments_clear_mdd_title">Purge Cached Manifests</string>
     <string name="screen_experiments_clear_mdd_content">Clear manifests cached by apps. This will force them to re-sync from the repository, even if up to date, and may use data to do so.</string>
     <string name="screen_experiments_clear_mdd_toast">Manifests purged</string>
