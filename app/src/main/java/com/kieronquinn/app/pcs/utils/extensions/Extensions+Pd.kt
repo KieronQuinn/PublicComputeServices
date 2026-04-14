@@ -23,6 +23,9 @@ val ManifestConfigConstraints.version: String?
 val ManifestConfigConstraints.deviceModel: String?
     get() = labelList.first { it.attribute == "device_model" }.value
 
+val ManifestConfigConstraints.device: String?
+    get() = labelList.firstOrNull { it.attribute == "device" }?.value
+
 val ManifestConfigConstraints.modelType: String?
     get() = labelList.first { it.attribute == "model_type" }.value
 

@@ -45,6 +45,7 @@ interface ManifestRepository {
     ): ByteArray?
     suspend fun getPhoneManifest(url: String, clientId: String): ByteArray?
     suspend fun getTtsManifest(url: String, id: String): ByteArray?
+    suspend fun getAgentManifest(url: String, id: String, device: String?): ByteArray?
 
     sealed class ManifestState {
         data object Loading: ManifestState()
@@ -199,6 +200,19 @@ class ManifestRepositoryImpl(
         val mainManifest = getManifests(url) ?: return null
         val manifest = mainManifest.ttsManifestList.firstOrNull {
             id == it.id
+        } ?: return null
+        return getManifest(url, manifest.name, manifest.encryptionKey.toByteArray().toKeysetHandle())
+    }
+
+    override suspend fun getAgentManifest(url: String, id: String, device: String?): ByteArray? {
+        val mainManifest = getManifests(url) ?: return null
+        val requiredId = if (device != null) {
+            "$id:$device"
+        } else {
+            id
+        }
+        val manifest = mainManifest.agentManifestList.firstOrNull {
+            requiredId == it.id
         } ?: return null
         return getManifest(url, manifest.name, manifest.encryptionKey.toByteArray().toKeysetHandle())
     }

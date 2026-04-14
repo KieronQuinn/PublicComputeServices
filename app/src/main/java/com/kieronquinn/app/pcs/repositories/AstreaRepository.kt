@@ -15,9 +15,10 @@ interface AstreaRepository {
 
     companion object {
         const val HOST = "127.0.0.1"
-        const val PORT_PCS = 7270 //PCS0
-        const val PORT_PHONE = 7271 //PCS1
-        const val PORT_TTS = 7272
+        const val PORT_PCS = 7270 // PCS0
+        const val PORT_PHONE = 7271 // PCS1
+        const val PORT_TTS = 7272 // PCS2
+        const val PORT_AGENT = 7273 // PCS3
     }
 
     fun start()

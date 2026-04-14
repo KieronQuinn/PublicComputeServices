@@ -68,6 +68,9 @@ private data class Interactions(
     val onPsiForceAdminAllowanceChanged: (Boolean) -> Unit,
     val onAsNowPlayingChanged: (Boolean) -> Unit,
     val onClearMddClicked: () -> Unit,
+    val onPhoneEnabledChanged: (Boolean) -> Unit,
+    val onTtsEnabledChanged: (Boolean) -> Unit,
+    val onAgentEnabledChanged: (Boolean) -> Unit,
     val onClearOverridesClicked: () -> Unit,
     val onClientGroupOverrideChanged: (ClientGroupOverride) -> Unit,
 ) {
@@ -93,6 +96,9 @@ private data class Interactions(
             onPsiForceAdminAllowanceChanged = {},
             onAsNowPlayingChanged = {},
             onClearMddClicked = {},
+            onPhoneEnabledChanged = {},
+            onTtsEnabledChanged = {},
+            onAgentEnabledChanged = {},
             onClearOverridesClicked = {},
             onClientGroupOverrideChanged = {}
         )
@@ -124,6 +130,9 @@ fun ExperimentsScreen() = ProvidePreferenceLocals {
         onPsiForceAdminAllowanceChanged = viewModel::onPsiForceAdminAllowanceChanged,
         onAsNowPlayingChanged = viewModel::onAsNowPlayingChanged,
         onClearMddClicked = viewModel::onClearMddClicked,
+        onPhoneEnabledChanged = viewModel::onPhoneEnabledChanged,
+        onTtsEnabledChanged = viewModel::onTtsEnabledChanged,
+        onAgentEnabledChanged = viewModel::onAgentEnabledChanged,
         onClearOverridesClicked = viewModel::onClearOverridesClicked,
         onClientGroupOverrideChanged = viewModel::onClientGroupOverrideChanged
     )
@@ -786,6 +795,82 @@ private fun LoadedContent(state: State.Loaded, interactions: Interactions) {
             Spacer(Modifier.height(2.dp))
         }
 
+        if (state.phoneAvailable) {
+            val enablePhoneShape = Shape(3, 1)
+            switchPreference(
+                modifier = Modifier
+                    .padding(horizontal = 8.dp)
+                    .background(color = surface, shape = enablePhoneShape)
+                    .clip(enablePhoneShape),
+                key = "advanced_enable_phone",
+                value = state.propertiesState.phoneEnabled,
+                title = {
+                    Text(
+                        text = stringResource(R.string.screen_experiments_enable_phone_title),
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                },
+                summary = {
+                    Text(text = textResource(R.string.screen_experiments_enable_phone_content))
+                },
+                onValueChange = interactions.onPhoneEnabledChanged
+            )
+
+            item {
+                Spacer(Modifier.height(2.dp))
+            }
+
+            val enableTTSShape = Shape(3, 1)
+            switchPreference(
+                modifier = Modifier
+                    .padding(horizontal = 8.dp)
+                    .background(color = surface, shape = enableTTSShape)
+                    .clip(enableTTSShape),
+                key = "advanced_enable_tts",
+                value = state.propertiesState.ttsEnabled,
+                title = {
+                    Text(
+                        text = stringResource(R.string.screen_experiments_enable_tts_title),
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                },
+                summary = {
+                    Text(text = textResource(R.string.screen_experiments_enable_tts_content))
+                },
+                onValueChange = interactions.onTtsEnabledChanged
+            )
+
+            item {
+                Spacer(Modifier.height(2.dp))
+            }
+        }
+
+        if (state.agentAvailable) {
+            val enableAgentShape = Shape(3, 1)
+            switchPreference(
+                modifier = Modifier
+                    .padding(horizontal = 8.dp)
+                    .background(color = surface, shape = enableAgentShape)
+                    .clip(enableAgentShape),
+                key = "advanced_enable_agent",
+                value = state.propertiesState.agentEnabled,
+                title = {
+                    Text(
+                        text = stringResource(R.string.screen_experiments_enable_agent_title),
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                },
+                summary = {
+                    Text(text = textResource(R.string.screen_experiments_enable_agent_content))
+                },
+                onValueChange = interactions.onAgentEnabledChanged
+            )
+
+            item {
+                Spacer(Modifier.height(2.dp))
+            }
+        }
+
         val clearOverridesShape = Shape(3, 1)
         preference(
             modifier = Modifier
@@ -853,6 +938,7 @@ private fun ContentPreviewLight() {
             magicCueAvailable = true,
             nowPlayingAvailable = true,
             phoneAvailable = true,
+            agentAvailable = true,
             phoneSettings = PhoneSettings(
                 sharpieEnabled = false,
                 dobbyEnabled = false,

@@ -5,10 +5,12 @@ import android.content.Context
 import android.content.pm.PackageManager
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.kieronquinn.app.pcs.PcsApplication.Companion.PACKAGE_NAME_AGENT
 import com.kieronquinn.app.pcs.PcsApplication.Companion.PACKAGE_NAME_AIC
 import com.kieronquinn.app.pcs.PcsApplication.Companion.PACKAGE_NAME_AS
 import com.kieronquinn.app.pcs.PcsApplication.Companion.PACKAGE_NAME_PHONE
 import com.kieronquinn.app.pcs.PcsApplication.Companion.PACKAGE_NAME_PSI
+import com.kieronquinn.app.pcs.PcsApplication.Companion.PACKAGE_NAME_TTS
 import com.kieronquinn.app.pcs.model.ClientGroupOverride
 import com.kieronquinn.app.pcs.model.phone.PhoneSettings
 import com.kieronquinn.app.pcs.repositories.DeviceConfigPropertiesRepository
@@ -54,6 +56,9 @@ abstract class ExperimentsViewModel: ViewModel() {
 
     abstract fun onAsNowPlayingChanged(enabled: Boolean)
 
+    abstract fun onPhoneEnabledChanged(enabled: Boolean)
+    abstract fun onTtsEnabledChanged(enabled: Boolean)
+    abstract fun onAgentEnabledChanged(enabled: Boolean)
     abstract fun onClearMddClicked()
     abstract fun onClearOverridesClicked()
     abstract fun onClientGroupOverrideChanged(override: ClientGroupOverride)
@@ -64,6 +69,7 @@ abstract class ExperimentsViewModel: ViewModel() {
             val magicCueAvailable: Boolean,
             val nowPlayingAvailable: Boolean,
             val phoneAvailable: Boolean,
+            val agentAvailable: Boolean,
             val phoneSettings: PhoneSettings,
             val propertiesState: PropertiesRepository.State
         ): State()
@@ -121,6 +127,16 @@ class ExperimentsViewModelImpl(
             null
         }
         emit(versionName != null && versionName.contains("pixel"))
+    }
+
+    private val isAgentAvailable = flow {
+        val versionName = try {
+            context.packageManager.getPackageInfo(PACKAGE_NAME_AGENT, 0)
+                ?.versionName
+        } catch (e: PackageManager.NameNotFoundException) {
+            null
+        }
+        emit(versionName != null && !versionName.contains("stub"))
     }
 
     private val isNowPlayingAvailable = flow {
@@ -200,17 +216,26 @@ class ExperimentsViewModelImpl(
         )
     }
 
-    override val state = combine(
-        isMagicCueAvailable,
-        isNowPlayingAvailable,
+    private val packageStates = combine(
+        isAgentAvailable,
         isPhoneAvailable,
+        isMagicCueAvailable,
+        isNowPlayingAvailable
+    ) {
+        it
+    }
+
+    override val state = combine(
+        packageStates,
         propertiesRepository.state,
         phoneSettings
-    ) { magicCueAvailable, nowPlayingAvailable, isPhoneAvailable, propertiesState, phoneSettings ->
+    ) { packageStates, propertiesState, phoneSettings ->
+        val (isAgentAvailable, isPhoneAvailable, magicCueAvailable, nowPlayingAvailable) = packageStates
         State.Loaded(
             magicCueAvailable = magicCueAvailable,
             nowPlayingAvailable = nowPlayingAvailable,
             phoneAvailable = isPhoneAvailable,
+            agentAvailable = isAgentAvailable,
             phoneSettings = phoneSettings,
             propertiesState = propertiesState
         )
@@ -346,11 +371,31 @@ class ExperimentsViewModelImpl(
         }
     }
 
+    override fun onPhoneEnabledChanged(enabled: Boolean) {
+        viewModelScope.launch {
+            propertiesRepository.setPhoneEnabled(enabled)
+        }
+    }
+
+    override fun onTtsEnabledChanged(enabled: Boolean) {
+        viewModelScope.launch {
+            propertiesRepository.setTtsEnabled(enabled)
+        }
+    }
+
+    override fun onAgentEnabledChanged(enabled: Boolean) {
+        viewModelScope.launch {
+            propertiesRepository.setAgentEnabled(enabled)
+        }
+    }
+
     override fun onClearMddClicked() {
         viewModelScope.launch {
             deviceConfigPropertiesRepository.clearMdd(PACKAGE_NAME_AIC)
             deviceConfigPropertiesRepository.clearMdd(PACKAGE_NAME_PSI)
             deviceConfigPropertiesRepository.clearMdd(PACKAGE_NAME_PHONE)
+            deviceConfigPropertiesRepository.clearMdd(PACKAGE_NAME_AGENT)
+            deviceConfigPropertiesRepository.clearMdd(PACKAGE_NAME_TTS)
             events.emit(Event.MANIFESTS_PURGED)
         }
     }

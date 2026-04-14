@@ -9,6 +9,7 @@ import android.os.Bundle
 import androidx.core.net.toUri
 import androidx.core.os.bundleOf
 import com.kieronquinn.app.pcs.BuildConfig
+import com.kieronquinn.app.pcs.PcsApplication.Companion.PACKAGE_NAME_AGENT
 import com.kieronquinn.app.pcs.PcsApplication.Companion.PACKAGE_NAME_PHONE
 import com.kieronquinn.app.pcs.PcsApplication.Companion.PACKAGE_NAME_TTS
 import com.kieronquinn.app.pcs.model.PcsClient.BuildId.Namespace.DEVICE_PERSONALIZATION_SERVICES
@@ -32,6 +33,7 @@ class ConfigProvider: ContentProvider() {
         private val PACKAGE_ALLOWLIST = setOf(
             PACKAGE_NAME_PHONE,
             PACKAGE_NAME_TTS,
+            PACKAGE_NAME_AGENT,
             BuildConfig.APPLICATION_ID
         )
 

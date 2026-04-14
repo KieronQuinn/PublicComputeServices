@@ -50,6 +50,7 @@ class PcsApplication: Application() {
         const val PACKAGE_NAME_TTS = "com.google.android.tts"
         const val PACKAGE_NAME_AS = "com.google.android.as"
         const val PACKAGE_NAME_AIC = "com.google.android.aicore"
+        const val PACKAGE_NAME_AGENT = "com.google.android.apps.pixel.agent"
     }
 
     override fun onCreate() {

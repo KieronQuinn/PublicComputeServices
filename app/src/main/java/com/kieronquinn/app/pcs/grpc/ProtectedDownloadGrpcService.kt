@@ -24,6 +24,7 @@ import com.kieronquinn.app.pcs.utils.extensions.buildId
 import com.kieronquinn.app.pcs.utils.extensions.client
 import com.kieronquinn.app.pcs.utils.extensions.clientGroup
 import com.kieronquinn.app.pcs.utils.extensions.country
+import com.kieronquinn.app.pcs.utils.extensions.device
 import com.kieronquinn.app.pcs.utils.extensions.deviceModel
 import com.kieronquinn.app.pcs.utils.extensions.deviceTier
 import com.kieronquinn.app.pcs.utils.extensions.modelType
@@ -61,6 +62,7 @@ class ProtectedDownloadGrpcService(
             RequestType.AICORE -> getManifestConfigAiCore(request, responseObserver)
             RequestType.PHONE -> getManifestConfigPhone(request, responseObserver)
             RequestType.TTS -> getManifestConfigTts(request, responseObserver)
+            RequestType.AGENT -> getManifestConfigAgent(request, responseObserver)
             null -> {
                 Log.e("AstreaServiceError", "Unknown request type")
                 Log.e("AstreaServiceError", request.toString())
@@ -144,6 +146,30 @@ class ProtectedDownloadGrpcService(
         }
     }
 
+    private fun getManifestConfigAgent(
+        request: GetManifestConfigRequest,
+        responseObserver: StreamObserver<GetManifestConfigResponse>
+    ) {
+        if (SystemProperties_getBoolean(DEBUG_PROPERTY_NAME, false)) {
+            request.logAgent()
+        }
+        scope.launch(Dispatchers.IO) {
+            val url = ConfigProvider.getRepositoryUrl(context) ?: run {
+                Log.e("AstreaServiceError", "No URL set, unable to download manifest")
+                responseObserver.onError(Throwable())
+                return@launch
+            }
+            val manifest = manifestRepository.getAgentManifest(
+                url, request.constraints.clientId, request.constraints.device
+            )
+            responseObserver.sendBackManifest(
+                manifest,
+                request.constraints.clientId,
+                request.cryptoKeys
+            )
+        }
+    }
+
     private fun StreamObserver<GetManifestConfigResponse>.sendBackManifest(
         manifest: ByteArray?,
         clientId: String,
@@ -174,6 +200,9 @@ class ProtectedDownloadGrpcService(
     private fun GetManifestConfigRequest.getType(): RequestType? {
         val constraintLabels = constraints.labelList.map { it.attribute }
         return when {
+            constraints.clientId.startsWith("com.google.android.apps.pixel.agent") -> {
+                RequestType.AGENT
+            }
             constraintLabels.contains("device_tier") -> RequestType.AICORE
             constraintLabels.contains("country") -> RequestType.PHONE
             constraintLabels.contains("device_model") -> RequestType.TTS
@@ -217,8 +246,19 @@ class ProtectedDownloadGrpcService(
         Log.d(TAG, "==== End Manifest Config Request ====")
     }
 
+    @Synchronized
+    private fun GetManifestConfigRequest.logAgent() {
+        Log.d(TAG, "==== Get Manifest Config Request (Agent) ====")
+        Log.d(TAG, "Client ID: ${constraints.clientId}")
+        Log.d(TAG, "Client Version: ${constraints.clientVersion.version}")
+        Log.d(TAG, "Device: ${constraints.device}")
+        Log.d(TAG, "Build ID: ${constraints.buildId}")
+        Log.d(TAG, "Compress: ${manifestTransform.compressManifest}")
+        Log.d(TAG, "==== End Manifest Config Request ====")
+    }
+
     private enum class RequestType {
-        AICORE, PHONE, TTS
+        AICORE, PHONE, TTS, AGENT
     }
 
 }
