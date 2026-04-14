@@ -23,6 +23,7 @@ import org.koin.core.context.startKoin
 import org.koin.dsl.module
 import org.luckypray.dexkit.DexKitBridge
 import retrofit2.Retrofit
+import java.lang.reflect.Member
 import java.security.cert.X509Certificate
 import javax.net.ssl.SSLSession
 
@@ -58,9 +59,10 @@ abstract class GrpcHooks: XposedHooks, KoinComponent {
 
     @CallSuper
     override fun hook(loadPackageParam: LoadPackageParam) {
-        log("Begin gRPC hooking")
         val dexKit = loadDexKit(loadPackageParam.appInfo.sourceDir)
         loadPackageParam.hookApplication()
+        if (!isEnabled()) return
+        log("Begin gRPC hooking")
         loadPackageParam.hookService()
         loadPackageParam.hookActivity()
         loadPackageParam.hookTrustManager()
@@ -68,6 +70,8 @@ abstract class GrpcHooks: XposedHooks, KoinComponent {
         loadPackageParam.hookSsl(dexKit)
         log("Finished gRPC hooking")
     }
+
+    open fun isEnabled(): Boolean = true
 
     private fun LoadPackageParam.hookApplication() {
         XposedHelpers.findAndHookMethod(
@@ -152,11 +156,7 @@ abstract class GrpcHooks: XposedHooks, KoinComponent {
         )
     }
 
-    /**
-     *  Hooks creation of gRPC client for On Device Safety (ODS) and redirects it to our own custom
-     *  localhost one.
-     */
-    private fun LoadPackageParam.hookOds(dexKit: DexKitBridge) {
+    open fun LoadPackageParam.getOdsConstructor(dexKit: DexKitBridge): Member? {
         val hostLoader = dexKit.findClass {
             matcher { usingStrings("TLS Provider failure") }
         }.singleOrNull()?.let {
@@ -166,12 +166,22 @@ abstract class GrpcHooks: XposedHooks, KoinComponent {
                 null
             }
         } ?: run {
+            return null
+        }
+        return hostLoader.getConstructor(String::class.java)
+    }
+
+    /**
+     *  Hooks creation of gRPC client for On Device Safety (ODS) and redirects it to our own custom
+     *  localhost one.
+     */
+    private fun LoadPackageParam.hookOds(dexKit: DexKitBridge) {
+        val constructor = getOdsConstructor(dexKit) ?: run {
             log("Unable to find host loader class")
             return
         }
-        XposedHelpers.findAndHookConstructor(
-            hostLoader,
-            String::class.java,
+        XposedBridge.hookMethod(
+            constructor,
             object: XC_MethodHook() {
                 override fun beforeHookedMethod(param: MethodHookParam) {
                     super.beforeHookedMethod(param)

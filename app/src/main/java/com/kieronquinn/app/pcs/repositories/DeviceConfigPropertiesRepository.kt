@@ -25,6 +25,9 @@ interface DeviceConfigPropertiesRepository {
         const val PSI_FORCE_ADMIN_ALLOWANCE_PROPERTY_NAME = "persist.psi.force_admin_allowance"
         const val PSI_CLIENT_GROUP_OVERRIDE_PROPERTY_NAME = "persist.psi.client_group_override"
         const val AS_SHOW_NOW_PLAYING_NOTIFICATION = "persist.as.show_now_playing_notification"
+        const val PHONE_ENABLED = "persist.phone.pcs_enabled"
+        const val TTS_ENABLED = "persist.tts.pcs_enabled"
+        const val AGENT_ENABLED = "persist.agent.pcs_enabled"
     }
 
     /**

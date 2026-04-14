@@ -12,6 +12,7 @@ message Manifests {
   repeated Manifest manifest = 1;
   repeated StaticManifest phone_manifest = 2;
   repeated StaticManifest tts_manifest = 3;
+  repeated StaticManifest agent_manifest = 4;
 }
 
 message Manifest {

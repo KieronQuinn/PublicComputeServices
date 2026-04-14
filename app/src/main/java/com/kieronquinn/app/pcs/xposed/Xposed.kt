@@ -1,6 +1,7 @@
 package com.kieronquinn.app.pcs.xposed
 
 import com.kieronquinn.app.pcs.BuildConfig
+import com.kieronquinn.app.pcs.PcsApplication.Companion.PACKAGE_NAME_AGENT
 import com.kieronquinn.app.pcs.PcsApplication.Companion.PACKAGE_NAME_AS
 import com.kieronquinn.app.pcs.PcsApplication.Companion.PACKAGE_NAME_PCS
 import com.kieronquinn.app.pcs.PcsApplication.Companion.PACKAGE_NAME_PHONE
@@ -13,6 +14,7 @@ class Xposed: IXposedHookLoadPackage {
 
     override fun handleLoadPackage(lpparam: XC_LoadPackage.LoadPackageParam) {
         when (lpparam.packageName) {
+            "android" -> return // Don't ever hook system
             BuildConfig.APPLICATION_ID -> {
                 SelfHook.hook(lpparam)
             }
@@ -30,6 +32,9 @@ class Xposed: IXposedHookLoadPackage {
             }
             PACKAGE_NAME_AS -> {
                 AsHooks.hook(lpparam)
+            }
+            PACKAGE_NAME_AGENT -> {
+                AgentHooks.hook(lpparam)
             }
         }
         if (lpparam.packageName != BuildConfig.APPLICATION_ID) {

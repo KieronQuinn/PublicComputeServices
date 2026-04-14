@@ -6,5 +6,6 @@
         <item>com.google.android.dialer</item>
         <item>com.google.android.apps.pixel.psi</item>
         <item>com.google.android.tts</item>
+        <item>com.google.android.apps.pixel.agent</item>
     </string-array>
 </resources>

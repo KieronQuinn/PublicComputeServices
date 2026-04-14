@@ -7,9 +7,11 @@ import com.kieronquinn.app.pcs.model.phone.PhoneFlag
 import com.kieronquinn.app.pcs.model.phone.PhoneSettings
 import com.kieronquinn.app.pcs.providers.PhoneSettingsProvider
 import com.kieronquinn.app.pcs.repositories.AstreaRepository.Companion.PORT_PHONE
+import com.kieronquinn.app.pcs.repositories.DeviceConfigPropertiesRepository.Companion.PHONE_ENABLED
 import com.kieronquinn.app.pcs.repositories.SettingsRepository.BeeslyRegion
 import com.kieronquinn.app.pcs.repositories.SettingsRepository.DobbyRegion
 import com.kieronquinn.app.pcs.repositories.SettingsRepository.PatrickPhase
+import com.kieronquinn.app.pcs.utils.extensions.SystemProperties_getBoolean
 import com.kieronquinn.app.pcs.utils.extensions.getKeyByValue
 import com.kieronquinn.app.pcs.utils.extensions.loadDexKit
 import com.kieronquinn.app.pcs.utils.extensions.reflectParseProto
@@ -32,6 +34,10 @@ object PhoneHooks: GrpcHooks() {
     override val port = PORT_PHONE
 
     private val flagOverrides = HashMap<PhoneFlag, Any>()
+
+    override fun isEnabled(): Boolean {
+        return SystemProperties_getBoolean(PHONE_ENABLED, false)
+    }
 
     override fun LoadPackageParam.onBeforeApplicationOnCreate(application: Application) {
         val dexKit = loadDexKit(appInfo.sourceDir)
