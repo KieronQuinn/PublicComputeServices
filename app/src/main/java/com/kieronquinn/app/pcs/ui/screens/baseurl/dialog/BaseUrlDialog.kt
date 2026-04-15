@@ -8,7 +8,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.input.TextFieldLineLimits
+import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
@@ -20,7 +23,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -60,11 +62,12 @@ private fun EnterURLDialog(
 ) {
     val scope = rememberCoroutineScope()
 
-    var url by rememberSaveable { mutableStateOf(initialUrl) }
+    val urlState = rememberTextFieldState(initialText = initialUrl)
     var isLoading by remember { mutableStateOf(false) }
     var hasError by remember { mutableStateOf(false) }
+    val urlScrollState = rememberScrollState()
 
-    LaunchedEffect(url) {
+    LaunchedEffect(urlState.text) {
         if (hasError) {
             hasError = false
         }
@@ -88,15 +91,15 @@ private fun EnterURLDialog(
                 Text(text = textResource(R.string.screen_base_url_dialog_content))
                 Spacer(Modifier.height(16.dp))
                 TextField(
-                    value = url,
-                    onValueChange = { url = it },
+                    state = urlState,
                     isError = hasError,
                     supportingText = {
                         if (hasError) {
                             Text(stringResource(R.string.screen_base_url_dialog_error))
                         }
                     },
-                    singleLine = true,
+                    lineLimits = TextFieldLineLimits.SingleLine,
+                    scrollState = urlScrollState,
                     modifier = Modifier.fillMaxWidth(),
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Uri,
@@ -112,16 +115,16 @@ private fun EnterURLDialog(
                 onClick = {
                     isLoading = true
                     scope.launch {
-                        val isValid = validate(url)
+                        val isValid = validate(urlState.text.toString())
                         if (isValid) {
-                            onSuccess(url)
+                            onSuccess(urlState.text.toString())
                         } else {
                             hasError = true
                         }
                         isLoading = false
                     }
                 },
-                enabled = url.isNotBlank() && !isLoading
+                enabled = urlState.text.isNotBlank() && !isLoading
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
