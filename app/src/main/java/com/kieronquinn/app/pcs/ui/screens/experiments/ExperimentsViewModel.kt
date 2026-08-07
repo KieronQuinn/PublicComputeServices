@@ -56,6 +56,7 @@ abstract class ExperimentsViewModel: ViewModel() {
 
     abstract fun onAsNowPlayingChanged(enabled: Boolean)
     abstract fun onAsForceGSAChanged(enabled: Boolean)
+    abstract fun onAiCoreUnloadInferenceChanged(enabled: Boolean)
 
     abstract fun onPhoneEnabledChanged(enabled: Boolean)
     abstract fun onTtsEnabledChanged(enabled: Boolean)
@@ -69,6 +70,7 @@ abstract class ExperimentsViewModel: ViewModel() {
         data class Loaded(
             val magicCueAvailable: Boolean,
             val nowPlayingAvailable: Boolean,
+            val aicoreAvailable: Boolean,
             val phoneAvailable: Boolean,
             val agentAvailable: Boolean,
             val phoneSettings: PhoneSettings,
@@ -138,6 +140,15 @@ class ExperimentsViewModelImpl(
             null
         }
         emit(versionName != null && !versionName.contains("stub"))
+    }
+
+    private val isAiCoreAvailable = flow {
+        try {
+            context.packageManager.getPackageInfo(PACKAGE_NAME_AIC, 0)
+            emit(true)
+        } catch (e: PackageManager.NameNotFoundException) {
+            emit(false)
+        }
     }
 
     private val isNowPlayingAvailable = flow {
@@ -221,7 +232,8 @@ class ExperimentsViewModelImpl(
         isAgentAvailable,
         isPhoneAvailable,
         isMagicCueAvailable,
-        isNowPlayingAvailable
+        isNowPlayingAvailable,
+        isAiCoreAvailable
     ) {
         it
     }
@@ -231,10 +243,12 @@ class ExperimentsViewModelImpl(
         propertiesRepository.state,
         phoneSettings
     ) { packageStates, propertiesState, phoneSettings ->
-        val (isAgentAvailable, isPhoneAvailable, magicCueAvailable, nowPlayingAvailable) = packageStates
+        val (isAgentAvailable, isPhoneAvailable, magicCueAvailable, nowPlayingAvailable,
+            isAiCoreAvailable) = packageStates
         State.Loaded(
             magicCueAvailable = magicCueAvailable,
             nowPlayingAvailable = nowPlayingAvailable,
+            aicoreAvailable = isAiCoreAvailable,
             phoneAvailable = isPhoneAvailable,
             agentAvailable = isAgentAvailable,
             phoneSettings = phoneSettings,
@@ -375,6 +389,12 @@ class ExperimentsViewModelImpl(
     override fun onAsForceGSAChanged(enabled: Boolean) {
         viewModelScope.launch {
             propertiesRepository.setAsForceGSAEnabled(enabled)
+        }
+    }
+
+    override fun onAiCoreUnloadInferenceChanged(enabled: Boolean) {
+        viewModelScope.launch {
+            propertiesRepository.setAiCoreUnloadInference(enabled)
         }
     }
 

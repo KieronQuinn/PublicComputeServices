@@ -26,6 +26,7 @@ interface DeviceConfigPropertiesRepository {
         const val PSI_CLIENT_GROUP_OVERRIDE_PROPERTY_NAME = "persist.psi.client_group_override"
         const val AS_SHOW_NOW_PLAYING_NOTIFICATION = "persist.as.show_now_playing_notification"
         const val AS_FORCE_GSA = "persist.as.force_gsa"
+        const val AICORE_UNLOAD_INFERENCE = "persist.aicore.unload_inference"
         const val PHONE_ENABLED = "persist.phone.pcs_enabled"
         const val TTS_ENABLED = "persist.tts.pcs_enabled"
         const val AGENT_ENABLED = "persist.agent.pcs_enabled"

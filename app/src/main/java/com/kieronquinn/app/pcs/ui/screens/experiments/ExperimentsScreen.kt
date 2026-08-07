@@ -68,6 +68,7 @@ private data class Interactions(
     val onPsiForceAdminAllowanceChanged: (Boolean) -> Unit,
     val onAsNowPlayingChanged: (Boolean) -> Unit,
     val onAsForceGSAChanged: (Boolean) -> Unit,
+    val onAiCoreUnloadInferenceChanged: (Boolean) -> Unit,
     val onClearMddClicked: () -> Unit,
     val onPhoneEnabledChanged: (Boolean) -> Unit,
     val onTtsEnabledChanged: (Boolean) -> Unit,
@@ -97,6 +98,7 @@ private data class Interactions(
             onPsiForceAdminAllowanceChanged = {},
             onAsNowPlayingChanged = {},
             onAsForceGSAChanged = {},
+            onAiCoreUnloadInferenceChanged = {},
             onClearMddClicked = {},
             onPhoneEnabledChanged = {},
             onTtsEnabledChanged = {},
@@ -132,6 +134,7 @@ fun ExperimentsScreen() = ProvidePreferenceLocals {
         onPsiForceAdminAllowanceChanged = viewModel::onPsiForceAdminAllowanceChanged,
         onAsNowPlayingChanged = viewModel::onAsNowPlayingChanged,
         onAsForceGSAChanged = viewModel::onAsForceGSAChanged,
+        onAiCoreUnloadInferenceChanged = viewModel::onAiCoreUnloadInferenceChanged,
         onClearMddClicked = viewModel::onClearMddClicked,
         onPhoneEnabledChanged = viewModel::onPhoneEnabledChanged,
         onTtsEnabledChanged = viewModel::onTtsEnabledChanged,
@@ -768,6 +771,39 @@ private fun LoadedContent(state: State.Loaded, interactions: Interactions) {
             )
         }
 
+        if (state.aicoreAvailable) {
+            preferenceCategory(
+                key = "category_aicore",
+                title = {
+                    Text(stringResource(R.string.screen_experiments_category_aicore))
+                }
+            )
+
+            val aicoreShape = Shape(1, 0)
+            switchPreference(
+                modifier = Modifier
+                    .padding(horizontal = 8.dp)
+                    .background(color = surface, shape = aicoreShape)
+                    .clip(aicoreShape),
+                value = state.propertiesState.aicoreUnloadInference,
+                key = "aicore_unload_inference",
+                title = {
+                    Text(
+                        text = stringResource(
+                            R.string.screen_experiments_aicore_unload_inference_title
+                        ),
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                },
+                summary = {
+                    Text(text = textResource(
+                        R.string.screen_experiments_aicore_unload_inference_content
+                    ))
+                },
+                onValueChange = interactions.onAiCoreUnloadInferenceChanged
+            )
+        }
+
         preferenceCategory(
             key = "category_aag",
             title = {
@@ -967,6 +1003,7 @@ private fun ContentPreviewLight() {
         val state = State.Loaded(
             magicCueAvailable = true,
             nowPlayingAvailable = true,
+            aicoreAvailable = true,
             phoneAvailable = true,
             agentAvailable = true,
             phoneSettings = PhoneSettings(
