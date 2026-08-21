@@ -118,7 +118,7 @@
 
     <string name="screen_experiments_category_aicore">AICore</string>
     <string name="screen_experiments_aicore_unload_inference_title">Unload AI models when idle</string>
-    <string name="screen_experiments_aicore_unload_inference_content">Unload on-device AI models after five minutes of inactivity to free memory. The first request after unloading may take longer.</string>
+    <string name="screen_experiments_aicore_unload_inference_content">Unload on-device AI models after five minutes of inactivity to free memory. The first request after unloading may take longer.\n<b>Note:</b> This may break some AICore functionality such as Notification Organiser</string>
 
     <string name="screen_experiments_category_glance">At a Glance</string>
     <string name="screen_experiments_as_force_gsa_title">Disable Google App Check</string>
