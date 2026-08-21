@@ -81,6 +81,13 @@ part of the app's package name, in all caps. For example, to follow the progress
 models, enable debug logging, make sure *Device Intelligence* is hooked, and monitor the log with 
 the tag "PSI".
 
+## Can Public Compute Services reduce AICore's memory use?
+
+Enable **Unload AI models when idle** on the Experiments screen. Make sure
+`com.google.android.aicore` is enabled in the module's LSPosed scope, then restart AICore or reboot.
+The inference model will unload after five minutes without a request and load again when needed, so
+the first AI request after unloading may take longer.
+
 ## Models aren't downloading!
 
 There's a few possible causes for this:

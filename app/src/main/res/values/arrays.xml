@@ -7,5 +7,6 @@
         <item>com.google.android.apps.pixel.psi</item>
         <item>com.google.android.tts</item>
         <item>com.google.android.apps.pixel.agent</item>
+        <item>com.google.android.aicore</item>
     </string-array>
 </resources>

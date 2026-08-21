@@ -30,6 +30,7 @@ day and applying them.
 - Experiments to tweak Google Phone and Magic Cue's features
 - Enable Now Playing notification when new Now Playing is enabled, allowing Now Playing history apps to work again
 - Enable debug logging for hooked Google apps, useful for observing features such as Magic Cue
+- Optionally unload AICore's inference service after five minutes of inactivity, freeing model memory
 
 ## Frequently Asked Questions
 FAQs can be found [here](https://github.com/KieronQuinn/PublicComputeServices/blob/main/app/src/main/res/raw/faq.md). 

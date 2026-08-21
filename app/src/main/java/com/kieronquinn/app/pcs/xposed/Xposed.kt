@@ -2,6 +2,7 @@ package com.kieronquinn.app.pcs.xposed
 
 import com.kieronquinn.app.pcs.BuildConfig
 import com.kieronquinn.app.pcs.PcsApplication.Companion.PACKAGE_NAME_AGENT
+import com.kieronquinn.app.pcs.PcsApplication.Companion.PACKAGE_NAME_AIC
 import com.kieronquinn.app.pcs.PcsApplication.Companion.PACKAGE_NAME_AS
 import com.kieronquinn.app.pcs.PcsApplication.Companion.PACKAGE_NAME_PCS
 import com.kieronquinn.app.pcs.PcsApplication.Companion.PACKAGE_NAME_PHONE
@@ -35,6 +36,9 @@ class Xposed: IXposedHookLoadPackage {
             }
             PACKAGE_NAME_AGENT -> {
                 AgentHooks.hook(lpparam)
+            }
+            PACKAGE_NAME_AIC -> {
+                AiCoreHooks.hook(lpparam)
             }
         }
         if (lpparam.packageName != BuildConfig.APPLICATION_ID) {
