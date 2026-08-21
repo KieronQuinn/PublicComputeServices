@@ -13,6 +13,7 @@ enum class BuildLabel(
 
     SAMSUNG_QC_MID(DeviceTier.MID, Variant.SAMSUNG_QC, devices = listOf("Galaxy S24 Ultra", "Galaxy Z Fold 6")),
     SAMSUNG_QC_HIGH(DeviceTier.HIGH, Variant.SAMSUNG_QC),
+    SAMSUNG_QC_ULTRA(DeviceTier.ULTRA, Variant.SAMSUNG_QC),
 
     SAMSUNG_SLSI_MID(DeviceTier.MID, Variant.SAMSUNG_SLSI, devices = listOf("Galaxy S24 FE")),
 
@@ -26,6 +27,9 @@ enum class BuildLabel(
 
     VARIANT_9_MID(DeviceTier.MID, Variant.VARIANT_9, devices = listOf("Pixel 9", "Pixel 9a")),
 
+    VARIANT_10_HIGH(DeviceTier.HIGH, Variant.VARIANT_10),
+    VARIANT_10_ULTRA(DeviceTier.ULTRA, Variant.VARIANT_10),
+
     VARIANT_11_MID(DeviceTier.MID, Variant.VARIANT_11),
     VARIANT_11_HIGH(DeviceTier.HIGH, Variant.VARIANT_11),
 
@@ -37,15 +41,24 @@ enum class BuildLabel(
     VARIANT_13_HIGH(DeviceTier.HIGH, Variant.VARIANT_13),
 
     VARIANT_14_MID(DeviceTier.MID, Variant.VARIANT_14, devices = listOf("Pixel 10")),
+    VARIANT_14_HIGH(DeviceTier.HIGH, Variant.VARIANT_14),
 
     VARIANT_15_MID(DeviceTier.MID, Variant.VARIANT_15, devices = listOf("Galaxy Z Flip 7")),
 
     VARIANT_16_MID(DeviceTier.MID, Variant.VARIANT_16),
+    VARIANT_16_HIGH(DeviceTier.HIGH, Variant.VARIANT_16),
+
+    VARIANT_17_MID(DeviceTier.MID, Variant.VARIANT_16),
 
     VARIANT_20_MID(DeviceTier.MID, Variant.VARIANT_20),
     VARIANT_20_HIGH(DeviceTier.HIGH, Variant.VARIANT_20),
 
     VARIANT_21_MID(DeviceTier.MID, Variant.VARIANT_21),
+    VARIANT_21_HIGH(DeviceTier.HIGH, Variant.VARIANT_21),
+
     VARIANT_22_MID(DeviceTier.MID, Variant.VARIANT_22),
+
+    VARIANT_24_MID(DeviceTier.MID, Variant.VARIANT_24, devices = listOf("Pixel 11")),
+    VARIANT_24_ULTRA(DeviceTier.ULTRA, Variant.VARIANT_24),
 
 }
