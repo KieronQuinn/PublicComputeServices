@@ -7,7 +7,8 @@
     <string name="screen_base_url_title">下载源</string>
     <string name="screen_build_label_title">设备配置</string>
     <string name="screen_base_url_repo_info">开放计算服务本身不提供任何下载源，您必须自己提供下载源地址。
-<b>不知道这是什么意思？请参见 GitHub 文档。</b></string>
+<b>不知道这是什么意思？请参见 GitHub 文档。</b>
+</string>
     <string name="screen_base_url_repo_title">下载源 URL</string>
     <string name="screen_base_url_repo_content">填入模型清单的下载 URL (必填)</string>
     <string name="screen_base_url_dialog_content">填入模型清单的下载 URL
@@ -111,6 +112,9 @@
     <string name="screen_experiments_category_now_playing">正在播放</string>
     <string name="screen_experiments_as_show_notification_title">正在播放通知</string>
     <string name="screen_experiments_as_show_notification_content">显示当前识别歌曲的通知，该通知已在新版「正在播放」中被移除。启用后，还可让「正在播放历史」应用重新正常工作。</string>
+    <string name="screen_experiments_category_aicore">AICore</string>
+    <string name="screen_experiments_aicore_unload_inference_title">Unload AI models when idle</string>
+    <string name="screen_experiments_aicore_unload_inference_content">Unload on-device AI models after five minutes of inactivity to free memory. The first request after unloading may take longer.\n<b>Note:</b> This may break some AICore functionality such as Notification Organiser</string>
     <string name="screen_experiments_category_glance">一目了然</string>
     <string name="screen_experiments_as_force_gsa_title">禁用 Google 应用检查</string>
     <string name="screen_experiments_as_force_gsa_content">部分如体育及金融在内的「一目了然」功能需要将搜索提供程序设置为 Google 应用。启用此选项将允许使用其他搜索提供该功能。</string>
