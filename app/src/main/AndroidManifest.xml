@@ -55,7 +55,7 @@
         <provider
             android:authorities="${applicationId}.settings.phone"
             android:name=".providers.PhoneSettingsProvider"
-            android:process=":settings"
+            android:directBootAware="true"
             android:exported="true"
             tools:ignore="ExportedContentProvider" />
 
