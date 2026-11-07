@@ -1,5 +1,7 @@
 package com.kieronquinn.app.pcs.xposed
 
+import com.kieronquinn.app.pcs.directmycall.DirectMyCallFlags
+import com.kieronquinn.app.pcs.directmycall.MenuParser
 import com.kieronquinn.app.pcs.utils.DebugLogging
 import com.kieronquinn.app.pcs.repositories.SettingsRepository.CallScreenMode
 import com.kieronquinn.app.pcs.repositories.SettingsRepository.SharpieCountryMode
@@ -60,6 +62,8 @@ object PhoneHooks: GrpcHooks() {
 
     override val deferGrpcHooksUntilApplication = true
     private var phoneSettings: PhoneSettings? = null
+    /** The language Direct My Call listens in, when it runs in the phone's language. */
+    private var xatuLanguageTag: String? = null
 
     override fun hook(loadPackageParam: LoadPackageParam) {
         DebugLogging.beginPhoneProcess()
@@ -83,6 +87,10 @@ object PhoneHooks: GrpcHooks() {
             "metered=${settings.xatuAllowMetered}, manifests=${settings.manifestHandlingEnabled}, " +
             "debug=${settings.debugLogging}")
         logDobbyData(settings)
+        val phoneLocale = application.resources.configuration.locales.get(0)
+        xatuLanguageTag = phoneLocale.toLanguageTag().takeIf {
+            settings.xatuEnabled && settings.xatuPhoneLanguage && MenuParser.forLocale(phoneLocale) != null
+        }
         hookFlagDataStore(dexKit, settings)
         CallNotesHooks.install(dexKit, classLoader, settings.fermatEnabled)
         hookSharpieCountry(dexKit, settings)
@@ -106,6 +114,11 @@ object PhoneHooks: GrpcHooks() {
         hookDobbySettings(dexKit, settings)
         hookXatuModelDownload(dexKit, settings)
         hookXatuMddConnectivity(dexKit, settings)
+        xatuLanguageTag?.let { tag ->
+            SodaLocaleHooks.register(dexKit, classLoader, application, phoneLocale,
+                SodaLocaleHooks.Use("Direct My Call") { tag })
+            DirectMyCallMenuHooks.install(dexKit, classLoader, phoneLocale)
+        }
         if (settings.patrickPhase > PatrickPhase.DISABLED) {
             hookPatrick(dexKit)
         }
@@ -886,7 +899,18 @@ object PhoneHooks: GrpcHooks() {
             PhoneFlag.XATU_MODELS -> settings.xatuModels
                 ?.takeIf { settings.xatuEnabled }
                 ?.fromBase64()
+                ?.let { group -> xatuLanguageTag?.let { DirectMyCallFlags.groupWithLocale(group, it) } ?: group }
                 ?.reflectParseProto(originalValue?.javaClass ?: return null)
+            // Direct My Call in the phone's language: speech recognition in that language, with
+            // its speech pack accepted, and English confidence tuning left off.
+            PhoneFlag.XATU_SODA_LOCALE -> xatuLanguageTag
+            PhoneFlag.XATU_CONFIDENCE_MAPPING -> if (xatuLanguageTag != null) false else null
+            PhoneFlag.XATU_SUPPORTED_SPEECH_VERSIONS -> if (xatuLanguageTag != null) {
+                val original = originalValue ?: return null
+                VoicePackHooks.serialize(original)
+                    ?.let(DirectMyCallFlags::supportedVersionsWithAny)
+                    ?.reflectParseProto(original.javaClass)
+            } else null
             PhoneFlag.SHARPIE_ENABLED -> if (settings.sharpieEnabled) {
                 true
             } else null

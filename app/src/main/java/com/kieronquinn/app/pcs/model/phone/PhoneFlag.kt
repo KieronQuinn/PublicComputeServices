@@ -35,6 +35,9 @@ enum class PhoneFlag(val flagPackage: FlagPackage, val flag: String) {
     NAUTILUS_ENABLED(FlagPackage.DIALER_DIRECTBOOT, "45665235"),
     SONIC_ENABLED(FlagPackage.DIALER_DIRECTBOOT, "45408594"),
     XATU_ENABLED(FlagPackage.DIALER_DIRECTBOOT, "45417169"),
+    XATU_SODA_LOCALE(FlagPackage.DIALER_DIRECTBOOT, "45417194"), // xatu_soda_locale
+    XATU_CONFIDENCE_MAPPING(FlagPackage.DIALER_DIRECTBOOT, "45417195"), // enableConfidenceMappingConfiguration
+    XATU_SUPPORTED_SPEECH_VERSIONS(FlagPackage.DIALER_DIRECTBOOT, "45417216"), // lpPreferences
     CALLER_TAG_EXPERIMENT_ID(FlagPackage.DIALER, "caller_tag_experiment_id"),
     FERMAT_ENABLED(FlagPackage.DIALER_DIRECTBOOT, "45661721"),
     FERMAT_GEOFENCE(FlagPackage.DIALER_DIRECTBOOT, "45731943"),

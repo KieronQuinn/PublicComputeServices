@@ -12,6 +12,7 @@ import com.kieronquinn.app.pcs.PcsApplication.Companion.PACKAGE_NAME_PHONE
 import com.kieronquinn.app.pcs.PcsApplication.Companion.PACKAGE_NAME_PSI
 import com.kieronquinn.app.pcs.PcsApplication.Companion.PACKAGE_NAME_TTS
 import com.kieronquinn.app.pcs.model.ClientGroupOverride
+import com.kieronquinn.app.pcs.directmycall.MenuParser
 import com.kieronquinn.app.pcs.voicepack.HoldForMePrompts
 import com.kieronquinn.app.pcs.voicepack.VoicePack
 import com.kieronquinn.app.pcs.voicepack.VoicePackTranslations
@@ -63,6 +64,7 @@ abstract class ExperimentsViewModel: ViewModel() {
     abstract fun onPhoneSonicEnabledChanged(enabled: Boolean)
     abstract fun onPhoneXatuAllowMeteredChanged(enabled: Boolean)
     abstract fun onPhoneXatuEnabledChanged(enabled: Boolean)
+    abstract fun onPhoneXatuPhoneLanguageChanged(enabled: Boolean)
     abstract fun onPhoneCallerTagsEnabledChanged(enabled: Boolean)
     abstract fun onPhoneFermatEnabledChanged(enabled: Boolean)
     abstract fun onPhoneExpressoEnabledChanged(enabled: Boolean)
@@ -103,7 +105,9 @@ abstract class ExperimentsViewModel: ViewModel() {
             val takeAMessagePack: VoicePackRepository.State,
             /** Whether PCS ships Hold for Me's sentences for the phone's language. */
             val holdForMeTranslationAvailable: Boolean,
-            val holdForMePack: VoicePackRepository.State
+            val holdForMePack: VoicePackRepository.State,
+            /** Whether PCS can read phone menus in the phone's language. */
+            val directMyCallMenuParserAvailable: Boolean
         ): State()
     }
 
@@ -147,6 +151,7 @@ class ExperimentsViewModelImpl(
     private val phoneNautilusEnabled = settingsRepository.phoneNautilusEnabled
     private val phoneSonicEnabled = settingsRepository.phoneSonicEnabled
     private val phoneXatuAllowMetered = settingsRepository.phoneXatuAllowMetered
+    private val phoneXatuPhoneLanguage = settingsRepository.phoneXatuPhoneLanguage
     private val phoneXatuEnabled = settingsRepository.phoneXatuEnabled
     private val phoneXatuModels = settingsRepository.phoneXatuModels
     private val phoneCallerTagsEnabled = settingsRepository.phoneCallerTagsEnabled
@@ -226,7 +231,8 @@ class ExperimentsViewModelImpl(
         phoneDebugLogging.asFlow(),
         phoneSharpiePhoneLanguage.asFlow(),
         phoneAtlasPhoneLanguage.asFlow(),
-        phoneBeeslyPhoneLanguage.asFlow()
+        phoneBeeslyPhoneLanguage.asFlow(),
+        phoneXatuPhoneLanguage.asFlow()
     ) {
         it
     }
@@ -285,7 +291,8 @@ class ExperimentsViewModelImpl(
             debugLogging = booleans[13],
             sharpiePhoneLanguage = booleans[14],
             atlasPhoneLanguage = booleans[15],
-            beeslyPhoneLanguage = booleans[16]
+            beeslyPhoneLanguage = booleans[16],
+            xatuPhoneLanguage = booleans[17]
         )
     }
 
@@ -359,7 +366,8 @@ class ExperimentsViewModelImpl(
             takeAMessageTranslationAvailable = packs.takeAMessageTranslationAvailable,
             takeAMessagePack = packs.takeAMessage,
             holdForMeTranslationAvailable = packs.holdForMeTranslationAvailable,
-            holdForMePack = packs.holdForMe
+            holdForMePack = packs.holdForMe,
+            directMyCallMenuParserAvailable = MenuParser.forLocale(VoicePackTranslations.phoneLocale()) != null
         )
     }.stateIn(viewModelScope, SharingStarted.Eagerly, State.Loading)
 
@@ -505,6 +513,13 @@ class ExperimentsViewModelImpl(
     override fun onPhoneSonicEnabledChanged(enabled: Boolean) {
         viewModelScope.launch {
             phoneSonicEnabled.set(enabled)
+            forceStopPhone()
+        }
+    }
+
+    override fun onPhoneXatuPhoneLanguageChanged(enabled: Boolean) {
+        viewModelScope.launch {
+            phoneXatuPhoneLanguage.set(enabled)
             forceStopPhone()
         }
     }

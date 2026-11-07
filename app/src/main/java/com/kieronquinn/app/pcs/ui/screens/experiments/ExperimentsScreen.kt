@@ -74,6 +74,7 @@ private data class Interactions(
     val onPhoneSonicEnabledChanged: (Boolean) -> Unit,
     val onPhoneXatuAllowMeteredChanged: (Boolean) -> Unit,
     val onPhoneXatuEnabledChanged: (Boolean) -> Unit,
+    val onPhoneXatuPhoneLanguageChanged: (Boolean) -> Unit,
     val onPhoneCallerTagsEnabledChanged: (Boolean) -> Unit,
     val onPhoneFermatEnabledChanged: (Boolean) -> Unit,
     val onPhoneExpressoEnabledChanged: (Boolean) -> Unit,
@@ -115,6 +116,7 @@ private data class Interactions(
             onPhoneSonicEnabledChanged = {},
             onPhoneXatuAllowMeteredChanged = {},
             onPhoneXatuEnabledChanged = {},
+            onPhoneXatuPhoneLanguageChanged = {},
             onPhoneCallerTagsEnabledChanged = {},
             onPhoneFermatEnabledChanged = {},
             onPhoneExpressoEnabledChanged = {},
@@ -162,6 +164,7 @@ fun ExperimentsScreen() = ProvidePreferenceLocals {
         onPhoneSonicEnabledChanged = viewModel::onPhoneSonicEnabledChanged,
         onPhoneXatuAllowMeteredChanged = viewModel::onPhoneXatuAllowMeteredChanged,
         onPhoneXatuEnabledChanged = viewModel::onPhoneXatuEnabledChanged,
+        onPhoneXatuPhoneLanguageChanged = viewModel::onPhoneXatuPhoneLanguageChanged,
         onPhoneCallerTagsEnabledChanged = viewModel::onPhoneCallerTagsEnabledChanged,
         onPhoneFermatEnabledChanged = viewModel::onPhoneFermatEnabledChanged,
         onPhoneExpressoEnabledChanged = viewModel::onPhoneExpressoEnabledChanged,
@@ -856,6 +859,31 @@ private fun LoadedContent(state: State.Loaded, interactions: Interactions) {
                 item {
                     Spacer(Modifier.height(2.dp))
                 }
+
+                if (state.directMyCallMenuParserAvailable) {
+                    switchPreference(
+                        modifier = Modifier
+                            .padding(horizontal = 8.dp)
+                            .background(color = surface, shape = xatuShape)
+                            .clip(xatuShape),
+                        value = state.phoneSettings.xatuPhoneLanguage,
+                        key = "phone_flags_xatu_phone_language",
+                        title = { _ ->
+                            Text(
+                                text = stringResource(R.string.screen_experiments_phone_xatu_phone_language),
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                        },
+                        summary = { _ ->
+                            Text(text = stringResource(R.string.screen_experiments_phone_xatu_phone_language_summary))
+                        },
+                        onValueChange = interactions.onPhoneXatuPhoneLanguageChanged
+                    )
+
+                    item {
+                        Spacer(Modifier.height(2.dp))
+                    }
+                }
             }
 
             val callerTagsShape = Shape(phoneFlagsCount, 6)
@@ -1388,7 +1416,8 @@ private fun ContentPreviewLight() {
             takeAMessageTranslationAvailable = false,
             takeAMessagePack = VoicePackRepository.State.Checking,
             holdForMeTranslationAvailable = false,
-            holdForMePack = VoicePackRepository.State.Checking
+            holdForMePack = VoicePackRepository.State.Checking,
+            directMyCallMenuParserAvailable = false
         )
         LoadedContent(state, Interactions.PREVIEW)
     }

@@ -33,7 +33,8 @@ data class PhoneSettings(
     val xatuAllowMetered: Boolean = true,
     val sharpiePhoneLanguage: Boolean = false,
     val atlasPhoneLanguage: Boolean = false,
-    val beeslyPhoneLanguage: Boolean = false
+    val beeslyPhoneLanguage: Boolean = false,
+    val xatuPhoneLanguage: Boolean = false
 ): Parcelable {
 
     /** Only the agentic pack can be built in the phone's language. */
