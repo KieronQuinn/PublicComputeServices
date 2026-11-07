@@ -30,7 +30,9 @@ import java.security.MessageDigest
 import java.util.Locale
 
 /**
- *  Builds a feature's voice pack ([VoicePack]) in the phone's language on the device.
+ *  Builds a voice pack in the phone's language on the device. [VoicePackRepositoryImpl] builds a
+ *  feature's pack ([VoicePack]) from Phone's English zip; [HoldForMeVoiceRepository] records Hold
+ *  for Me's sentences.
  *
  *  The source is the English zip Phone's download manager (MDD) fetched for the feature's group;
  *  it is found by the size and SHA-1 the group records. Its text files are rewritten with the
@@ -38,8 +40,6 @@ import java.util.Locale
  *  text-to-speech engine. Nothing from Google is downloaded or shipped by PCS.
  */
 interface VoicePackRepository {
-
-    val pack: VoicePack
 
     sealed class State {
         /** Not checked yet, or checking. */
@@ -68,7 +68,7 @@ interface VoicePackRepository {
 
 class VoicePackRepositoryImpl(
     private val context: Context,
-    override val pack: VoicePack
+    private val pack: VoicePack
 ) : VoicePackRepository {
 
     companion object {
@@ -88,11 +88,7 @@ class VoicePackRepositoryImpl(
     private val _state = MutableStateFlow<State>(State.Checking)
     override val state = _state.asStateFlow()
 
-    private var _shell: Shell? = null
-    private val shell: Shell
-        get() = _shell ?: Shell.Builder.create().setFlags(Shell.FLAG_MOUNT_MASTER).build().also {
-            _shell = it
-        }
+    private val root = RootShell()
 
     private val workDirectory get() = File(context.cacheDir, pack.assetDirectory)
     private val audioCache get() = File(context.filesDir, "${pack.assetDirectory}/audio")
@@ -346,13 +342,7 @@ class VoicePackRepositoryImpl(
     }
 
     /** Copies a file Phone owns into PCS's cache to read it. */
-    private fun readRoot(path: String): ByteArray {
-        val copy = File(workDirectory.apply { mkdirs() }, "read.tmp")
-        copy.delete()
-        val result = run("cat ${q(path)} > ${q(copy.path)} && chmod 644 ${q(copy.path)}")
-        if (!result.isSuccess || !copy.isFile) error("Unable to read $path")
-        return copy.readBytes().also { copy.delete() }
-    }
+    private fun readRoot(path: String): ByteArray = root.read(path, workDirectory)
 
     /** Copies one entry of a zip Phone owns into PCS's cache to read it; null if it is missing. */
     private fun readRoot(zip: String, entry: String): ByteArray? {
@@ -382,15 +372,7 @@ class VoicePackRepositoryImpl(
         null
     }
 
-    private suspend fun isRootAvailable() = withContext(Dispatchers.IO) {
-        shell.isRoot.also {
-            // A shell opened before root was granted stays unprivileged: retry with a new one.
-            if (!it) {
-                _shell?.close()
-                _shell = null
-            }
-        }
-    }
+    private suspend fun isRootAvailable() = root.isRootAvailable()
 
     private fun contains(haystack: ByteArray, needle: ByteArray): Boolean {
         outer@ for (i in 0..haystack.size - needle.size) {
@@ -403,11 +385,8 @@ class VoicePackRepositoryImpl(
     private fun sha1(text: String) = MessageDigest.getInstance("SHA-1").digest(text.toByteArray())
         .joinToString("") { "%02x".format(it) }
 
-    /** Runs [command] in the root shell. A plain libsu job does not collect stdout, so ask for it. */
-    private fun run(command: String): Shell.Result =
-        shell.newJob().add(command).to(ArrayList()).exec()
+    private fun run(command: String): Shell.Result = root.run(command)
 
-    /** Quotes for sh; paths come from package info and fixed names, but stay safe regardless. */
-    private fun q(value: String) = "'" + value.replace("'", "'\\''") + "'"
+    private fun q(value: String) = RootShell.q(value)
 
 }

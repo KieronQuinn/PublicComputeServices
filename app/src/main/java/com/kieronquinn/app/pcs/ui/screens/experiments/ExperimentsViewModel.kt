@@ -12,6 +12,7 @@ import com.kieronquinn.app.pcs.PcsApplication.Companion.PACKAGE_NAME_PHONE
 import com.kieronquinn.app.pcs.PcsApplication.Companion.PACKAGE_NAME_PSI
 import com.kieronquinn.app.pcs.PcsApplication.Companion.PACKAGE_NAME_TTS
 import com.kieronquinn.app.pcs.model.ClientGroupOverride
+import com.kieronquinn.app.pcs.voicepack.HoldForMePrompts
 import com.kieronquinn.app.pcs.voicepack.VoicePack
 import com.kieronquinn.app.pcs.voicepack.VoicePackTranslations
 import com.kieronquinn.app.pcs.model.phone.PhoneSettings
@@ -57,6 +58,7 @@ abstract class ExperimentsViewModel: ViewModel() {
     abstract fun onPhoneBeeslyRegionChanged(region: BeeslyRegion)
     abstract fun onPhoneBeeslyPhoneLanguageChanged(enabled: Boolean)
     abstract fun onTakeAMessagePackClicked()
+    abstract fun onHoldForMePackClicked()
     abstract fun onPhoneNautilusEnabledChanged(enabled: Boolean)
     abstract fun onPhoneSonicEnabledChanged(enabled: Boolean)
     abstract fun onPhoneXatuAllowMeteredChanged(enabled: Boolean)
@@ -98,7 +100,10 @@ abstract class ExperimentsViewModel: ViewModel() {
             val callScreenPack: VoicePackRepository.State,
             /** Whether PCS ships a Take a Message translation for the phone's language. */
             val takeAMessageTranslationAvailable: Boolean,
-            val takeAMessagePack: VoicePackRepository.State
+            val takeAMessagePack: VoicePackRepository.State,
+            /** Whether PCS ships Hold for Me's sentences for the phone's language. */
+            val holdForMeTranslationAvailable: Boolean,
+            val holdForMePack: VoicePackRepository.State
         ): State()
     }
 
@@ -114,6 +119,7 @@ class ExperimentsViewModelImpl(
     private val phenotypeRepository: PhenotypeRepository,
     private val callScreenPackRepository: VoicePackRepository,
     private val takeAMessagePackRepository: VoicePackRepository,
+    private val holdForMePackRepository: VoicePackRepository,
     settingsRepository: SettingsRepository,
     context: Context
 ): ExperimentsViewModel() {
@@ -284,10 +290,12 @@ class ExperimentsViewModelImpl(
     }
 
     /** Whether PCS ships a translation of [pack] for the phone's language. */
-    private fun isTranslationAvailable(pack: VoicePack) = flow {
+    private fun isTranslationAvailable(pack: VoicePack) = isTranslationAvailable(pack.assetDirectory)
+
+    private fun isTranslationAvailable(assetDirectory: String) = flow {
         emit(
             try {
-                VoicePackTranslations.forPhone(appContext, pack) != null
+                VoicePackTranslations.forPhone(appContext, assetDirectory) != null
             } catch (e: Exception) {
                 false
             }
@@ -315,13 +323,17 @@ class ExperimentsViewModelImpl(
     private data class Packs(
         val callScreen: VoicePackRepository.State,
         val takeAMessageTranslationAvailable: Boolean,
-        val takeAMessage: VoicePackRepository.State
+        val takeAMessage: VoicePackRepository.State,
+        val holdForMeTranslationAvailable: Boolean,
+        val holdForMe: VoicePackRepository.State
     )
 
     private val packs = combine(
         callScreenPackRepository.state,
         isTranslationAvailable(VoicePack.TAKE_A_MESSAGE),
         takeAMessagePackRepository.state,
+        isTranslationAvailable(HoldForMePrompts.ASSET_DIRECTORY),
+        holdForMePackRepository.state,
         ::Packs
     )
 
@@ -345,7 +357,9 @@ class ExperimentsViewModelImpl(
             dobbyRegions = dobbyRegions,
             callScreenPack = packs.callScreen,
             takeAMessageTranslationAvailable = packs.takeAMessageTranslationAvailable,
-            takeAMessagePack = packs.takeAMessage
+            takeAMessagePack = packs.takeAMessage,
+            holdForMeTranslationAvailable = packs.holdForMeTranslationAvailable,
+            holdForMePack = packs.holdForMe
         )
     }.stateIn(viewModelScope, SharingStarted.Eagerly, State.Loading)
 
@@ -412,6 +426,8 @@ class ExperimentsViewModelImpl(
 
     override fun onTakeAMessagePackClicked() = onPackClicked(takeAMessagePackRepository)
 
+    override fun onHoldForMePackClicked() = onPackClicked(holdForMePackRepository)
+
     private fun onPackClicked(repository: VoicePackRepository) {
         when (repository.state.value) {
             is VoicePackRepository.State.Checking,
@@ -436,6 +452,9 @@ class ExperimentsViewModelImpl(
             if (phoneBeeslyEnabled.get() && phoneBeeslyPhoneLanguage.get()) {
                 takeAMessagePackRepository.refresh()
             }
+            if (phoneAtlasEnabled.get() && phoneAtlasPhoneLanguage.get()) {
+                holdForMePackRepository.refresh()
+            }
         }
     }
 
@@ -459,6 +478,7 @@ class ExperimentsViewModelImpl(
             phoneAtlasPhoneLanguage.set(enabled)
             forceStopPhone()
         }
+        if (enabled) holdForMePackRepository.refresh()
     }
 
     override fun onPhoneBeeslyEnabledChanged(enabled: Boolean) {

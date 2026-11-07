@@ -69,6 +69,7 @@ private data class Interactions(
     val onPhoneBeeslyRegionChanged: (BeeslyRegion) -> Unit,
     val onPhoneBeeslyPhoneLanguageChanged: (Boolean) -> Unit,
     val onTakeAMessagePackClicked: () -> Unit,
+    val onHoldForMePackClicked: () -> Unit,
     val onPhoneNautilusEnabledChanged: (Boolean) -> Unit,
     val onPhoneSonicEnabledChanged: (Boolean) -> Unit,
     val onPhoneXatuAllowMeteredChanged: (Boolean) -> Unit,
@@ -109,6 +110,7 @@ private data class Interactions(
             onPhoneBeeslyRegionChanged = {},
             onPhoneBeeslyPhoneLanguageChanged = {},
             onTakeAMessagePackClicked = {},
+            onHoldForMePackClicked = {},
             onPhoneNautilusEnabledChanged = {},
             onPhoneSonicEnabledChanged = {},
             onPhoneXatuAllowMeteredChanged = {},
@@ -155,6 +157,7 @@ fun ExperimentsScreen() = ProvidePreferenceLocals {
         onPhoneBeeslyRegionChanged = viewModel::onPhoneBeeslyRegionChanged,
         onPhoneBeeslyPhoneLanguageChanged = viewModel::onPhoneBeeslyPhoneLanguageChanged,
         onTakeAMessagePackClicked = viewModel::onTakeAMessagePackClicked,
+        onHoldForMePackClicked = viewModel::onHoldForMePackClicked,
         onPhoneNautilusEnabledChanged = viewModel::onPhoneNautilusEnabledChanged,
         onPhoneSonicEnabledChanged = viewModel::onPhoneSonicEnabledChanged,
         onPhoneXatuAllowMeteredChanged = viewModel::onPhoneXatuAllowMeteredChanged,
@@ -580,6 +583,34 @@ private fun LoadedContent(state: State.Loaded, interactions: Interactions) {
 
                 item {
                     Spacer(Modifier.height(2.dp))
+                }
+
+                if (state.phoneSettings.atlasPhoneLanguage && state.holdForMeTranslationAvailable) {
+                    val pack = state.holdForMePack
+                    preference(
+                        modifier = Modifier
+                            .padding(horizontal = 8.dp)
+                            .background(color = surface, shape = atlasShape)
+                            .clip(atlasShape),
+                        key = "phone_flags_atlas_pack",
+                        enabled = pack !is VoicePackRepository.State.Building &&
+                                pack !is VoicePackRepository.State.Checking &&
+                                pack !is VoicePackRepository.State.Unsupported,
+                        title = {
+                            Text(
+                                text = stringResource(R.string.screen_experiments_phone_atlas_pack),
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                        },
+                        summary = {
+                            Text(text = voicePackSummary(pack, R.string.screen_experiments_phone_feature_atlas))
+                        },
+                        onClick = interactions.onHoldForMePackClicked
+                    )
+
+                    item {
+                        Spacer(Modifier.height(2.dp))
+                    }
                 }
             }
 
@@ -1355,7 +1386,9 @@ private fun ContentPreviewLight() {
             dobbyRegions = DobbyRegion.entries,
             callScreenPack = VoicePackRepository.State.Checking,
             takeAMessageTranslationAvailable = false,
-            takeAMessagePack = VoicePackRepository.State.Checking
+            takeAMessagePack = VoicePackRepository.State.Checking,
+            holdForMeTranslationAvailable = false,
+            holdForMePack = VoicePackRepository.State.Checking
         )
         LoadedContent(state, Interactions.PREVIEW)
     }

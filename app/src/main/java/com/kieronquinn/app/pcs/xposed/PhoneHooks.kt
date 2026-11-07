@@ -101,6 +101,7 @@ object PhoneHooks: GrpcHooks() {
             val phoneLocale = application.resources.configuration.locales.get(0)
             SodaLocaleHooks.register(dexKit, classLoader, application, phoneLocale,
                 SodaLocaleHooks.Use("Hold for Me") { phoneLocale.toLanguageTag() })
+            HoldForMeVoiceHooks.install(dexKit, classLoader, application)
         }
         hookDobbySettings(dexKit, settings)
         hookXatuModelDownload(dexKit, settings)

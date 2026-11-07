@@ -3,6 +3,7 @@ package com.kieronquinn.app.pcs
 import android.app.Application
 import com.google.crypto.tink.hybrid.HybridConfig
 import com.kieronquinn.app.pcs.repositories.VoicePackRepository
+import com.kieronquinn.app.pcs.repositories.HoldForMeVoiceRepository
 import com.kieronquinn.app.pcs.repositories.VoicePackRepositoryImpl
 import com.kieronquinn.app.pcs.voicepack.VoicePack
 import com.kieronquinn.app.pcs.repositories.DeviceConfigPropertiesRepository
@@ -49,6 +50,7 @@ class PcsApplication: Application() {
 
     companion object {
         const val PACKAGE_NAME_PCS = "com.google.android.as.oss"
+        private const val HOLD_FOR_ME_VOICE = "HOLD_FOR_ME_VOICE"
         const val PACKAGE_NAME_PHONE = "com.google.android.dialer"
         const val PACKAGE_NAME_PSI = "com.google.android.apps.pixel.psi"
         const val PACKAGE_NAME_TTS = "com.google.android.tts"
@@ -96,6 +98,7 @@ class PcsApplication: Application() {
         VoicePack.entries.forEach { pack ->
             single<VoicePackRepository>(named(pack.name)) { VoicePackRepositoryImpl(get(), pack) }
         }
+        single<VoicePackRepository>(named(HOLD_FOR_ME_VOICE)) { HoldForMeVoiceRepository(get()) }
     }
 
     private fun viewModels() = module {
@@ -110,6 +113,7 @@ class PcsApplication: Application() {
                 get(), get(), get(),
                 get(named(VoicePack.CALL_SCREEN.name)),
                 get(named(VoicePack.TAKE_A_MESSAGE.name)),
+                get(named(HOLD_FOR_ME_VOICE)),
                 get(), get()
             )
         }

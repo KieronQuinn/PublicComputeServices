@@ -86,6 +86,7 @@
     <string name="screen_experiments_phone_feature_dobby_region_phone">Phone language</string>
     <string name="screen_experiments_phone_dobby_pack">Call Screen voice pack</string>
     <string name="screen_experiments_phone_beesly_pack">Take a Message voice pack</string>
+    <string name="screen_experiments_phone_atlas_pack">Hold for Me voice</string>
     <string name="screen_experiments_phone_voice_pack_checking">Checking…</string>
     <string name="screen_experiments_phone_voice_pack_unsupported">%1$s is not translated into %2$s yet</string>
     <string name="screen_experiments_phone_voice_pack_no_root">Root access is needed to build the voice pack. Tap to try again</string>
@@ -196,7 +197,7 @@
     <string name="screen_experiments_phone_atlas_phone_language">Transcribe in Phone Language</string>
     <string name="screen_experiments_phone_beesly_phone_language">Answer in Phone Language</string>
     <string name="screen_experiments_phone_beesly_phone_language_summary">Take a Message greets callers and takes the message in your phone\'s language, with a voice pack built from the phone\'s text-to-speech voice</string>
-    <string name="screen_experiments_phone_atlas_phone_language_summary">Hold for Me transcribes the line in your phone\'s language instead of English. Only applies when on-device speech recognition supports the language; Phone downloads the speech pack itself</string>
+    <string name="screen_experiments_phone_atlas_phone_language_summary">Hold for Me transcribes the line in your phone\'s language instead of English, and speaks to the other party in it once its voice is recorded below. Transcription only applies when on-device speech recognition supports the language; Phone downloads the speech pack itself</string>
     <string name="screen_experiments_phone_sharpie_phone_language_summary">Scam Detection listens to calls in your phone\'s language, even if Google does not support it there yet. Only applies when on-device speech recognition supports the language; Phone downloads the speech pack itself</string>
     <string name="screen_experiments_phone_xatu_allow_metered">Download Direct My Call Models on Mobile Data</string>
     <string name="screen_experiments_phone_xatu_allow_metered_summary">Allow model downloads on metered networks; data charges may apply</string>
