@@ -2,6 +2,9 @@ package com.kieronquinn.app.pcs
 
 import android.app.Application
 import com.google.crypto.tink.hybrid.HybridConfig
+import com.kieronquinn.app.pcs.repositories.VoicePackRepository
+import com.kieronquinn.app.pcs.repositories.VoicePackRepositoryImpl
+import com.kieronquinn.app.pcs.voicepack.VoicePack
 import com.kieronquinn.app.pcs.repositories.DeviceConfigPropertiesRepository
 import com.kieronquinn.app.pcs.repositories.DeviceConfigPropertiesRepositoryImpl
 import com.kieronquinn.app.pcs.repositories.ManifestRepository
@@ -35,6 +38,7 @@ import com.kieronquinn.app.pcs.ui.screens.experiments.ExperimentsViewModelImpl
 import com.kieronquinn.app.pcs.ui.screens.settings.SettingsViewModel
 import com.kieronquinn.app.pcs.ui.screens.settings.SettingsViewModelImpl
 import org.koin.android.ext.koin.androidContext
+import org.koin.core.qualifier.named
 import org.koin.core.context.startKoin
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
@@ -53,16 +57,19 @@ class PcsApplication: Application() {
         const val PACKAGE_NAME_AGENT = "com.google.android.apps.pixel.agent"
     }
 
-    override fun onCreate() {
-        super.onCreate()
-        // Only run extra stuff on main process
-        if (getProcessName() != BuildConfig.APPLICATION_ID) return
+    private var uiInitialized = false
+
+    /** The settings provider can start this process before the first unlock. */
+    @Synchronized
+    fun initializeUi() {
+        if (uiInitialized) return
         System.loadLibrary("sekret")
         HybridConfig.register()
         startKoin {
             androidContext(this@PcsApplication)
             modules(repositories(), viewModels())
         }
+        uiInitialized = true
     }
 
     private fun repositories() = module {
@@ -86,6 +93,9 @@ class PcsApplication: Application() {
         }
         single<UpdateRepository> { UpdateRepositoryImpl(get(), get()) }
         single<SettingsRepository> { SettingsRepositoryImpl(get()) }
+        VoicePack.entries.forEach { pack ->
+            single<VoicePackRepository>(named(pack.name)) { VoicePackRepositoryImpl(get(), pack) }
+        }
     }
 
     private fun viewModels() = module {
@@ -95,7 +105,14 @@ class PcsApplication: Application() {
         viewModel<BaseUrlDialogViewModel> { BaseUrlDialogViewModelImpl(get(), get()) }
         viewModel<BuildLabelViewModel> { BuildLabelViewModelImpl(get()) }
         viewModel<SettingsViewModel> { SettingsViewModelImpl(get(), get(), get(), get(), get(), get(), get(), get()) }
-        viewModel<ExperimentsViewModel> { ExperimentsViewModelImpl(get(), get(), get(), get(), get()) }
+        viewModel<ExperimentsViewModel> {
+            ExperimentsViewModelImpl(
+                get(), get(), get(),
+                get(named(VoicePack.CALL_SCREEN.name)),
+                get(named(VoicePack.TAKE_A_MESSAGE.name)),
+                get(), get()
+            )
+        }
     }
 
     private fun getRetrofit() = Retrofit.Builder()

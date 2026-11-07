@@ -41,7 +41,8 @@ class Xposed: IXposedHookLoadPackage {
                 AiCoreHooks.hook(lpparam)
             }
         }
-        if (lpparam.packageName != BuildConfig.APPLICATION_ID) {
+        if (lpparam.packageName != BuildConfig.APPLICATION_ID &&
+            lpparam.packageName != PACKAGE_NAME_PHONE) {
             DebugHooks.hook(lpparam)
         }
     }
