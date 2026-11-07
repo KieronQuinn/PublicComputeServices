@@ -53,16 +53,19 @@ class PcsApplication: Application() {
         const val PACKAGE_NAME_AGENT = "com.google.android.apps.pixel.agent"
     }
 
-    override fun onCreate() {
-        super.onCreate()
-        // Only run extra stuff on main process
-        if (getProcessName() != BuildConfig.APPLICATION_ID) return
+    private var uiInitialized = false
+
+    /** The settings provider can start this process before the first unlock. */
+    @Synchronized
+    fun initializeUi() {
+        if (uiInitialized) return
         System.loadLibrary("sekret")
         HybridConfig.register()
         startKoin {
             androidContext(this@PcsApplication)
             modules(repositories(), viewModels())
         }
+        uiInitialized = true
     }
 
     private fun repositories() = module {
