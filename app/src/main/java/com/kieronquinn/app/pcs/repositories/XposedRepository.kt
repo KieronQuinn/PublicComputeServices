@@ -8,7 +8,10 @@ import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 
 interface XposedRepository {
 
@@ -27,7 +30,12 @@ interface XposedRepository {
 
 class XposedRepositoryImpl(private val context: Context): XposedRepository {
 
+    companion object {
+        private const val XPOSED_TIMEOUT_MS = 5_000L
+    }
+
     private val scope = MainScope()
+    private val refreshLock = Mutex()
 
     override val state = MutableStateFlow<XposedState>(XposedState.Loading)
 
@@ -37,10 +45,16 @@ class XposedRepositoryImpl(private val context: Context): XposedRepository {
         }
     }
 
-    override suspend fun refreshAndWait() {
+    override suspend fun refreshAndWait() = refreshLock.withLock {
         state.emit(XposedState.Loading)
-        val enabled = withContext(Dispatchers.IO) {
-            getXposedEnabled(context)
+        val enabled = try {
+            withContext(Dispatchers.IO) {
+                withTimeoutOrNull(XPOSED_TIMEOUT_MS) {
+                    getXposedEnabled(context)
+                } ?: false
+            }
+        } catch (e: Throwable) {
+            false
         }
         if (enabled) {
             state.emit(XposedState.Available)

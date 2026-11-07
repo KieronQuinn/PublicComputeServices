@@ -6,7 +6,10 @@ import android.util.Base64
 import com.kieronquinn.app.pcs.repositories.DeviceConfigPropertiesRepository.DeviceConfigEntry
 import com.topjohnwu.superuser.Shell
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import java.io.File
 
 /**
@@ -95,37 +98,57 @@ class DeviceConfigPropertiesRepositoryImpl(context: Context) : DeviceConfigPrope
         private const val OVERRIDE = "device_config override"
         private const val CLEAR = "device_config clear_override"
         private const val SPLIT = "="
+        private const val SHELL_TIMEOUT_MS = 10_000L
     }
 
     private var _shell: Shell? = null
+    private val shellLock = Mutex()
     private val packageManager = context.packageManager
 
     private val shell
-        get() = _shell ?: run {
+        get() = _shell?.takeIf { it.isAlive } ?: run {
+            _shell?.runCatching { close() }
             Shell.Builder.create().setFlags(Shell.FLAG_MOUNT_MASTER).build().also {
                 _shell = it
             }
         }
 
-    override suspend fun isAvailable(): Boolean {
-        return withContext(Dispatchers.IO) {
-            ArrayList<String>().also {
-                shell.newJob().add("whoami").to(it).exec()
-            }.firstOrNull() == "root"
-        }.also {
-            if(!it) {
-                // If we don't have root, always clear the shell for the next retry
-                _shell?.close()
-                _shell = null
-            }
-        }
+    private fun resetShell() {
+        _shell?.runCatching { close() }
+        _shell = null
     }
 
-    override suspend fun getConfig(namespace: String): List<DeviceConfigEntry> {
-        return withContext(Dispatchers.IO) {
-            ArrayList<String>().also {
-                shell.newJob().add("$LIST $namespace").to(it).exec()
-            }.parseNamespaceOutput(namespace)
+    override suspend fun isAvailable(): Boolean = shellLock.withLock {
+        val hasRoot = withContext(Dispatchers.IO) {
+            withTimeoutOrNull(SHELL_TIMEOUT_MS) {
+                runCatching {
+                    ArrayList<String>().also {
+                        shell.newJob().add("whoami").to(it).exec()
+                    }.firstOrNull() == "root"
+                }.getOrDefault(false)
+            } ?: false
+        }
+        if (!hasRoot) {
+            // If we don't have root or timed out, always clear the shell for the next retry
+            resetShell()
+        }
+        hasRoot
+    }
+
+    override suspend fun getConfig(namespace: String): List<DeviceConfigEntry> = shellLock.withLock {
+        withContext(Dispatchers.IO) {
+            withTimeoutOrNull(SHELL_TIMEOUT_MS) {
+                runCatching {
+                    ArrayList<String>().also {
+                        shell.newJob().add("$LIST $namespace").to(it).exec()
+                    }.parseNamespaceOutput(namespace)
+                }.onFailure {
+                    resetShell()
+                }.getOrDefault(emptyList())
+            } ?: run {
+                resetShell()
+                emptyList()
+            }
         }
     }
 
@@ -177,8 +200,8 @@ class DeviceConfigPropertiesRepositoryImpl(context: Context) : DeviceConfigPrope
     private fun ArrayList<String>.parseNamespaceOutput(namespace: String): List<DeviceConfigEntry> {
         return mapNotNull {
             if(!it.contains(SPLIT)) return@mapNotNull null
-            it.split(SPLIT).let { pair ->
-                DeviceConfigEntry(namespace, pair[0], pair[1])
+            it.split(SPLIT, limit = 2).let { pair ->
+                DeviceConfigEntry(namespace, pair[0], pair.getOrNull(1))
             }
         }
     }

@@ -51,6 +51,15 @@ class ContainerViewModelImpl(
         phenotypeRepository.refresh()
     }
 
+    private fun setupNavigation() = viewModelScope.launch {
+        navigationRepository.navigationEvent.collect {
+            if (it.clear) {
+                backStack.clear()
+            }
+            backStack.add(it.destination)
+        }
+    }
+
     private fun setupRoute() = viewModelScope.launch {
         route.collect {
             navigationRepository.navigateTo(it, true)
@@ -58,6 +67,7 @@ class ContainerViewModelImpl(
     }
 
     init {
+        setupNavigation()
         setupRoute()
     }
 

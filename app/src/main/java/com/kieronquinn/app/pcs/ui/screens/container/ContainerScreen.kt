@@ -164,10 +164,6 @@ fun ContainerScreen() = PcsTheme {
 
     LaunchedEffect(Unit) {
         navigationRepository.navigationEvent.collect {
-            if (it.clear) {
-                backStack.clear()
-            }
-            backStack.add(it.destination)
             showMenu = false
         }
     }
