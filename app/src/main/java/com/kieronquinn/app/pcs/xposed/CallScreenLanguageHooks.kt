@@ -143,12 +143,13 @@ internal object CallScreenLanguageHooks {
         phoneLocale: Locale,
         onResolved: (String, CallScreenPackLayout.Pack?) -> Unit
     ): Any? {
-        val group = CallScreenPackLayout.parseGroup(bytes) ?: return null
-        val pack = CallScreenPackLayout.findReadyPack(filesDir, phoneLocale, group)
+        val parsed = CallScreenPackLayout.parseGroup(bytes) ?: return null
+        val pack = CallScreenPackLayout.findReadyPack(filesDir, phoneLocale, parsed)
         activePack = pack
-        onResolved(group.sourceId, pack)
+        onResolved(parsed.sourceId, pack)
         pack ?: return null
         val tag = pack.locale.toLanguageTag().toByteArray()
+        // Rebuild Phone's own proto type, not the parsed summary.
         return replaceEnglishTags(bytes, tag).reflectParseProto(group.javaClass)
     }
 

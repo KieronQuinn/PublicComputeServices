@@ -88,7 +88,8 @@ internal object SodaLocaleHooks {
                     } ?: return
                     param.result = value
                     if (logged.add(tag)) {
-                        log("Speech recognition for ${features.joinToString()} uses $tag instead of Phone's en-US fallback")
+                        // The lookup carries no feature, so name the settings that allowed it.
+                        log("Speech recognition uses $tag instead of Phone's en-US fallback (allowed by ${features.joinToString()})")
                     }
                 }
             }
