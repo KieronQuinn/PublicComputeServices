@@ -31,6 +31,7 @@ day and applying them.
 - Enable Now Playing notification when new Now Playing is enabled, allowing Now Playing history apps to work again
 - Enable debug logging for hooked Google apps, useful for observing features such as Magic Cue
 - Optionally unload AICore's inference service after five minutes of inactivity, freeing model memory
+- Optionally summarise Call Notes in the language of the call instead of English
 
 ## Frequently Asked Questions
 FAQs can be found [here](https://github.com/KieronQuinn/PublicComputeServices/blob/main/app/src/main/res/raw/faq.md). 

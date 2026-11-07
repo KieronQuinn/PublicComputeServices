@@ -88,6 +88,15 @@ Enable **Unload AI models when idle** on the Experiments screen. Make sure
 The inference model will unload after five minutes without a request and load again when needed, so
 the first AI request after unloading may take longer.
 
+## Why are my Call Notes summaries in English?
+
+Google Phone's Call Notes summary model uses an adapter that was only trained on English calls, so
+calls in other languages get an English (and often inaccurate) summary. Enable **Call Notes in the
+call's language** on the Experiments screen, make sure `com.google.android.aicore` is enabled in the
+module's LSPosed scope, then restart AICore or reboot. The adapter is removed from the Call Notes
+model only, and the summary prompt asks for the language of the call. Summaries of English calls
+may read slightly differently.
+
 ## Models aren't downloading!
 
 There's a few possible causes for this:

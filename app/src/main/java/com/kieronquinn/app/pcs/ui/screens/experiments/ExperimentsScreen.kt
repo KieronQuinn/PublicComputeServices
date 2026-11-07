@@ -69,6 +69,7 @@ private data class Interactions(
     val onAsNowPlayingChanged: (Boolean) -> Unit,
     val onAsForceGSAChanged: (Boolean) -> Unit,
     val onAiCoreUnloadInferenceChanged: (Boolean) -> Unit,
+    val onAiCoreCallNotesLanguageChanged: (Boolean) -> Unit,
     val onClearMddClicked: () -> Unit,
     val onPhoneEnabledChanged: (Boolean) -> Unit,
     val onTtsEnabledChanged: (Boolean) -> Unit,
@@ -99,6 +100,7 @@ private data class Interactions(
             onAsNowPlayingChanged = {},
             onAsForceGSAChanged = {},
             onAiCoreUnloadInferenceChanged = {},
+            onAiCoreCallNotesLanguageChanged = {},
             onClearMddClicked = {},
             onPhoneEnabledChanged = {},
             onTtsEnabledChanged = {},
@@ -135,6 +137,7 @@ fun ExperimentsScreen() = ProvidePreferenceLocals {
         onAsNowPlayingChanged = viewModel::onAsNowPlayingChanged,
         onAsForceGSAChanged = viewModel::onAsForceGSAChanged,
         onAiCoreUnloadInferenceChanged = viewModel::onAiCoreUnloadInferenceChanged,
+        onAiCoreCallNotesLanguageChanged = viewModel::onAiCoreCallNotesLanguageChanged,
         onClearMddClicked = viewModel::onClearMddClicked,
         onPhoneEnabledChanged = viewModel::onPhoneEnabledChanged,
         onTtsEnabledChanged = viewModel::onTtsEnabledChanged,
@@ -779,7 +782,8 @@ private fun LoadedContent(state: State.Loaded, interactions: Interactions) {
                 }
             )
 
-            val aicoreShape = Shape(1, 0)
+            val aicoreItemCount = 2
+            val aicoreShape = Shape(aicoreItemCount, 0)
             switchPreference(
                 modifier = Modifier
                     .padding(horizontal = 8.dp)
@@ -801,6 +805,30 @@ private fun LoadedContent(state: State.Loaded, interactions: Interactions) {
                     ))
                 },
                 onValueChange = interactions.onAiCoreUnloadInferenceChanged
+            )
+
+            val callNotesLanguageShape = Shape(aicoreItemCount, 1)
+            switchPreference(
+                modifier = Modifier
+                    .padding(horizontal = 8.dp)
+                    .background(color = surface, shape = callNotesLanguageShape)
+                    .clip(callNotesLanguageShape),
+                value = state.propertiesState.aicoreCallNotesLanguage,
+                key = "aicore_call_notes_language",
+                title = {
+                    Text(
+                        text = stringResource(
+                            R.string.screen_experiments_aicore_call_notes_language_title
+                        ),
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                },
+                summary = {
+                    Text(text = textResource(
+                        R.string.screen_experiments_aicore_call_notes_language_content
+                    ))
+                },
+                onValueChange = interactions.onAiCoreCallNotesLanguageChanged
             )
         }
 
