@@ -101,6 +101,9 @@ object PhoneHooks: GrpcHooks() {
         }?.takeIf { it.isNotBlank() }?.uppercase(Locale.ROOT)
         hookFlagDataStore(dexKit, settings)
         CallNotesHooks.install(dexKit, classLoader, settings.fermatEnabled)
+        if (settings.fermatEnabled && settings.fermatPhoneLanguage) {
+            CallActionsLanguageHooks.install(dexKit, classLoader, application)
+        }
         hookSharpieCountry(dexKit, settings)
         hookSharpieLocale(dexKit, settings, application)
         hookCallScreen(dexKit, settings)

@@ -78,6 +78,7 @@ private data class Interactions(
     val onPhoneAtlasEveryNumberChanged: (Boolean) -> Unit,
     val onPhoneXatuEveryNumberChanged: (Boolean) -> Unit,
     val onPhoneStringsPhoneLanguageChanged: (Boolean) -> Unit,
+    val onPhoneFermatPhoneLanguageChanged: (Boolean) -> Unit,
     val onPhoneCallerTagsEnabledChanged: (Boolean) -> Unit,
     val onPhoneFermatEnabledChanged: (Boolean) -> Unit,
     val onPhoneExpressoEnabledChanged: (Boolean) -> Unit,
@@ -123,6 +124,7 @@ private data class Interactions(
             onPhoneAtlasEveryNumberChanged = {},
             onPhoneXatuEveryNumberChanged = {},
             onPhoneStringsPhoneLanguageChanged = {},
+            onPhoneFermatPhoneLanguageChanged = {},
             onPhoneCallerTagsEnabledChanged = {},
             onPhoneFermatEnabledChanged = {},
             onPhoneExpressoEnabledChanged = {},
@@ -174,6 +176,7 @@ fun ExperimentsScreen() = ProvidePreferenceLocals {
         onPhoneAtlasEveryNumberChanged = viewModel::onPhoneAtlasEveryNumberChanged,
         onPhoneXatuEveryNumberChanged = viewModel::onPhoneXatuEveryNumberChanged,
         onPhoneStringsPhoneLanguageChanged = viewModel::onPhoneStringsPhoneLanguageChanged,
+        onPhoneFermatPhoneLanguageChanged = viewModel::onPhoneFermatPhoneLanguageChanged,
         onPhoneCallerTagsEnabledChanged = viewModel::onPhoneCallerTagsEnabledChanged,
         onPhoneFermatEnabledChanged = viewModel::onPhoneFermatEnabledChanged,
         onPhoneExpressoEnabledChanged = viewModel::onPhoneExpressoEnabledChanged,
@@ -1003,6 +1006,31 @@ private fun LoadedContent(state: State.Loaded, interactions: Interactions) {
                 }
             )
 
+            if (state.phoneSettings.fermatEnabled && state.callNotesTranslationAvailable) {
+                item {
+                    Spacer(Modifier.height(2.dp))
+                }
+
+                switchPreference(
+                    modifier = Modifier
+                        .padding(horizontal = 8.dp)
+                        .background(color = surface, shape = fermatShape)
+                        .clip(fermatShape),
+                    value = state.phoneSettings.fermatPhoneLanguage,
+                    key = "phone_flags_fermat_phone_language",
+                    title = { _ ->
+                        Text(
+                            text = stringResource(R.string.screen_experiments_phone_fermat_phone_language),
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                    },
+                    summary = { _ ->
+                        Text(text = stringResource(R.string.screen_experiments_phone_fermat_phone_language_summary))
+                    },
+                    onValueChange = interactions.onPhoneFermatPhoneLanguageChanged
+                )
+            }
+
             item {
                 Spacer(Modifier.height(2.dp))
             }
@@ -1484,7 +1512,8 @@ private fun ContentPreviewLight() {
             holdForMeTranslationAvailable = false,
             holdForMePack = VoicePackRepository.State.Checking,
             directMyCallMenuParserAvailable = false,
-            phoneStringsTranslationAvailable = false
+            phoneStringsTranslationAvailable = false,
+            callNotesTranslationAvailable = false
         )
         LoadedContent(state, Interactions.PREVIEW)
     }

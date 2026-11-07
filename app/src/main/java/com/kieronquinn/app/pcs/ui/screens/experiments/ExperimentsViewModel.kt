@@ -12,6 +12,8 @@ import com.kieronquinn.app.pcs.PcsApplication.Companion.PACKAGE_NAME_PHONE
 import com.kieronquinn.app.pcs.PcsApplication.Companion.PACKAGE_NAME_PSI
 import com.kieronquinn.app.pcs.PcsApplication.Companion.PACKAGE_NAME_TTS
 import com.kieronquinn.app.pcs.phonestrings.PhoneStrings
+import com.kieronquinn.app.pcs.translation.PhoneLanguageTranslator
+import com.kieronquinn.app.pcs.translation.TranslationModelWorker
 import com.kieronquinn.app.pcs.model.ClientGroupOverride
 import com.kieronquinn.app.pcs.directmycall.MenuParser
 import com.kieronquinn.app.pcs.voicepack.HoldForMePrompts
@@ -70,6 +72,7 @@ abstract class ExperimentsViewModel: ViewModel() {
     abstract fun onPhoneAtlasEveryNumberChanged(enabled: Boolean)
     abstract fun onPhoneXatuEveryNumberChanged(enabled: Boolean)
     abstract fun onPhoneStringsPhoneLanguageChanged(enabled: Boolean)
+    abstract fun onPhoneFermatPhoneLanguageChanged(enabled: Boolean)
     abstract fun onPhoneCallerTagsEnabledChanged(enabled: Boolean)
     abstract fun onPhoneFermatEnabledChanged(enabled: Boolean)
     abstract fun onPhoneExpressoEnabledChanged(enabled: Boolean)
@@ -114,7 +117,9 @@ abstract class ExperimentsViewModel: ViewModel() {
             /** Whether PCS can read phone menus in the phone's language. */
             val directMyCallMenuParserAvailable: Boolean,
             /** Whether PCS ships Phone's English-only text in the phone's language. */
-            val phoneStringsTranslationAvailable: Boolean
+            val phoneStringsTranslationAvailable: Boolean,
+            /** Whether on-device translation into the phone's language is available. */
+            val callNotesTranslationAvailable: Boolean
         ): State()
     }
 
@@ -162,6 +167,7 @@ class ExperimentsViewModelImpl(
     private val phoneAtlasEveryNumber = settingsRepository.phoneAtlasEveryNumber
     private val phoneXatuEveryNumber = settingsRepository.phoneXatuEveryNumber
     private val phoneStringsPhoneLanguage = settingsRepository.phoneStringsPhoneLanguage
+    private val phoneFermatPhoneLanguage = settingsRepository.phoneFermatPhoneLanguage
     private val phoneXatuEnabled = settingsRepository.phoneXatuEnabled
     private val phoneXatuModels = settingsRepository.phoneXatuModels
     private val phoneCallerTagsEnabled = settingsRepository.phoneCallerTagsEnabled
@@ -245,7 +251,8 @@ class ExperimentsViewModelImpl(
         phoneXatuPhoneLanguage.asFlow(),
         phoneAtlasEveryNumber.asFlow(),
         phoneXatuEveryNumber.asFlow(),
-        phoneStringsPhoneLanguage.asFlow()
+        phoneStringsPhoneLanguage.asFlow(),
+        phoneFermatPhoneLanguage.asFlow()
     ) {
         it
     }
@@ -308,7 +315,8 @@ class ExperimentsViewModelImpl(
             xatuPhoneLanguage = booleans[17],
             atlasEveryNumber = booleans[18],
             xatuEveryNumber = booleans[19],
-            stringsPhoneLanguage = booleans[20]
+            stringsPhoneLanguage = booleans[20],
+            fermatPhoneLanguage = booleans[21]
         )
     }
 
@@ -400,7 +408,8 @@ class ExperimentsViewModelImpl(
             holdForMeTranslationAvailable = packs.holdForMeTranslationAvailable,
             holdForMePack = packs.holdForMe,
             directMyCallMenuParserAvailable = MenuParser.forLocale(VoicePackTranslations.phoneLocale()) != null,
-            phoneStringsTranslationAvailable = phoneStringsAvailable
+            phoneStringsTranslationAvailable = phoneStringsAvailable,
+            callNotesTranslationAvailable = PhoneLanguageTranslator.targetLanguage() != null
         )
     }.stateIn(viewModelScope, SharingStarted.Eagerly, State.Loading)
 
@@ -574,6 +583,15 @@ class ExperimentsViewModelImpl(
     override fun onPhoneStringsPhoneLanguageChanged(enabled: Boolean) {
         viewModelScope.launch {
             phoneStringsPhoneLanguage.set(enabled)
+            forceStopPhone()
+        }
+    }
+
+    override fun onPhoneFermatPhoneLanguageChanged(enabled: Boolean) {
+        viewModelScope.launch {
+            phoneFermatPhoneLanguage.set(enabled)
+            // The model is needed before the first call's tasks arrive.
+            if (enabled) TranslationModelWorker.enqueue(appContext)
             forceStopPhone()
         }
     }

@@ -101,7 +101,8 @@ class PhoneSettingsProvider: ContentProvider() {
         xatuPhoneLanguage = settings.phoneXatuPhoneLanguage.getSync(),
         atlasEveryNumber = settings.phoneAtlasEveryNumber.getSync(),
         xatuEveryNumber = settings.phoneXatuEveryNumber.getSync(),
-        stringsPhoneLanguage = settings.phoneStringsPhoneLanguage.getSync()
+        stringsPhoneLanguage = settings.phoneStringsPhoneLanguage.getSync(),
+        fermatPhoneLanguage = settings.phoneFermatPhoneLanguage.getSync()
     )
 
     override fun query(

@@ -52,6 +52,12 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
+        // PCS runs on Pixels, which are all arm64. ML Kit Translation ships a ~17 MB native
+        // library per ABI; the others would only add size.
+        ndk {
+            abiFilters += "arm64-v8a"
+        }
+
         buildConfigField("String", "TAG_NAME", "\"${tagName}\"")
     }
 
@@ -158,6 +164,8 @@ dependencies {
     implementation(libs.grpc.protobuf.lite)
     implementation(libs.protobuf.java)
     implementation(libs.work)
+    implementation(libs.mlkit.translate)
+    implementation(libs.mlkit.language.id)
 
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.material)
