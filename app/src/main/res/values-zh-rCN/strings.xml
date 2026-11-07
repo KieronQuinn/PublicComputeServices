@@ -157,4 +157,18 @@
     <string name="error_no_root">尚未赋予 Root 权限</string>
     <string name="error_no_xposed">Xposed 模块尚未启用，请确认您是否已启用了模块且重启了设备。</string>
     <string name="error_retry">重试</string>
+
+    <string name="screen_experiments_phone_call_screen_mode">来电筛选模型</string>
+    <string name="screen_experiments_phone_call_screen_mode_duplex">经典（Duplex）</string>
+    <string name="screen_experiments_phone_call_screen_mode_agentic">智能代理（需要 AICore）</string>
+    <string name="screen_experiments_phone_dialer_default">Google 电话默认设置</string>
+    <string name="screen_experiments_phone_sharpie_country_mode">诈骗检测国家策略</string>
+    <string name="screen_experiments_phone_sharpie_country_all">允许所有国家</string>
+    <string name="screen_experiments_phone_sharpie_country_selected">仅允许所选国家</string>
+    <string name="screen_experiments_phone_sharpie_country">诈骗检测国家</string>
+    <string name="screen_experiments_phone_sharpie_country_summary">仅允许%1$s；不会更改 SIM 卡国家</string>
+    <string name="screen_experiments_phone_xatu_allow_metered">使用移动数据下载通话菜单转写模型</string>
+    <string name="screen_experiments_phone_xatu_allow_metered_summary">允许通过按流量计费的网络下载模型，可能产生流量费用</string>
+    <string name="screen_experiments_phone_debug_logging">电话调试日志</string>
+    <string name="screen_experiments_phone_debug_logging_summary">记录电话诊断信息，重启电话应用后生效。</string>
 </resources>

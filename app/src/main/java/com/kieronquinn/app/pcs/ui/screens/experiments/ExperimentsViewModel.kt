@@ -18,8 +18,10 @@ import com.kieronquinn.app.pcs.repositories.PhenotypeRepository
 import com.kieronquinn.app.pcs.repositories.PropertiesRepository
 import com.kieronquinn.app.pcs.repositories.SettingsRepository
 import com.kieronquinn.app.pcs.repositories.SettingsRepository.BeeslyRegion
+import com.kieronquinn.app.pcs.repositories.SettingsRepository.CallScreenMode
 import com.kieronquinn.app.pcs.repositories.SettingsRepository.DobbyRegion
 import com.kieronquinn.app.pcs.repositories.SettingsRepository.PatrickPhase
+import com.kieronquinn.app.pcs.repositories.SettingsRepository.SharpieCountryMode
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -34,7 +36,12 @@ abstract class ExperimentsViewModel: ViewModel() {
     abstract val state: StateFlow<State>
     abstract val events: Flow<Event>
 
+    abstract fun onPhoneDebugLoggingChanged(enabled: Boolean)
+    abstract fun onPhoneCallScreenModeChanged(mode: CallScreenMode)
+    abstract fun onPhoneSharpieCountryModeChanged(mode: SharpieCountryMode)
+    abstract fun onPhoneSharpieCountryChanged(country: String)
     abstract fun onPhoneSharpieEnabledChanged(enabled: Boolean)
+    abstract fun onPhoneSharpiePhoneLanguageChanged(enabled: Boolean)
     abstract fun onPhoneDobbyEnabledChanged(enabled: Boolean)
     abstract fun onPhoneDobbyRegionChanged(region: DobbyRegion)
     abstract fun onPhoneAtlasEnabledChanged(enabled: Boolean)
@@ -42,6 +49,7 @@ abstract class ExperimentsViewModel: ViewModel() {
     abstract fun onPhoneBeeslyRegionChanged(region: BeeslyRegion)
     abstract fun onPhoneNautilusEnabledChanged(enabled: Boolean)
     abstract fun onPhoneSonicEnabledChanged(enabled: Boolean)
+    abstract fun onPhoneXatuAllowMeteredChanged(enabled: Boolean)
     abstract fun onPhoneXatuEnabledChanged(enabled: Boolean)
     abstract fun onPhoneCallerTagsEnabledChanged(enabled: Boolean)
     abstract fun onPhoneFermatEnabledChanged(enabled: Boolean)
@@ -92,7 +100,14 @@ class ExperimentsViewModelImpl(
     context: Context
 ): ExperimentsViewModel() {
 
+    private val phoneManifestHandlingEnabled = settingsRepository.phoneManifestHandlingEnabled
+    private val phoneDebugLogging = settingsRepository.phoneDebugLogging
+
+    private val phoneCallScreenMode = settingsRepository.phoneCallScreenMode
+    private val phoneSharpieCountryMode = settingsRepository.phoneSharpieCountryMode
+    private val phoneSharpieCountry = settingsRepository.phoneSharpieCountry
     private val phoneSharpieEnabled = settingsRepository.phoneSharpieEnabled
+    private val phoneSharpiePhoneLanguage = settingsRepository.phoneSharpiePhoneLanguage
     private val phoneDobbyEnabled = settingsRepository.phoneDobbyEnabled
     private val phoneDobbyRegion = settingsRepository.phoneDobbyRegion
     private val phoneDobbyUrl = settingsRepository.phoneDobbyUrl
@@ -104,6 +119,7 @@ class ExperimentsViewModelImpl(
     private val phoneBeesly = settingsRepository.phoneBeesly
     private val phoneNautilusEnabled = settingsRepository.phoneNautilusEnabled
     private val phoneSonicEnabled = settingsRepository.phoneSonicEnabled
+    private val phoneXatuAllowMetered = settingsRepository.phoneXatuAllowMetered
     private val phoneXatuEnabled = settingsRepository.phoneXatuEnabled
     private val phoneXatuModels = settingsRepository.phoneXatuModels
     private val phoneCallerTagsEnabled = settingsRepository.phoneCallerTagsEnabled
@@ -177,7 +193,11 @@ class ExperimentsViewModelImpl(
         phoneCallerTagsEnabled.asFlow(),
         phoneFermatEnabled.asFlow(),
         phoneExpressoEnabled.asFlow(),
-        phoneCallRecordingEnabled.asFlow()
+        phoneCallRecordingEnabled.asFlow(),
+        phoneXatuAllowMetered.asFlow(),
+        phoneManifestHandlingEnabled.asFlow(),
+        phoneDebugLogging.asFlow(),
+        phoneSharpiePhoneLanguage.asFlow()
     ) {
         it
     }
@@ -185,7 +205,9 @@ class ExperimentsViewModelImpl(
     private val phoneEnumSettings = combine(
         phoneDobbyRegion.asFlow(),
         phoneBeeslyRegion.asFlow(),
-        phonePatrickPhase.asFlow()
+        phonePatrickPhase.asFlow(),
+        phoneCallScreenMode.asFlow(),
+        phoneSharpieCountryMode.asFlow()
     ) {
         it
     }
@@ -195,7 +217,8 @@ class ExperimentsViewModelImpl(
         phoneBeesly.asFlow(),
         phoneDobbyDuplexFiles.asFlow(),
         phoneAtlasModels.asFlow(),
-        phoneXatuModels.asFlow()
+        phoneXatuModels.asFlow(),
+        phoneSharpieCountry.asFlow()
     ) {
         it
     }
@@ -224,7 +247,14 @@ class ExperimentsViewModelImpl(
             booleans[8],
             booleans[9],
             enums[2] as PatrickPhase,
-            booleans[10]
+            booleans[10],
+            callScreenMode = enums[3] as CallScreenMode,
+            sharpieCountryMode = enums[4] as SharpieCountryMode,
+            sharpieCountry = strings[5],
+            xatuAllowMetered = booleans[11],
+            manifestHandlingEnabled = booleans[12],
+            debugLogging = booleans[13],
+            sharpiePhoneLanguage = booleans[14]
         )
     }
 
@@ -258,9 +288,44 @@ class ExperimentsViewModelImpl(
 
     override val events = MutableSharedFlow<Event>()
 
+    override fun onPhoneDebugLoggingChanged(enabled: Boolean) {
+        viewModelScope.launch {
+            phoneDebugLogging.set(enabled)
+            forceStopPhone()
+        }
+    }
+
+    override fun onPhoneCallScreenModeChanged(mode: CallScreenMode) {
+        viewModelScope.launch {
+            phoneCallScreenMode.set(mode)
+            forceStopPhone()
+        }
+    }
+
+    override fun onPhoneSharpieCountryModeChanged(mode: SharpieCountryMode) {
+        viewModelScope.launch {
+            phoneSharpieCountryMode.set(mode)
+            forceStopPhone()
+        }
+    }
+
+    override fun onPhoneSharpieCountryChanged(country: String) {
+        viewModelScope.launch {
+            phoneSharpieCountry.set(country)
+            forceStopPhone()
+        }
+    }
+
     override fun onPhoneSharpieEnabledChanged(enabled: Boolean) {
         viewModelScope.launch {
             phoneSharpieEnabled.set(enabled)
+            forceStopPhone()
+        }
+    }
+
+    override fun onPhoneSharpiePhoneLanguageChanged(enabled: Boolean) {
+        viewModelScope.launch {
+            phoneSharpiePhoneLanguage.set(enabled)
             forceStopPhone()
         }
     }
@@ -310,6 +375,13 @@ class ExperimentsViewModelImpl(
     override fun onPhoneSonicEnabledChanged(enabled: Boolean) {
         viewModelScope.launch {
             phoneSonicEnabled.set(enabled)
+            forceStopPhone()
+        }
+    }
+
+    override fun onPhoneXatuAllowMeteredChanged(enabled: Boolean) {
+        viewModelScope.launch {
+            phoneXatuAllowMetered.set(enabled)
             forceStopPhone()
         }
     }
@@ -400,7 +472,8 @@ class ExperimentsViewModelImpl(
 
     override fun onPhoneEnabledChanged(enabled: Boolean) {
         viewModelScope.launch {
-            propertiesRepository.setPhoneEnabled(enabled)
+            phoneManifestHandlingEnabled.set(enabled)
+            forceStopPhone()
         }
     }
 
