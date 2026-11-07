@@ -1,11 +1,11 @@
-package com.kieronquinn.app.pcs.callscreen.pack
+package com.kieronquinn.app.pcs.voicepack
 
-import com.kieronquinn.app.pcs.callscreen.pack.ProtoWire.Field
-import com.kieronquinn.app.pcs.callscreen.pack.ProtoWire.LENGTH_DELIMITED
+import com.kieronquinn.app.pcs.voicepack.ProtoWire.Field
+import com.kieronquinn.app.pcs.voicepack.ProtoWire.LENGTH_DELIMITED
 
 /**
- *  Rewrites the text files of Phone's agentic Call Screen pack ("dobby-duplex-files") into another
- *  language. Only the fields below change; every other byte is preserved.
+ *  Rewrites the text files of a Phone voice pack ([VoicePack]) into another language. Only the
+ *  fields below change; every other byte is preserved.
  *
  *  - `*_robot_intent_specs.pb`: top field 3 is an intent (1 = name). Intent field 11 is what the
  *    bot says: its field 2 is a prompt (1 = audio path, 2 = text) and field 15 the locale. Intent
@@ -15,9 +15,9 @@ import com.kieronquinn.app.pcs.callscreen.pack.ProtoWire.LENGTH_DELIMITED
  *  - In every file, English locale tags are replaced wherever they appear as a whole string
  *    field. Lengths are re-encoded, so target tags of any length are safe.
  *
- *  Audio is not handled here: [CallScreenPackBuilder] synthesises one file per prompt path.
+ *  Audio is not handled here: [VoicePackRepository] synthesises one file per prompt path.
  */
-internal class CallScreenPackRewriter(private val translation: CallScreenTranslation) {
+internal class VoicePackRewriter(private val translation: VoicePackTranslation) {
 
     class Result(val bytes: ByteArray, val untranslated: List<String>)
 
@@ -87,6 +87,8 @@ internal class CallScreenPackRewriter(private val translation: CallScreenTransla
         untranslated: MutableList<String>
     ): Field {
         val english = ProtoWire.text(field) ?: return field
+        // Silences and keypad tones keep their recording, and their text describes no speech.
+        if (path != null && VoicePack.keepsSourceRecording(path)) return field
         val translated = translation.translate(path, english)
         if (translated == null) {
             if (!isKeypad(english)) untranslated += "$intent: $english"

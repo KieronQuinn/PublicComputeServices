@@ -96,7 +96,8 @@ class PhoneSettingsProvider: ContentProvider() {
         debugLogging = settings.phoneDebugLogging.getSync(),
         xatuAllowMetered = settings.phoneXatuAllowMetered.getSync(),
         sharpiePhoneLanguage = settings.phoneSharpiePhoneLanguage.getSync(),
-        atlasPhoneLanguage = settings.phoneAtlasPhoneLanguage.getSync()
+        atlasPhoneLanguage = settings.phoneAtlasPhoneLanguage.getSync(),
+        beeslyPhoneLanguage = settings.phoneBeeslyPhoneLanguage.getSync()
     )
 
     override fun query(

@@ -1,4 +1,4 @@
-package com.kieronquinn.app.pcs.callscreen.pack
+package com.kieronquinn.app.pcs.voicepack
 
 import java.io.ByteArrayOutputStream
 import java.nio.ByteBuffer
@@ -12,13 +12,11 @@ import kotlin.math.sin
 import kotlin.math.sqrt
 
 /**
- *  16-bit PCM WAV reading, resampling and writing. Call Screen plays its recordings as 32 kHz mono
- *  16-bit PCM; text-to-speech engines write other rates (Google TTS writes 24 kHz), and a recording
- *  at the wrong rate plays at the wrong speed and pitch.
+ *  16-bit PCM WAV reading, resampling and writing. Voice packs hold mono 16-bit PCM recordings at
+ *  the pack's rate ([VoicePack.sampleRate]); text-to-speech engines write other rates (Google TTS
+ *  writes 24 kHz), so recordings are converted to the pack's rate.
  */
 internal object WavAudio {
-
-    const val CALL_SCREEN_SAMPLE_RATE = 32_000
 
     class InvalidException(message: String) : Exception(message)
 

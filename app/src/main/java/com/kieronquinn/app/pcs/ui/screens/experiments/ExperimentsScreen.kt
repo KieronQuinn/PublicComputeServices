@@ -3,6 +3,7 @@ package com.kieronquinn.app.pcs.ui.screens.experiments
 import android.content.Context
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import android.widget.Toast
+import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -29,7 +30,7 @@ import androidx.compose.ui.unit.dp
 import com.kieronquinn.app.pcs.R
 import com.kieronquinn.app.pcs.model.ClientGroupOverride
 import com.kieronquinn.app.pcs.model.phone.PhoneSettings
-import com.kieronquinn.app.pcs.repositories.CallScreenPackRepository
+import com.kieronquinn.app.pcs.repositories.VoicePackRepository
 import com.kieronquinn.app.pcs.repositories.PropertiesRepository
 import com.kieronquinn.app.pcs.repositories.SettingsRepository.BeeslyRegion
 import com.kieronquinn.app.pcs.repositories.SettingsRepository.CallScreenMode
@@ -66,6 +67,8 @@ private data class Interactions(
     val onPhoneAtlasPhoneLanguageChanged: (Boolean) -> Unit,
     val onPhoneBeeslyEnabledChanged: (Boolean) -> Unit,
     val onPhoneBeeslyRegionChanged: (BeeslyRegion) -> Unit,
+    val onPhoneBeeslyPhoneLanguageChanged: (Boolean) -> Unit,
+    val onTakeAMessagePackClicked: () -> Unit,
     val onPhoneNautilusEnabledChanged: (Boolean) -> Unit,
     val onPhoneSonicEnabledChanged: (Boolean) -> Unit,
     val onPhoneXatuAllowMeteredChanged: (Boolean) -> Unit,
@@ -104,6 +107,8 @@ private data class Interactions(
             onPhoneAtlasPhoneLanguageChanged = {},
             onPhoneBeeslyEnabledChanged = {},
             onPhoneBeeslyRegionChanged = {},
+            onPhoneBeeslyPhoneLanguageChanged = {},
+            onTakeAMessagePackClicked = {},
             onPhoneNautilusEnabledChanged = {},
             onPhoneSonicEnabledChanged = {},
             onPhoneXatuAllowMeteredChanged = {},
@@ -148,6 +153,8 @@ fun ExperimentsScreen() = ProvidePreferenceLocals {
         onPhoneAtlasPhoneLanguageChanged = viewModel::onPhoneAtlasPhoneLanguageChanged,
         onPhoneBeeslyEnabledChanged = viewModel::onPhoneBeeslyEnabledChanged,
         onPhoneBeeslyRegionChanged = viewModel::onPhoneBeeslyRegionChanged,
+        onPhoneBeeslyPhoneLanguageChanged = viewModel::onPhoneBeeslyPhoneLanguageChanged,
+        onTakeAMessagePackClicked = viewModel::onTakeAMessagePackClicked,
         onPhoneNautilusEnabledChanged = viewModel::onPhoneNautilusEnabledChanged,
         onPhoneSonicEnabledChanged = viewModel::onPhoneSonicEnabledChanged,
         onPhoneXatuAllowMeteredChanged = viewModel::onPhoneXatuAllowMeteredChanged,
@@ -201,30 +208,31 @@ private fun handleEvent(context: Context, event: Event) {
 }
 
 @Composable
-private fun callScreenPackSummary(pack: CallScreenPackRepository.State): String {
+/** The pack row's summary; [feature] is the feature's name, as shown in its switch. */
+private fun voicePackSummary(pack: VoicePackRepository.State, @StringRes feature: Int): String {
     fun Locale.label() = getDisplayName(this)
     return when (pack) {
-        CallScreenPackRepository.State.Checking ->
-            stringResource(R.string.screen_experiments_phone_dobby_pack_checking)
-        is CallScreenPackRepository.State.Unsupported ->
-            stringResource(R.string.screen_experiments_phone_dobby_pack_unsupported, pack.locale.label())
-        CallScreenPackRepository.State.NoRoot ->
-            stringResource(R.string.screen_experiments_phone_dobby_pack_no_root)
-        is CallScreenPackRepository.State.NoVoice ->
-            stringResource(R.string.screen_experiments_phone_dobby_pack_no_voice, pack.locale.label())
-        is CallScreenPackRepository.State.NoSource ->
-            stringResource(R.string.screen_experiments_phone_dobby_pack_no_source)
-        is CallScreenPackRepository.State.NotBuilt -> stringResource(
-            if (pack.outdated) R.string.screen_experiments_phone_dobby_pack_outdated
-            else R.string.screen_experiments_phone_dobby_pack_not_built,
+        VoicePackRepository.State.Checking ->
+            stringResource(R.string.screen_experiments_phone_voice_pack_checking)
+        is VoicePackRepository.State.Unsupported ->
+            stringResource(R.string.screen_experiments_phone_voice_pack_unsupported, stringResource(feature), pack.locale.label())
+        VoicePackRepository.State.NoRoot ->
+            stringResource(R.string.screen_experiments_phone_voice_pack_no_root)
+        is VoicePackRepository.State.NoVoice ->
+            stringResource(R.string.screen_experiments_phone_voice_pack_no_voice, pack.locale.label())
+        is VoicePackRepository.State.NoSource ->
+            stringResource(R.string.screen_experiments_phone_voice_pack_no_source, stringResource(feature))
+        is VoicePackRepository.State.NotBuilt -> stringResource(
+            if (pack.outdated) R.string.screen_experiments_phone_voice_pack_outdated
+            else R.string.screen_experiments_phone_voice_pack_not_built,
             pack.locale.label()
         )
-        is CallScreenPackRepository.State.Building ->
-            stringResource(R.string.screen_experiments_phone_dobby_pack_building, pack.done, pack.total)
-        is CallScreenPackRepository.State.Ready ->
-            stringResource(R.string.screen_experiments_phone_dobby_pack_ready, pack.locale.label(), pack.voice)
-        is CallScreenPackRepository.State.Failed ->
-            stringResource(R.string.screen_experiments_phone_dobby_pack_failed, pack.message)
+        is VoicePackRepository.State.Building ->
+            stringResource(R.string.screen_experiments_phone_voice_pack_building, pack.done, pack.total)
+        is VoicePackRepository.State.Ready ->
+            stringResource(R.string.screen_experiments_phone_voice_pack_ready, pack.locale.label(), pack.voice)
+        is VoicePackRepository.State.Failed ->
+            stringResource(R.string.screen_experiments_phone_voice_pack_failed, pack.message)
     }
 }
 
@@ -490,9 +498,9 @@ private fun LoadedContent(state: State.Loaded, interactions: Interactions) {
                             .background(color = surface, shape = packShape)
                             .clip(packShape),
                         key = "phone_flags_dobby_pack",
-                        enabled = pack !is CallScreenPackRepository.State.Building &&
-                                pack !is CallScreenPackRepository.State.Checking &&
-                                pack !is CallScreenPackRepository.State.Unsupported,
+                        enabled = pack !is VoicePackRepository.State.Building &&
+                                pack !is VoicePackRepository.State.Checking &&
+                                pack !is VoicePackRepository.State.Unsupported,
                         title = {
                             Text(
                                 text = stringResource(R.string.screen_experiments_phone_dobby_pack),
@@ -500,7 +508,7 @@ private fun LoadedContent(state: State.Loaded, interactions: Interactions) {
                             )
                         },
                         summary = {
-                            Text(text = callScreenPackSummary(pack))
+                            Text(text = voicePackSummary(pack, R.string.screen_experiments_phone_feature_dobby))
                         },
                         onClick = interactions.onCallScreenPackClicked
                     )
@@ -643,6 +651,61 @@ private fun LoadedContent(state: State.Loaded, interactions: Interactions) {
 
                 item {
                     Spacer(Modifier.height(2.dp))
+                }
+
+                // Keep the switch while it is on, so it can be turned off without a translation.
+                val beeslyPhoneLanguage = state.phoneSettings.beeslyPhoneLanguage
+                if (state.takeAMessageTranslationAvailable || beeslyPhoneLanguage) {
+                    switchPreference(
+                        modifier = Modifier
+                            .padding(horizontal = 8.dp)
+                            .background(color = surface, shape = beeslyRegionShape)
+                            .clip(beeslyRegionShape),
+                        value = beeslyPhoneLanguage,
+                        key = "phone_flags_beesly_phone_language",
+                        title = { _ ->
+                            Text(
+                                text = stringResource(R.string.screen_experiments_phone_beesly_phone_language),
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                        },
+                        summary = { _ ->
+                            Text(text = stringResource(R.string.screen_experiments_phone_beesly_phone_language_summary))
+                        },
+                        onValueChange = interactions.onPhoneBeeslyPhoneLanguageChanged
+                    )
+
+                    item {
+                        Spacer(Modifier.height(2.dp))
+                    }
+                }
+
+                if (beeslyPhoneLanguage) {
+                    val pack = state.takeAMessagePack
+                    preference(
+                        modifier = Modifier
+                            .padding(horizontal = 8.dp)
+                            .background(color = surface, shape = beeslyRegionShape)
+                            .clip(beeslyRegionShape),
+                        key = "phone_flags_beesly_pack",
+                        enabled = pack !is VoicePackRepository.State.Building &&
+                                pack !is VoicePackRepository.State.Checking &&
+                                pack !is VoicePackRepository.State.Unsupported,
+                        title = {
+                            Text(
+                                text = stringResource(R.string.screen_experiments_phone_beesly_pack),
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                        },
+                        summary = {
+                            Text(text = voicePackSummary(pack, R.string.screen_experiments_phone_feature_beesly))
+                        },
+                        onClick = interactions.onTakeAMessagePackClicked
+                    )
+
+                    item {
+                        Spacer(Modifier.height(2.dp))
+                    }
                 }
             }
 
@@ -1290,7 +1353,9 @@ private fun ContentPreviewLight() {
             ),
             propertiesState = PropertiesRepository.State(),
             dobbyRegions = DobbyRegion.entries,
-            callScreenPack = CallScreenPackRepository.State.Checking
+            callScreenPack = VoicePackRepository.State.Checking,
+            takeAMessageTranslationAvailable = false,
+            takeAMessagePack = VoicePackRepository.State.Checking
         )
         LoadedContent(state, Interactions.PREVIEW)
     }

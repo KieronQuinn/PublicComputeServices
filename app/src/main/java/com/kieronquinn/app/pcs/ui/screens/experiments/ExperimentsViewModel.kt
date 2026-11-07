@@ -12,9 +12,10 @@ import com.kieronquinn.app.pcs.PcsApplication.Companion.PACKAGE_NAME_PHONE
 import com.kieronquinn.app.pcs.PcsApplication.Companion.PACKAGE_NAME_PSI
 import com.kieronquinn.app.pcs.PcsApplication.Companion.PACKAGE_NAME_TTS
 import com.kieronquinn.app.pcs.model.ClientGroupOverride
-import com.kieronquinn.app.pcs.callscreen.pack.CallScreenTranslations
+import com.kieronquinn.app.pcs.voicepack.VoicePack
+import com.kieronquinn.app.pcs.voicepack.VoicePackTranslations
 import com.kieronquinn.app.pcs.model.phone.PhoneSettings
-import com.kieronquinn.app.pcs.repositories.CallScreenPackRepository
+import com.kieronquinn.app.pcs.repositories.VoicePackRepository
 import com.kieronquinn.app.pcs.repositories.DeviceConfigPropertiesRepository
 import com.kieronquinn.app.pcs.repositories.PhenotypeRepository
 import com.kieronquinn.app.pcs.repositories.PropertiesRepository
@@ -54,6 +55,8 @@ abstract class ExperimentsViewModel: ViewModel() {
     abstract fun onPhoneAtlasPhoneLanguageChanged(enabled: Boolean)
     abstract fun onPhoneBeeslyEnabledChanged(enabled: Boolean)
     abstract fun onPhoneBeeslyRegionChanged(region: BeeslyRegion)
+    abstract fun onPhoneBeeslyPhoneLanguageChanged(enabled: Boolean)
+    abstract fun onTakeAMessagePackClicked()
     abstract fun onPhoneNautilusEnabledChanged(enabled: Boolean)
     abstract fun onPhoneSonicEnabledChanged(enabled: Boolean)
     abstract fun onPhoneXatuAllowMeteredChanged(enabled: Boolean)
@@ -92,7 +95,10 @@ abstract class ExperimentsViewModel: ViewModel() {
             val propertiesState: PropertiesRepository.State,
             /** Regions offered for Call Screen; [DobbyRegion.PHONE] only with a translation. */
             val dobbyRegions: List<DobbyRegion>,
-            val callScreenPack: CallScreenPackRepository.State
+            val callScreenPack: VoicePackRepository.State,
+            /** Whether PCS ships a Take a Message translation for the phone's language. */
+            val takeAMessageTranslationAvailable: Boolean,
+            val takeAMessagePack: VoicePackRepository.State
         ): State()
     }
 
@@ -106,11 +112,13 @@ class ExperimentsViewModelImpl(
     private val propertiesRepository: PropertiesRepository,
     private val deviceConfigPropertiesRepository: DeviceConfigPropertiesRepository,
     private val phenotypeRepository: PhenotypeRepository,
-    private val callScreenPackRepository: CallScreenPackRepository,
+    private val callScreenPackRepository: VoicePackRepository,
+    private val takeAMessagePackRepository: VoicePackRepository,
     settingsRepository: SettingsRepository,
     context: Context
 ): ExperimentsViewModel() {
 
+    private val appContext: Context = context.applicationContext
     private val phoneManifestHandlingEnabled = settingsRepository.phoneManifestHandlingEnabled
     private val phoneDebugLogging = settingsRepository.phoneDebugLogging
 
@@ -129,6 +137,7 @@ class ExperimentsViewModelImpl(
     private val phoneBeeslyEnabled = settingsRepository.phoneBeeslyEnabled
     private val phoneBeeslyRegion = settingsRepository.phoneBeeslyRegion
     private val phoneBeesly = settingsRepository.phoneBeesly
+    private val phoneBeeslyPhoneLanguage = settingsRepository.phoneBeeslyPhoneLanguage
     private val phoneNautilusEnabled = settingsRepository.phoneNautilusEnabled
     private val phoneSonicEnabled = settingsRepository.phoneSonicEnabled
     private val phoneXatuAllowMetered = settingsRepository.phoneXatuAllowMetered
@@ -210,7 +219,8 @@ class ExperimentsViewModelImpl(
         phoneManifestHandlingEnabled.asFlow(),
         phoneDebugLogging.asFlow(),
         phoneSharpiePhoneLanguage.asFlow(),
-        phoneAtlasPhoneLanguage.asFlow()
+        phoneAtlasPhoneLanguage.asFlow(),
+        phoneBeeslyPhoneLanguage.asFlow()
     ) {
         it
     }
@@ -268,20 +278,23 @@ class ExperimentsViewModelImpl(
             manifestHandlingEnabled = booleans[12],
             debugLogging = booleans[13],
             sharpiePhoneLanguage = booleans[14],
-            atlasPhoneLanguage = booleans[15]
+            atlasPhoneLanguage = booleans[15],
+            beeslyPhoneLanguage = booleans[16]
         )
     }
 
-    /** Whether PCS ships a Call Screen translation for the phone's language. */
-    private val isPhoneLanguageCallScreenAvailable = flow {
+    /** Whether PCS ships a translation of [pack] for the phone's language. */
+    private fun isTranslationAvailable(pack: VoicePack) = flow {
         emit(
             try {
-                CallScreenTranslations.forPhone(context) != null
+                VoicePackTranslations.forPhone(appContext, pack) != null
             } catch (e: Exception) {
                 false
             }
         )
     }.flowOn(Dispatchers.IO)
+
+    private val isPhoneLanguageCallScreenAvailable = isTranslationAvailable(VoicePack.CALL_SCREEN)
 
     private val dobbyRegions = isPhoneLanguageCallScreenAvailable.combine(phoneDobbyRegion.asFlow()) {
             available, selected ->
@@ -299,13 +312,26 @@ class ExperimentsViewModelImpl(
         it
     }
 
+    private data class Packs(
+        val callScreen: VoicePackRepository.State,
+        val takeAMessageTranslationAvailable: Boolean,
+        val takeAMessage: VoicePackRepository.State
+    )
+
+    private val packs = combine(
+        callScreenPackRepository.state,
+        isTranslationAvailable(VoicePack.TAKE_A_MESSAGE),
+        takeAMessagePackRepository.state,
+        ::Packs
+    )
+
     override val state = combine(
         packageStates,
         propertiesRepository.state,
         phoneSettings,
         dobbyRegions,
-        callScreenPackRepository.state
-    ) { packageStates, propertiesState, phoneSettings, dobbyRegions, callScreenPack ->
+        packs
+    ) { packageStates, propertiesState, phoneSettings, dobbyRegions, packs ->
         val (isAgentAvailable, isPhoneAvailable, magicCueAvailable, nowPlayingAvailable,
             isAiCoreAvailable) = packageStates
         State.Loaded(
@@ -317,7 +343,9 @@ class ExperimentsViewModelImpl(
             phoneSettings = phoneSettings,
             propertiesState = propertiesState,
             dobbyRegions = dobbyRegions,
-            callScreenPack = callScreenPack
+            callScreenPack = packs.callScreen,
+            takeAMessageTranslationAvailable = packs.takeAMessageTranslationAvailable,
+            takeAMessagePack = packs.takeAMessage
         )
     }.stateIn(viewModelScope, SharingStarted.Eagerly, State.Loading)
 
@@ -380,17 +408,21 @@ class ExperimentsViewModelImpl(
         if (region == DobbyRegion.PHONE) callScreenPackRepository.refresh()
     }
 
-    override fun onCallScreenPackClicked() {
-        when (callScreenPackRepository.state.value) {
-            is CallScreenPackRepository.State.Checking,
-            is CallScreenPackRepository.State.Building,
-            is CallScreenPackRepository.State.Unsupported -> Unit
-            is CallScreenPackRepository.State.NoRoot,
-            is CallScreenPackRepository.State.NoVoice,
-            is CallScreenPackRepository.State.NoSource -> callScreenPackRepository.refresh()
-            is CallScreenPackRepository.State.NotBuilt,
-            is CallScreenPackRepository.State.Ready,
-            is CallScreenPackRepository.State.Failed -> callScreenPackRepository.build()
+    override fun onCallScreenPackClicked() = onPackClicked(callScreenPackRepository)
+
+    override fun onTakeAMessagePackClicked() = onPackClicked(takeAMessagePackRepository)
+
+    private fun onPackClicked(repository: VoicePackRepository) {
+        when (repository.state.value) {
+            is VoicePackRepository.State.Checking,
+            is VoicePackRepository.State.Building,
+            is VoicePackRepository.State.Unsupported -> Unit
+            is VoicePackRepository.State.NoRoot,
+            is VoicePackRepository.State.NoVoice,
+            is VoicePackRepository.State.NoSource -> repository.refresh()
+            is VoicePackRepository.State.NotBuilt,
+            is VoicePackRepository.State.Ready,
+            is VoicePackRepository.State.Failed -> repository.build()
         }
     }
 
@@ -401,7 +433,18 @@ class ExperimentsViewModelImpl(
             if (phoneDobbyEnabled.get() && phoneDobbyRegion.get() == DobbyRegion.PHONE) {
                 callScreenPackRepository.refresh()
             }
+            if (phoneBeeslyEnabled.get() && phoneBeeslyPhoneLanguage.get()) {
+                takeAMessagePackRepository.refresh()
+            }
         }
+    }
+
+    override fun onPhoneBeeslyPhoneLanguageChanged(enabled: Boolean) {
+        viewModelScope.launch {
+            phoneBeeslyPhoneLanguage.set(enabled)
+            forceStopPhone()
+        }
+        if (enabled) takeAMessagePackRepository.refresh()
     }
 
     override fun onPhoneAtlasEnabledChanged(enabled: Boolean) {

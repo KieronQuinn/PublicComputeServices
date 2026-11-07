@@ -1,30 +1,30 @@
-package com.kieronquinn.app.pcs.callscreen.pack
+package com.kieronquinn.app.pcs.voicepack
 
-import com.kieronquinn.app.pcs.callscreen.pack.ProtoWire.LENGTH_DELIMITED
-import com.kieronquinn.app.pcs.callscreen.pack.ProtoWire.VARINT
+import com.kieronquinn.app.pcs.voicepack.ProtoWire.LENGTH_DELIMITED
+import com.kieronquinn.app.pcs.voicepack.ProtoWire.VARINT
 import java.io.File
+import java.util.Base64
 import java.util.Locale
 import java.util.Properties
 
 /**
- *  Where localised Call Screen packs live inside Phone's data directory, shared by the app (which
- *  builds them) and the Phone hook (which points Call Screen at them).
+ *  Where localised voice packs live inside Phone's data directory, shared by the app (which builds
+ *  them) and the Phone hooks (which point the feature at them).
  *
- *  A pack is built from the English zip Phone's download manager (MDD) fetched for the
- *  "dobby-duplex-files" group. The zip is identified by the group's version and the file's SHA-1,
- *  since two zips can share a version. `files/pcs-call-screen/<locale>/<version>_<sha1>/` holds the
- *  zip's contents with the text and recordings in the phone's language. Phone's download manager
- *  never touches this directory, so it does not undo the pack.
+ *  A pack is built from the English zip Phone's download manager (MDD) fetched for the feature's
+ *  group ([VoicePack.groupName]). The zip is identified by the group's version and the file's
+ *  SHA-1, since two zips can share a version. `files/<pack directory>/<locale>/<version>_<sha1>/`
+ *  holds the zip's contents with the text and recordings in the phone's language. Phone's download
+ *  manager never touches this directory, so it does not undo the pack.
  */
-object CallScreenPackLayout {
+object VoicePackLayout {
 
     const val PHONE_PACKAGE = "com.google.android.dialer"
-    const val GROUP_NAME = "dobby-duplex-files"
-    /** Phone unzips the group's file into `files/dobby-duplex-files/<version>/`. */
-    const val SOURCE_DIRECTORY = GROUP_NAME
-    const val PACK_DIRECTORY = "pcs-call-screen"
-    const val SPECS = "agenticcallscreen_robot_intent_specs.pb"
-    const val MARKER = "pcs_call_screen.properties"
+    const val MARKER = "pcs_voice_pack.properties"
+
+    /** Phone's MDD metadata: each group as a Base64 protobuf in a shared preference. */
+    const val MDD_GROUPS = "gms_icing_mdd_groups.xml"
+    private val MDD_GROUP_VALUE = Regex("<string name=\"[^\"]*\">([A-Za-z0-9+/=\\s]+)</string>")
 
     private const val GROUP_FIELD_NAME = 1
     private const val GROUP_FIELD_FILE = 2
@@ -38,19 +38,20 @@ object CallScreenPackLayout {
     private const val KEY_TRANSLATION = "translation"
     private const val KEY_VOICE = "voice"
 
-    /** The parts of an MDD "dobby-duplex-files" group that identify its zip. */
+    /** The parts of a feature's MDD group that identify its zip. */
     data class Group(val version: Long, val checksum: String, val size: Long) {
         val sourceId get() = sourceId(version, checksum)
     }
 
     /**
      *  Reads an MDD DataFileGroup (1 = name, 2 = files, 10 = version; file: 4 = size,
-     *  5 = SHA-1). Returns null for other groups, and for groups without exactly one file.
+     *  5 = SHA-1). Returns null for other groups than [pack]'s, and for groups without exactly
+     *  one file.
      */
-    fun parseGroup(bytes: ByteArray): Group? {
+    fun parseGroup(pack: VoicePack, bytes: ByteArray): Group? {
         val fields = ProtoWire.parseOrNull(bytes) ?: return null
         val name = fields.firstOrNull { it.number == GROUP_FIELD_NAME }?.let(ProtoWire::text)
-        if (name != GROUP_NAME) return null
+        if (name != pack.groupName) return null
         val version = fields.firstOrNull {
             it.number == GROUP_FIELD_VERSION && it.wireType == VARINT
         }?.value as? Long ?: return null
@@ -65,6 +66,26 @@ object CallScreenPackLayout {
     }
 
     private val SHA1 = Regex("[0-9a-f]{40}")
+
+    /** [pack]'s groups in Phone's MDD metadata ([MDD_GROUPS]), as downloaded. */
+    fun readMddGroups(pack: VoicePack, xml: String): List<Group> =
+        MDD_GROUP_VALUE.findAll(xml).mapNotNull { match ->
+            val bytes = try {
+                Base64.getMimeDecoder().decode(match.groupValues[1])
+            } catch (e: IllegalArgumentException) {
+                return@mapNotNull null
+            }
+            parseGroup(pack, bytes)
+        }.distinctBy { it.sourceId }.toList()
+
+    /**
+     *  The zip Phone runs for a [requested] group: the downloaded group itself, or a newer
+     *  download of the feature, since Phone accepts any download that meets the requested version
+     *  ("Downloaded Duplex Model … meets minimum version"). Null when Phone has nothing to run yet.
+     */
+    fun runningGroup(requested: Group, downloaded: List<Group>): Group? =
+        downloaded.firstOrNull { it.sourceId == requested.sourceId }
+            ?: downloaded.filter { it.version >= requested.version }.maxByOrNull { it.version }
 
     fun sourceId(version: Long, checksum: String) = "${version}_$checksum"
 
@@ -100,10 +121,10 @@ object CallScreenPackLayout {
         }
     }
 
-    fun packRoot(filesDir: File) = File(filesDir, PACK_DIRECTORY)
+    fun packRoot(filesDir: File, pack: VoicePack) = File(filesDir, pack.packDirectory)
 
-    fun packDirectory(filesDir: File, locale: Locale, sourceId: String) =
-        File(File(packRoot(filesDir), locale.toLanguageTag()), sourceId)
+    fun packDirectory(filesDir: File, pack: VoicePack, locale: Locale, sourceId: String) =
+        File(File(packRoot(filesDir, pack), locale.toLanguageTag()), sourceId)
 
     class Pack(val locale: Locale, val version: Long, val directory: File)
 
@@ -112,24 +133,24 @@ object CallScreenPackLayout {
      *  Read inside Phone's process; the pack's own locale tag (tr-TR) is used even if the phone's
      *  region differs.
      */
-    fun findReadyPack(filesDir: File, phoneLocale: Locale, group: Group): Pack? {
-        val locales = packRoot(filesDir).listFiles().orEmpty()
+    fun findReadyPack(filesDir: File, pack: VoicePack, phoneLocale: Locale, group: Group): Pack? {
+        val locales = packRoot(filesDir, pack).listFiles().orEmpty()
             .filter { it.isDirectory && !it.name.startsWith(".") }
             .map { Locale.forLanguageTag(it.name) }
             .filter { it.language == phoneLocale.language }
             .sortedByDescending { it.country == phoneLocale.country }
         return locales.firstNotNullOfOrNull { locale ->
-            readyPack(filesDir, locale, group)?.let { Pack(locale, group.version, it) }
+            readyPack(filesDir, pack, locale, group)?.let { Pack(locale, group.version, it) }
         }
     }
 
-    fun readyPack(filesDir: File, locale: Locale, group: Group): File? {
-        val directory = packDirectory(filesDir, locale, group.sourceId)
+    fun readyPack(filesDir: File, pack: VoicePack, locale: Locale, group: Group): File? {
+        val directory = packDirectory(filesDir, pack, locale, group.sourceId)
         val marker = File(directory, MARKER).takeIf { it.isFile }?.readText()?.let(Marker::read)
             ?: return null
         if (marker.version != group.version || marker.checksum != group.checksum) return null
         if (marker.locale != locale.toLanguageTag()) return null
-        return directory.takeIf { File(it, SPECS).isFile }
+        return directory.takeIf { File(it, pack.specs).isFile }
     }
 
 }

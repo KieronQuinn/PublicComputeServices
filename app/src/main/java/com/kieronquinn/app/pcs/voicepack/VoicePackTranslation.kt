@@ -1,4 +1,4 @@
-package com.kieronquinn.app.pcs.callscreen.pack
+package com.kieronquinn.app.pcs.voicepack
 
 import com.google.gson.Gson
 import com.google.gson.annotations.SerializedName
@@ -6,11 +6,11 @@ import java.io.Reader
 import java.util.Locale
 
 /**
- *  A translation of Call Screen's spoken and displayed text, shipped with PCS as
- *  `assets/callscreen/<language>.json`. It contains only translated text; Google's pack and audio
+ *  A translation of a voice pack's spoken and displayed text, shipped with PCS as
+ *  `assets/<feature>/<language>.json`. It contains only translated text; Google's pack and audio
  *  are never included. The pack is localised on the device from the copy Phone downloads.
  */
-class CallScreenTranslation private constructor(
+class VoicePackTranslation private constructor(
     val locale: Locale,
     val speechRate: Float,
     /** Audio path in the pack (without ".wav") to the sentence spoken and shown for it. */
@@ -40,7 +40,7 @@ class CallScreenTranslation private constructor(
     companion object {
         private const val FORMAT_VERSION = 1
 
-        fun parse(reader: Reader): CallScreenTranslation {
+        fun parse(reader: Reader): VoicePackTranslation {
             val data = Gson().fromJson(reader, Data::class.java)
                 ?: throw InvalidException("Empty translation")
             if (data.version != FORMAT_VERSION) {
@@ -54,7 +54,7 @@ class CallScreenTranslation private constructor(
             if (prompts.isEmpty()) throw InvalidException("No prompts")
             (prompts.values + texts.values + data.chips.orEmpty().values).firstOrNull { it.isBlank() }
                 ?.let { throw InvalidException("Blank translation") }
-            return CallScreenTranslation(
+            return VoicePackTranslation(
                 locale = locale,
                 speechRate = data.tts?.rate?.takeIf { it in 0.5f..2f } ?: 1f,
                 prompts = prompts,

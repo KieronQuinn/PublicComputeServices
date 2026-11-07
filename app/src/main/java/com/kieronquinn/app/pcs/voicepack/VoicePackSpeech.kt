@@ -1,4 +1,4 @@
-package com.kieronquinn.app.pcs.callscreen.pack
+package com.kieronquinn.app.pcs.voicepack
 
 import android.content.Context
 import android.os.Bundle
@@ -18,11 +18,11 @@ import java.util.concurrent.ConcurrentHashMap
 import kotlin.coroutines.resume
 
 /**
- *  Speaks Call Screen's sentences into files with the device's own text-to-speech engine, through
+ *  Speaks a voice pack's sentences into files with the device's own text-to-speech engine, through
  *  the public [TextToSpeech] API. Google's engine is preferred when it is installed, since it has
  *  the voices Phone itself uses.
  */
-internal class CallScreenSpeech private constructor(
+internal class VoicePackSpeech private constructor(
     private val tts: TextToSpeech,
     val voice: Voice
 ) : Closeable {
@@ -86,7 +86,7 @@ internal class CallScreenSpeech private constructor(
         private const val SYNTHESIS_TIMEOUT_MS = 60_000L
         private const val INIT_TIMEOUT_MS = 30_000L
 
-        suspend fun open(context: Context, locale: Locale, rate: Float): CallScreenSpeech {
+        suspend fun open(context: Context, locale: Locale, rate: Float): VoicePackSpeech {
             val engine = GOOGLE_TTS.takeIf { isTtsEngine(context, it) }
             val tts = withTimeout(INIT_TIMEOUT_MS) { create(context, engine) }
             try {
@@ -96,7 +96,7 @@ internal class CallScreenSpeech private constructor(
                     throw UnavailableException("Unable to use voice ${voice.name}")
                 }
                 tts.setSpeechRate(rate)
-                return CallScreenSpeech(tts, voice)
+                return VoicePackSpeech(tts, voice)
             } catch (e: Exception) {
                 tts.shutdown()
                 throw e

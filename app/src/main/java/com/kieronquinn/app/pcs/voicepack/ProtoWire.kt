@@ -1,4 +1,4 @@
-package com.kieronquinn.app.pcs.callscreen.pack
+package com.kieronquinn.app.pcs.voicepack
 
 import java.io.ByteArrayOutputStream
 import java.nio.charset.CharacterCodingException
@@ -6,7 +6,7 @@ import java.nio.charset.CodingErrorAction
 import java.nio.ByteBuffer
 
 /**
- *  Schema-less protobuf wire format. Call Screen's pack files have no published schema, so they
+ *  Schema-less protobuf wire format. Phone's voice pack files have no published schema, so they
  *  are read as a list of fields in their original order and only the text and locale fields are
  *  changed. Everything else is written back byte for byte.
  */

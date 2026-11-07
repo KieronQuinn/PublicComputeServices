@@ -1,4 +1,4 @@
-package com.kieronquinn.app.pcs.callscreen.pack
+package com.kieronquinn.app.pcs.voicepack
 
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
@@ -55,7 +55,7 @@ class WavAudioTest {
     @Test
     fun `upsampling keeps pitch, length and level`() {
         val input = WavAudio.Pcm(24_000, sine(24_000, 1000.0, 1.0))
-        val output = WavAudio.resample(input, WavAudio.CALL_SCREEN_SAMPLE_RATE)
+        val output = WavAudio.resample(input, 32_000)
         assertEquals(32_000, output.sampleRate)
         assertEquals(32_000, output.samples.size)
         // 1 kHz has 2000 zero crossings per second at any sample rate.

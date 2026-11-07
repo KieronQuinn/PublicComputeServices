@@ -1,8 +1,8 @@
-package com.kieronquinn.app.pcs.callscreen.pack
+package com.kieronquinn.app.pcs.voicepack
 
-import com.kieronquinn.app.pcs.callscreen.pack.ProtoWire.Field
-import com.kieronquinn.app.pcs.callscreen.pack.ProtoWire.LENGTH_DELIMITED
-import com.kieronquinn.app.pcs.callscreen.pack.ProtoWire.VARINT
+import com.kieronquinn.app.pcs.voicepack.ProtoWire.Field
+import com.kieronquinn.app.pcs.voicepack.ProtoWire.LENGTH_DELIMITED
+import com.kieronquinn.app.pcs.voicepack.ProtoWire.VARINT
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -12,9 +12,9 @@ import java.io.File
 import java.io.StringReader
 import java.util.zip.ZipFile
 
-class CallScreenPackRewriterTest {
+class VoicePackRewriterTest {
 
-    private val translation = CallScreenTranslation.parse(StringReader("""
+    private val translation = VoicePackTranslation.parse(StringReader("""
         {
           "version": 1,
           "locale": "de-DE",
@@ -26,7 +26,7 @@ class CallScreenPackRewriterTest {
         }
     """.trimIndent()))
 
-    private val rewriter = CallScreenPackRewriter(translation)
+    private val rewriter = VoicePackRewriter(translation)
 
     private fun text(number: Int, value: String) = Field(number, LENGTH_DELIMITED, value.toByteArray())
     private fun message(number: Int, vararg fields: Field) =
@@ -106,7 +106,7 @@ class CallScreenPackRewriterTest {
         val reference = System.getenv("CALL_SCREEN_REFERENCE_ZIP")?.let(::File)
         val translationFile = System.getenv("CALL_SCREEN_TRANSLATION")?.let(::File)
         assumeTrue(source?.isFile == true && reference?.isFile == true && translationFile?.isFile == true)
-        val real = CallScreenPackRewriter(translationFile!!.reader().use(CallScreenTranslation::parse))
+        val real = VoicePackRewriter(translationFile!!.reader().use(VoicePackTranslation::parse))
         ZipFile(source!!).use { src ->
             ZipFile(reference!!).use { ref ->
                 val names = src.entries().toList().map { it.name }.filter(real::isRewritten)

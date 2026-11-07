@@ -2,17 +2,17 @@ package com.kieronquinn.app.pcs.repositories
 
 import android.content.Context
 import android.content.pm.PackageManager
-import android.util.Base64
 import android.util.Log
-import android.util.Xml
-import com.kieronquinn.app.pcs.callscreen.pack.CallScreenPackLayout
-import com.kieronquinn.app.pcs.callscreen.pack.CallScreenPackLayout.Marker
-import com.kieronquinn.app.pcs.callscreen.pack.CallScreenPackRewriter
-import com.kieronquinn.app.pcs.callscreen.pack.CallScreenSpeech
-import com.kieronquinn.app.pcs.callscreen.pack.CallScreenTranslation
-import com.kieronquinn.app.pcs.callscreen.pack.CallScreenTranslations
-import com.kieronquinn.app.pcs.callscreen.pack.WavAudio
-import com.kieronquinn.app.pcs.repositories.CallScreenPackRepository.State
+import com.kieronquinn.app.pcs.voicepack.VoicePack
+import com.kieronquinn.app.pcs.voicepack.VoicePackLayout
+import com.kieronquinn.app.pcs.voicepack.VoicePackLayout.MDD_GROUPS
+import com.kieronquinn.app.pcs.voicepack.VoicePackLayout.Marker
+import com.kieronquinn.app.pcs.voicepack.VoicePackRewriter
+import com.kieronquinn.app.pcs.voicepack.VoicePackSpeech
+import com.kieronquinn.app.pcs.voicepack.VoicePackTranslation
+import com.kieronquinn.app.pcs.voicepack.VoicePackTranslations
+import com.kieronquinn.app.pcs.voicepack.WavAudio
+import com.kieronquinn.app.pcs.repositories.VoicePackRepository.State
 import com.topjohnwu.superuser.Shell
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -25,20 +25,21 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import org.xmlpull.v1.XmlPullParser
 import java.io.File
 import java.security.MessageDigest
 import java.util.Locale
 
 /**
- *  Builds Call Screen's voice pack in the phone's language on the device.
+ *  Builds a feature's voice pack ([VoicePack]) in the phone's language on the device.
  *
- *  The source is the English agentic Call Screen zip Phone's download manager (MDD) fetched for
- *  its "dobby-duplex-files" group; it is found by the size and SHA-1 the group records. Its text
- *  files are rewritten with the translation shipped in PCS, and every spoken sentence is recorded
- *  with the phone's text-to-speech engine. Nothing from Google is downloaded or shipped by PCS.
+ *  The source is the English zip Phone's download manager (MDD) fetched for the feature's group;
+ *  it is found by the size and SHA-1 the group records. Its text files are rewritten with the
+ *  translation shipped in PCS, and every spoken sentence is recorded with the phone's
+ *  text-to-speech engine. Nothing from Google is downloaded or shipped by PCS.
  */
-interface CallScreenPackRepository {
+interface VoicePackRepository {
+
+    val pack: VoicePack
 
     sealed class State {
         /** Not checked yet, or checking. */
@@ -47,7 +48,7 @@ interface CallScreenPackRepository {
         data class Unsupported(val locale: Locale) : State()
         data object NoRoot : State()
         data class NoVoice(val locale: Locale) : State()
-        /** Phone has not downloaded the English Call Screen zip yet. */
+        /** Phone has not downloaded the feature's English zip yet. */
         data class NoSource(val locale: Locale) : State()
         data class NotBuilt(val locale: Locale, val outdated: Boolean) : State()
         data class Building(val locale: Locale, val done: Int, val total: Int) : State()
@@ -60,24 +61,24 @@ interface CallScreenPackRepository {
     /** Re-reads what is on the device. */
     fun refresh()
 
-    /** Builds the pack for every English Call Screen zip Phone has. */
+    /** Builds the pack for every English zip of the feature Phone has. */
     fun build()
 
 }
 
-class CallScreenPackRepositoryImpl(private val context: Context) : CallScreenPackRepository {
+class VoicePackRepositoryImpl(
+    private val context: Context,
+    override val pack: VoicePack
+) : VoicePackRepository {
 
     companion object {
-        private const val TAG = "CallScreenPack"
-        /** Keypad tones carry no speech and are kept from the source pack. */
-        private const val KEYPAD_TONES = "srdtmf"
+        private const val TAG = "VoicePack"
         private val ENGLISH_TAGS = listOf("en-US", "en-GB").map { it.toByteArray() }
-        private const val MDD_GROUPS = "gms_icing_mdd_groups.xml"
         private const val MDD_DOWNLOADS = "datadownload"
     }
 
-    /** An English Call Screen zip of Phone's, with the MDD group it was downloaded for. */
-    private class Source(val group: CallScreenPackLayout.Group, val zip: String) {
+    /** An English zip of Phone's for the feature, with the MDD group it was downloaded for. */
+    private class Source(val group: VoicePackLayout.Group, val zip: String) {
         val id get() = group.sourceId
     }
 
@@ -93,8 +94,8 @@ class CallScreenPackRepositoryImpl(private val context: Context) : CallScreenPac
             _shell = it
         }
 
-    private val workDirectory get() = File(context.cacheDir, "callscreen")
-    private val audioCache get() = File(context.filesDir, "callscreen/audio")
+    private val workDirectory get() = File(context.cacheDir, pack.assetDirectory)
+    private val audioCache get() = File(context.filesDir, "${pack.assetDirectory}/audio")
 
     override fun refresh() {
         if (buildJob?.isActive == true) return
@@ -107,13 +108,13 @@ class CallScreenPackRepositoryImpl(private val context: Context) : CallScreenPac
         if (buildJob?.isActive == true) return
         buildJob = scope.launch {
             mutex.withLock {
-                val locale = CallScreenTranslations.phoneLocale()
+                val locale = VoicePackTranslations.phoneLocale()
                 _state.value = try {
                     buildAll()
-                } catch (e: CallScreenSpeech.NoVoiceException) {
+                } catch (e: VoicePackSpeech.NoVoiceException) {
                     State.NoVoice(locale)
                 } catch (e: Exception) {
-                    Log.e(TAG, "Unable to build the Call Screen pack", e)
+                    Log.e(TAG, "Unable to build the ${pack.title} pack", e)
                     State.Failed(locale, e.message ?: e.javaClass.simpleName)
                 } finally {
                     workDirectory.deleteRecursively()
@@ -123,8 +124,8 @@ class CallScreenPackRepositoryImpl(private val context: Context) : CallScreenPac
     }
 
     private suspend fun check(): State {
-        val asset = CallScreenTranslations.forPhone(context)
-            ?: return State.Unsupported(CallScreenTranslations.phoneLocale())
+        val asset = VoicePackTranslations.forPhone(context, pack)
+            ?: return State.Unsupported(VoicePackTranslations.phoneLocale())
         val locale = asset.translation.locale
         if (!isRootAvailable()) return State.NoRoot
         val phone = phoneInfo() ?: return State.NoSource(locale)
@@ -137,8 +138,8 @@ class CallScreenPackRepositoryImpl(private val context: Context) : CallScreenPac
     }
 
     private suspend fun buildAll(): State {
-        val asset = CallScreenTranslations.forPhone(context)
-            ?: return State.Unsupported(CallScreenTranslations.phoneLocale())
+        val asset = VoicePackTranslations.forPhone(context, pack)
+            ?: return State.Unsupported(VoicePackTranslations.phoneLocale())
         val translation = asset.translation
         val locale = translation.locale
         if (!isRootAvailable()) return State.NoRoot
@@ -147,7 +148,7 @@ class CallScreenPackRepositoryImpl(private val context: Context) : CallScreenPac
         if (sources.isEmpty()) return State.NoSource(locale)
         workDirectory.deleteRecursively()
         workDirectory.mkdirs()
-        val localeRoot = File(CallScreenPackLayout.packRoot(phone.filesDir), locale.toLanguageTag()).path
+        val localeRoot = File(VoicePackLayout.packRoot(phone.filesDir, pack), locale.toLanguageTag()).path
         try {
             return buildAll(asset.hash, translation, phone, sources, localeRoot)
         } finally {
@@ -158,7 +159,7 @@ class CallScreenPackRepositoryImpl(private val context: Context) : CallScreenPac
 
     private suspend fun buildAll(
         hash: String,
-        translation: CallScreenTranslation,
+        translation: VoicePackTranslation,
         phone: PhoneInfo,
         sources: List<Source>,
         localeRoot: String
@@ -166,7 +167,7 @@ class CallScreenPackRepositoryImpl(private val context: Context) : CallScreenPac
         val locale = translation.locale
         // Each zip is unpacked next to its final directory first; text comes before speech, so a
         // zip with prompts the translation does not cover fails before any speech is synthesised.
-        val rewriter = CallScreenPackRewriter(translation)
+        val rewriter = VoicePackRewriter(translation)
         val staged = sources.associateWith { source ->
             val staging = "$localeRoot/.staging-${source.id}"
             unzip(source.zip, staging)
@@ -181,7 +182,7 @@ class CallScreenPackRepositoryImpl(private val context: Context) : CallScreenPac
                 File(output, name).apply { parentFile?.mkdirs() }.writeBytes(result.bytes)
             }
             val audio = files.filter { it.endsWith(".wav") }.map { it.removeSuffix(".wav") }
-            val unknown = audio.filter { it !in translation.prompts && !it.startsWith(KEYPAD_TONES) }
+            val unknown = audio.filter { it !in translation.prompts && !VoicePack.keepsSourceRecording(it) }
             if (unknown.isNotEmpty()) {
                 error("${unknown.size} recordings have no translation, for example ${unknown.first()}")
             }
@@ -191,7 +192,7 @@ class CallScreenPackRepositoryImpl(private val context: Context) : CallScreenPac
         val sentences = staged.values.flatMap { it.recordings }.map { translation.prompts.getValue(it) }.distinct()
         val voice: String
         val sentenceFiles = HashMap<String, File>()
-        CallScreenSpeech.open(context, locale, translation.speechRate).use { speech ->
+        VoicePackSpeech.open(context, locale, translation.speechRate).use { speech ->
             voice = speech.voice.name
             val cache = File(audioCache, "${locale.toLanguageTag()}/${voice}_${translation.speechRate}")
                 .apply { mkdirs() }
@@ -201,7 +202,7 @@ class CallScreenPackRepositoryImpl(private val context: Context) : CallScreenPac
                 if (!file.isFile) {
                     val raw = File(workDirectory, "tts.wav")
                     speech.synthesise(sentence, raw)
-                    val pcm = WavAudio.resample(WavAudio.read(raw.readBytes()), WavAudio.CALL_SCREEN_SAMPLE_RATE)
+                    val pcm = WavAudio.resample(WavAudio.read(raw.readBytes()), pack.sampleRate)
                     val temporary = File(cache, file.name + ".tmp")
                     temporary.writeBytes(WavAudio.write(pcm))
                     if (!temporary.renameTo(file)) error("Unable to save a recording")
@@ -231,7 +232,7 @@ class CallScreenPackRepositoryImpl(private val context: Context) : CallScreenPac
                 "unzip -oq -d ${q(directory)} ${q(zip)} 2>&1 && echo ok"
         )
         if (!result.isSuccess || result.out.lastOrNull() != "ok") {
-            error("Unable to unpack Phone's Call Screen zip: ${result.out.takeLast(3).joinToString(" ")}")
+            error("Unable to unpack Phone's ${pack.title} zip: ${result.out.takeLast(3).joinToString(" ")}")
         }
     }
 
@@ -247,8 +248,8 @@ class CallScreenPackRepositoryImpl(private val context: Context) : CallScreenPac
         recordings: Map<String, File>,
         marker: Marker
     ) = withContext(Dispatchers.IO) {
-        val packRoot = CallScreenPackLayout.packRoot(phone.filesDir).path
-        val target = CallScreenPackLayout.packDirectory(phone.filesDir, locale, source.id).path
+        val packRoot = VoicePackLayout.packRoot(phone.filesDir, pack).path
+        val target = VoicePackLayout.packDirectory(phone.filesDir, pack, locale, source.id).path
         val staging = stage.directory
         val markerFile = File(workDirectory, "marker-${source.id}").apply { writeText(marker.write()) }
         val script = buildString {
@@ -259,7 +260,7 @@ class CallScreenPackRepositoryImpl(private val context: Context) : CallScreenPac
             recordings.forEach { (path, file) ->
                 append("cp ${q(file.path)} ${q("$staging/$path.wav")}\n")
             }
-            append("cp ${q(markerFile.path)} ${q("$staging/${CallScreenPackLayout.MARKER}")}\n")
+            append("cp ${q(markerFile.path)} ${q("$staging/${VoicePackLayout.MARKER}")}\n")
             append("chown -R ${phone.uid}:${phone.uid} ${q(packRoot)}\n")
             append("chmod -R u+rwX,go-rwx ${q(packRoot)}\n")
             // Same SELinux label as Phone's own files (toybox chcon has no --reference).
@@ -274,7 +275,7 @@ class CallScreenPackRepositoryImpl(private val context: Context) : CallScreenPac
             error("Installing the pack failed: ${result.out.takeLast(3).joinToString(" ")}")
         }
         val installed = listFiles(target).toSet()
-        val expected = stage.files.toSet() + CallScreenPackLayout.MARKER
+        val expected = stage.files.toSet() + VoicePackLayout.MARKER
         if (installed != expected) {
             error("Installed pack is incomplete (${installed.size} of ${expected.size} files)")
         }
@@ -282,21 +283,22 @@ class CallScreenPackRepositoryImpl(private val context: Context) : CallScreenPac
 
     /** Removes packs built from zips Phone no longer has, in every language. */
     private fun prunePacks(phone: PhoneInfo, keep: Set<String>) {
-        val packRoot = CallScreenPackLayout.packRoot(phone.filesDir).path
+        val packRoot = VoicePackLayout.packRoot(phone.filesDir, pack).path
         val stale = run("for d in ${q(packRoot)}/*/*/; do echo \"\${d%/}\"; done").out
             .filter { it.startsWith("$packRoot/") && File(it).name !in keep && !File(it).name.startsWith("*") }
         if (stale.isEmpty()) return
         run("rm -rf " + stale.joinToString(" ") { q(it) })
-        Log.i(TAG, "Removed ${stale.size} outdated Call Screen packs")
+        Log.i(TAG, "Removed ${stale.size} outdated ${pack.title} packs")
     }
 
     /**
-     *  Phone's English Call Screen zips: every "dobby-duplex-files" group in Phone's MDD metadata
-     *  whose file is on the device with the recorded size and SHA-1, and holds an English pack.
+     *  Phone's English zips for the feature: every group of [VoicePack.groupName] in Phone's MDD
+     *  metadata whose file is on the device with the recorded size and SHA-1, and holds an English
+     *  pack.
      */
     private suspend fun findSources(phone: PhoneInfo): List<Source> = withContext(Dispatchers.IO) {
         val groups = readGroups(phone).distinctBy { it.sourceId }
-        if (groups.isEmpty()) Log.i(TAG, "Phone has no $MDD_GROUPS entry for ${CallScreenPackLayout.GROUP_NAME}")
+        if (groups.isEmpty()) Log.i(TAG, "Phone has no $MDD_GROUPS entry for ${pack.groupName}")
         val downloads = File(phone.filesDir, MDD_DOWNLOADS).path
         groups.mapNotNull { group ->
             val result = run("find ${q(downloads)} -type f -size ${group.size}c -exec sha1sum {} + 2>/dev/null")
@@ -309,8 +311,8 @@ class CallScreenPackRepositoryImpl(private val context: Context) : CallScreenPac
             }
             // Only an untouched English pack is a valid source; a zip already rewritten by
             // another tool would be translated twice.
-            val specs = readRoot(zip, CallScreenPackLayout.SPECS) ?: run {
-                Log.i(TAG, "Group ${group.sourceId}: $zip has no ${CallScreenPackLayout.SPECS}")
+            val specs = readRoot(zip, pack.specs) ?: run {
+                Log.i(TAG, "Group ${group.sourceId}: $zip has no ${pack.specs}")
                 return@mapNotNull null
             }
             if (ENGLISH_TAGS.none { contains(specs, it) }) {
@@ -321,30 +323,18 @@ class CallScreenPackRepositoryImpl(private val context: Context) : CallScreenPac
         }
     }
 
-    private fun readGroups(phone: PhoneInfo): List<CallScreenPackLayout.Group> {
+    private fun readGroups(phone: PhoneInfo): List<VoicePackLayout.Group> {
         val xml = try {
             readRoot("${phone.dataDir}/shared_prefs/$MDD_GROUPS")
         } catch (e: IllegalStateException) {
             Log.i(TAG, "Unable to read Phone's download groups: ${e.message}")
             return emptyList()
         }
-        val parser = Xml.newPullParser().apply { setInput(xml.inputStream(), "UTF-8") }
-        val groups = ArrayList<CallScreenPackLayout.Group>()
-        while (parser.next() != XmlPullParser.END_DOCUMENT) {
-            if (parser.eventType != XmlPullParser.START_TAG || parser.name != "string") continue
-            val value = parser.nextText()
-            val bytes = try {
-                Base64.decode(value, Base64.DEFAULT)
-            } catch (e: IllegalArgumentException) {
-                continue
-            }
-            CallScreenPackLayout.parseGroup(bytes)?.let(groups::add)
-        }
-        return groups
+        return VoicePackLayout.readMddGroups(pack, xml.toString(Charsets.UTF_8))
     }
 
-    private fun readMarker(filesDir: File, locale: Locale, group: CallScreenPackLayout.Group): Marker? {
-        val path = File(CallScreenPackLayout.packDirectory(filesDir, locale, group.sourceId), CallScreenPackLayout.MARKER)
+    private fun readMarker(filesDir: File, locale: Locale, group: VoicePackLayout.Group): Marker? {
+        val path = File(VoicePackLayout.packDirectory(filesDir, pack, locale, group.sourceId), VoicePackLayout.MARKER)
         val text = run("cat ${q(path.path)} 2>/dev/null").out.joinToString("\n")
         return text.takeIf { it.isNotBlank() }?.let(Marker::read)
             ?.takeIf { it.version == group.version && it.checksum == group.checksum }
@@ -385,7 +375,7 @@ class CallScreenPackRepositoryImpl(private val context: Context) : CallScreenPac
     }
 
     private fun phoneInfo(): PhoneInfo? = try {
-        val info = context.packageManager.getApplicationInfo(CallScreenPackLayout.PHONE_PACKAGE, 0)
+        val info = context.packageManager.getApplicationInfo(VoicePackLayout.PHONE_PACKAGE, 0)
         PhoneInfo(info.uid, File(info.dataDir))
     } catch (e: PackageManager.NameNotFoundException) {
         Log.i(TAG, "Phone is not installed")

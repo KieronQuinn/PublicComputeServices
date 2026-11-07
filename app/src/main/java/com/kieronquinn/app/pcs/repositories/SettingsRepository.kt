@@ -34,6 +34,7 @@ interface SettingsRepository: BaseSettingsRepository {
     val phoneBeeslyEnabled: PcsSetting<Boolean>
     val phoneBeesly: PcsSetting<String>
     val phoneBeeslyRegion: PcsSetting<BeeslyRegion>
+    val phoneBeeslyPhoneLanguage: PcsSetting<Boolean>
     val phoneNautilusEnabled: PcsSetting<Boolean>
     val phoneSonicEnabled: PcsSetting<Boolean>
     val phoneXatuAllowMetered: PcsSetting<Boolean>
@@ -192,6 +193,9 @@ class SettingsRepositoryImpl(
         private const val KEY_PHONE_BEESLY_REGION = "phone_beesly_region"
         private val DEFAULT_PHONE_BEESLY_REGION = SettingsRepository.BeeslyRegion.getDefault()
 
+        private const val KEY_PHONE_BEESLY_PHONE_LANGUAGE = "phone_beesly_phone_language"
+        private const val DEFAULT_PHONE_BEESLY_PHONE_LANGUAGE = false
+
         private const val KEY_PHONE_NAUTILUS_ENABLED = "phone_nautilus_enabled"
         private const val DEFAULT_PHONE_NAUTILUS_ENABLED = false
 
@@ -248,6 +252,7 @@ class SettingsRepositoryImpl(
     override val phoneBeeslyEnabled = boolean(KEY_PHONE_BEESLY_ENABLED, DEFAULT_PHONE_BEESLY_ENABLED)
     override val phoneBeesly = string(KEY_PHONE_BEESLY, DEFAULT_PHONE_BEESLY)
     override val phoneBeeslyRegion = enum(KEY_PHONE_BEESLY_REGION, DEFAULT_PHONE_BEESLY_REGION)
+    override val phoneBeeslyPhoneLanguage = boolean(KEY_PHONE_BEESLY_PHONE_LANGUAGE, DEFAULT_PHONE_BEESLY_PHONE_LANGUAGE)
     override val phoneNautilusEnabled = boolean(KEY_PHONE_NAUTILUS_ENABLED, DEFAULT_PHONE_NAUTILUS_ENABLED)
     override val phoneSonicEnabled = boolean(KEY_PHONE_SONIC_ENABLED, DEFAULT_PHONE_SONIC_ENABLED)
     override val phoneXatuAllowMetered = boolean(KEY_PHONE_XATU_ALLOW_METERED, DEFAULT_PHONE_XATU_ALLOW_METERED)

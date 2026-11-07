@@ -93,6 +93,9 @@ object PhoneHooks: GrpcHooks() {
         if (settings.dobbyEnabled && settings.dobbyRegion == DobbyRegion.PHONE) {
             CallScreenLanguageHooks.install(dexKit, classLoader, application)
         }
+        if (settings.beeslyEnabled && settings.beeslyPhoneLanguage) {
+            TakeAMessageLanguageHooks.install(dexKit, classLoader, application)
+        }
         if (settings.atlasEnabled && settings.atlasPhoneLanguage) {
             // Hold for Me starts speech recognition in the phone's own locale.
             val phoneLocale = application.resources.configuration.locales.get(0)
