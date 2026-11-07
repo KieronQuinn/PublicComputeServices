@@ -69,7 +69,12 @@ interface SettingsRepository: BaseSettingsRepository {
         IE(R.string.screen_experiments_phone_feature_dobby_region_ie, "en-GB"), // Uses UK
         JP(R.string.screen_experiments_phone_feature_dobby_region_jp, "ja-JP"),
         AU(R.string.screen_experiments_phone_feature_dobby_region_au, "en-AU"),
-        IN(R.string.screen_experiments_phone_feature_dobby_region_in, getIndiaLocale());
+        IN(R.string.screen_experiments_phone_feature_dobby_region_in, getIndiaLocale()),
+        /**
+         *  Call Screen in the phone's language. Phone downloads the US agentic pack, and PCS
+         *  builds a copy in the phone's language on the device from it.
+         */
+        PHONE(R.string.screen_experiments_phone_feature_dobby_region_phone, "en-US");
 
         companion object {
             fun getDefault(): DobbyRegion {

@@ -12,7 +12,9 @@ import com.kieronquinn.app.pcs.PcsApplication.Companion.PACKAGE_NAME_PHONE
 import com.kieronquinn.app.pcs.PcsApplication.Companion.PACKAGE_NAME_PSI
 import com.kieronquinn.app.pcs.PcsApplication.Companion.PACKAGE_NAME_TTS
 import com.kieronquinn.app.pcs.model.ClientGroupOverride
+import com.kieronquinn.app.pcs.callscreen.pack.CallScreenTranslations
 import com.kieronquinn.app.pcs.model.phone.PhoneSettings
+import com.kieronquinn.app.pcs.repositories.CallScreenPackRepository
 import com.kieronquinn.app.pcs.repositories.DeviceConfigPropertiesRepository
 import com.kieronquinn.app.pcs.repositories.PhenotypeRepository
 import com.kieronquinn.app.pcs.repositories.PropertiesRepository
@@ -22,12 +24,14 @@ import com.kieronquinn.app.pcs.repositories.SettingsRepository.CallScreenMode
 import com.kieronquinn.app.pcs.repositories.SettingsRepository.DobbyRegion
 import com.kieronquinn.app.pcs.repositories.SettingsRepository.PatrickPhase
 import com.kieronquinn.app.pcs.repositories.SettingsRepository.SharpieCountryMode
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -44,6 +48,8 @@ abstract class ExperimentsViewModel: ViewModel() {
     abstract fun onPhoneSharpiePhoneLanguageChanged(enabled: Boolean)
     abstract fun onPhoneDobbyEnabledChanged(enabled: Boolean)
     abstract fun onPhoneDobbyRegionChanged(region: DobbyRegion)
+    abstract fun onCallScreenPackClicked()
+    abstract fun onResume()
     abstract fun onPhoneAtlasEnabledChanged(enabled: Boolean)
     abstract fun onPhoneBeeslyEnabledChanged(enabled: Boolean)
     abstract fun onPhoneBeeslyRegionChanged(region: BeeslyRegion)
@@ -82,7 +88,10 @@ abstract class ExperimentsViewModel: ViewModel() {
             val phoneAvailable: Boolean,
             val agentAvailable: Boolean,
             val phoneSettings: PhoneSettings,
-            val propertiesState: PropertiesRepository.State
+            val propertiesState: PropertiesRepository.State,
+            /** Regions offered for Call Screen; [DobbyRegion.PHONE] only with a translation. */
+            val dobbyRegions: List<DobbyRegion>,
+            val callScreenPack: CallScreenPackRepository.State
         ): State()
     }
 
@@ -96,6 +105,7 @@ class ExperimentsViewModelImpl(
     private val propertiesRepository: PropertiesRepository,
     private val deviceConfigPropertiesRepository: DeviceConfigPropertiesRepository,
     private val phenotypeRepository: PhenotypeRepository,
+    private val callScreenPackRepository: CallScreenPackRepository,
     settingsRepository: SettingsRepository,
     context: Context
 ): ExperimentsViewModel() {
@@ -258,6 +268,23 @@ class ExperimentsViewModelImpl(
         )
     }
 
+    /** Whether PCS ships a Call Screen translation for the phone's language. */
+    private val isPhoneLanguageCallScreenAvailable = flow {
+        emit(
+            try {
+                CallScreenTranslations.forPhone(context) != null
+            } catch (e: Exception) {
+                false
+            }
+        )
+    }.flowOn(Dispatchers.IO)
+
+    private val dobbyRegions = isPhoneLanguageCallScreenAvailable.combine(phoneDobbyRegion.asFlow()) {
+            available, selected ->
+        // Keep PHONE listed while it is selected, so the setting stays visible and can be changed.
+        DobbyRegion.entries.filter { it != DobbyRegion.PHONE || available || selected == it }
+    }
+
     private val packageStates = combine(
         isAgentAvailable,
         isPhoneAvailable,
@@ -271,8 +298,10 @@ class ExperimentsViewModelImpl(
     override val state = combine(
         packageStates,
         propertiesRepository.state,
-        phoneSettings
-    ) { packageStates, propertiesState, phoneSettings ->
+        phoneSettings,
+        dobbyRegions,
+        callScreenPackRepository.state
+    ) { packageStates, propertiesState, phoneSettings, dobbyRegions, callScreenPack ->
         val (isAgentAvailable, isPhoneAvailable, magicCueAvailable, nowPlayingAvailable,
             isAiCoreAvailable) = packageStates
         State.Loaded(
@@ -282,7 +311,9 @@ class ExperimentsViewModelImpl(
             phoneAvailable = isPhoneAvailable,
             agentAvailable = isAgentAvailable,
             phoneSettings = phoneSettings,
-            propertiesState = propertiesState
+            propertiesState = propertiesState,
+            dobbyRegions = dobbyRegions,
+            callScreenPack = callScreenPack
         )
     }.stateIn(viewModelScope, SharingStarted.Eagerly, State.Loading)
 
@@ -341,6 +372,31 @@ class ExperimentsViewModelImpl(
         viewModelScope.launch {
             phoneDobbyRegion.set(region)
             forceStopPhone()
+        }
+        if (region == DobbyRegion.PHONE) callScreenPackRepository.refresh()
+    }
+
+    override fun onCallScreenPackClicked() {
+        when (callScreenPackRepository.state.value) {
+            is CallScreenPackRepository.State.Checking,
+            is CallScreenPackRepository.State.Building,
+            is CallScreenPackRepository.State.Unsupported -> Unit
+            is CallScreenPackRepository.State.NoRoot,
+            is CallScreenPackRepository.State.NoVoice,
+            is CallScreenPackRepository.State.NoSource -> callScreenPackRepository.refresh()
+            is CallScreenPackRepository.State.NotBuilt,
+            is CallScreenPackRepository.State.Ready,
+            is CallScreenPackRepository.State.Failed -> callScreenPackRepository.build()
+        }
+    }
+
+    override fun onResume() {
+        // Only check the pack when it is in use: checking needs root, which would otherwise
+        // prompt every user who opens this screen.
+        viewModelScope.launch {
+            if (phoneDobbyEnabled.get() && phoneDobbyRegion.get() == DobbyRegion.PHONE) {
+                callScreenPackRepository.refresh()
+            }
         }
     }
 

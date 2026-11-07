@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import com.kieronquinn.app.pcs.R
 import com.kieronquinn.app.pcs.model.ClientGroupOverride
 import com.kieronquinn.app.pcs.model.phone.PhoneSettings
+import com.kieronquinn.app.pcs.repositories.CallScreenPackRepository
 import com.kieronquinn.app.pcs.repositories.PropertiesRepository
 import com.kieronquinn.app.pcs.repositories.SettingsRepository.BeeslyRegion
 import com.kieronquinn.app.pcs.repositories.SettingsRepository.CallScreenMode
@@ -60,6 +61,7 @@ private data class Interactions(
     val onPhoneSharpiePhoneLanguageChanged: (Boolean) -> Unit,
     val onPhoneDobbyEnabledChanged: (Boolean) -> Unit,
     val onPhoneDobbyRegionChanged: (DobbyRegion) -> Unit,
+    val onCallScreenPackClicked: () -> Unit,
     val onPhoneAtlasEnabledChanged: (Boolean) -> Unit,
     val onPhoneBeeslyEnabledChanged: (Boolean) -> Unit,
     val onPhoneBeeslyRegionChanged: (BeeslyRegion) -> Unit,
@@ -96,6 +98,7 @@ private data class Interactions(
             onPhoneSharpiePhoneLanguageChanged = {},
             onPhoneDobbyEnabledChanged = {},
             onPhoneDobbyRegionChanged = {},
+            onCallScreenPackClicked = {},
             onPhoneAtlasEnabledChanged = {},
             onPhoneBeeslyEnabledChanged = {},
             onPhoneBeeslyRegionChanged = {},
@@ -138,6 +141,7 @@ fun ExperimentsScreen() = ProvidePreferenceLocals {
         onPhoneSharpiePhoneLanguageChanged = viewModel::onPhoneSharpiePhoneLanguageChanged,
         onPhoneDobbyEnabledChanged = viewModel::onPhoneDobbyEnabledChanged,
         onPhoneDobbyRegionChanged = viewModel::onPhoneDobbyRegionChanged,
+        onCallScreenPackClicked = viewModel::onCallScreenPackClicked,
         onPhoneAtlasEnabledChanged = viewModel::onPhoneAtlasEnabledChanged,
         onPhoneBeeslyEnabledChanged = viewModel::onPhoneBeeslyEnabledChanged,
         onPhoneBeeslyRegionChanged = viewModel::onPhoneBeeslyRegionChanged,
@@ -173,6 +177,9 @@ fun ExperimentsScreen() = ProvidePreferenceLocals {
     }
     val context = LocalContext.current
     LaunchedEffect(Unit) {
+        viewModel.onResume()
+    }
+    LaunchedEffect(Unit) {
         viewModel.events.collect {
             handleEvent(context, it)
         }
@@ -187,6 +194,34 @@ private fun handleEvent(context: Context, event: Event) {
         Event.MANIFEST_OVERRIDES_CLEARED -> {
             Toast.makeText(context, R.string.screen_experiments_clear_overrides_toast, Toast.LENGTH_LONG).show()
         }
+    }
+}
+
+@Composable
+private fun callScreenPackSummary(pack: CallScreenPackRepository.State): String {
+    fun Locale.label() = getDisplayName(this)
+    return when (pack) {
+        CallScreenPackRepository.State.Checking ->
+            stringResource(R.string.screen_experiments_phone_dobby_pack_checking)
+        is CallScreenPackRepository.State.Unsupported ->
+            stringResource(R.string.screen_experiments_phone_dobby_pack_unsupported, pack.locale.label())
+        CallScreenPackRepository.State.NoRoot ->
+            stringResource(R.string.screen_experiments_phone_dobby_pack_no_root)
+        is CallScreenPackRepository.State.NoVoice ->
+            stringResource(R.string.screen_experiments_phone_dobby_pack_no_voice, pack.locale.label())
+        is CallScreenPackRepository.State.NoSource ->
+            stringResource(R.string.screen_experiments_phone_dobby_pack_no_source)
+        is CallScreenPackRepository.State.NotBuilt -> stringResource(
+            if (pack.outdated) R.string.screen_experiments_phone_dobby_pack_outdated
+            else R.string.screen_experiments_phone_dobby_pack_not_built,
+            pack.locale.label()
+        )
+        is CallScreenPackRepository.State.Building ->
+            stringResource(R.string.screen_experiments_phone_dobby_pack_building, pack.done, pack.total)
+        is CallScreenPackRepository.State.Ready ->
+            stringResource(R.string.screen_experiments_phone_dobby_pack_ready, pack.locale.label(), pack.voice)
+        is CallScreenPackRepository.State.Failed ->
+            stringResource(R.string.screen_experiments_phone_dobby_pack_failed, pack.message)
     }
 }
 
@@ -420,7 +455,7 @@ private fun LoadedContent(state: State.Loaded, interactions: Interactions) {
                         .background(color = surface, shape = dobbyRegionShape)
                         .clip(dobbyRegionShape),
                     value = state.phoneSettings.dobbyRegion,
-                    values = DobbyRegion.entries,
+                    values = state.dobbyRegions,
                     key = "phone_flags_dobby_region",
                     title = { _ ->
                         Text(
@@ -441,6 +476,35 @@ private fun LoadedContent(state: State.Loaded, interactions: Interactions) {
 
                 item {
                     Spacer(Modifier.height(2.dp))
+                }
+
+                if (state.phoneSettings.dobbyRegion == DobbyRegion.PHONE) {
+                    val packShape = Shape(phoneFlagsCount, 1)
+                    val pack = state.callScreenPack
+                    preference(
+                        modifier = Modifier
+                            .padding(horizontal = 8.dp)
+                            .background(color = surface, shape = packShape)
+                            .clip(packShape),
+                        key = "phone_flags_dobby_pack",
+                        enabled = pack !is CallScreenPackRepository.State.Building &&
+                                pack !is CallScreenPackRepository.State.Checking &&
+                                pack !is CallScreenPackRepository.State.Unsupported,
+                        title = {
+                            Text(
+                                text = stringResource(R.string.screen_experiments_phone_dobby_pack),
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                        },
+                        summary = {
+                            Text(text = callScreenPackSummary(pack))
+                        },
+                        onClick = interactions.onCallScreenPackClicked
+                    )
+
+                    item {
+                        Spacer(Modifier.height(2.dp))
+                    }
                 }
             }
 
@@ -1196,7 +1260,9 @@ private fun ContentPreviewLight() {
                 patrickPhase = PatrickPhase.PHASE_TWO,
                 callRecordingEnabled = false
             ),
-            propertiesState = PropertiesRepository.State()
+            propertiesState = PropertiesRepository.State(),
+            dobbyRegions = DobbyRegion.entries,
+            callScreenPack = CallScreenPackRepository.State.Checking
         )
         LoadedContent(state, Interactions.PREVIEW)
     }

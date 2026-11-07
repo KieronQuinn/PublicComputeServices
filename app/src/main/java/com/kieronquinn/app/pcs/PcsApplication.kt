@@ -2,6 +2,8 @@ package com.kieronquinn.app.pcs
 
 import android.app.Application
 import com.google.crypto.tink.hybrid.HybridConfig
+import com.kieronquinn.app.pcs.repositories.CallScreenPackRepository
+import com.kieronquinn.app.pcs.repositories.CallScreenPackRepositoryImpl
 import com.kieronquinn.app.pcs.repositories.DeviceConfigPropertiesRepository
 import com.kieronquinn.app.pcs.repositories.DeviceConfigPropertiesRepositoryImpl
 import com.kieronquinn.app.pcs.repositories.ManifestRepository
@@ -89,6 +91,7 @@ class PcsApplication: Application() {
         }
         single<UpdateRepository> { UpdateRepositoryImpl(get(), get()) }
         single<SettingsRepository> { SettingsRepositoryImpl(get()) }
+        single<CallScreenPackRepository> { CallScreenPackRepositoryImpl(get()) }
     }
 
     private fun viewModels() = module {
@@ -98,7 +101,7 @@ class PcsApplication: Application() {
         viewModel<BaseUrlDialogViewModel> { BaseUrlDialogViewModelImpl(get(), get()) }
         viewModel<BuildLabelViewModel> { BuildLabelViewModelImpl(get()) }
         viewModel<SettingsViewModel> { SettingsViewModelImpl(get(), get(), get(), get(), get(), get(), get(), get()) }
-        viewModel<ExperimentsViewModel> { ExperimentsViewModelImpl(get(), get(), get(), get(), get()) }
+        viewModel<ExperimentsViewModel> { ExperimentsViewModelImpl(get(), get(), get(), get(), get(), get()) }
     }
 
     private fun getRetrofit() = Retrofit.Builder()

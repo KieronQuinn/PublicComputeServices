@@ -90,6 +90,9 @@ object PhoneHooks: GrpcHooks() {
         hookCallScreen(dexKit, settings)
         hookDobbyModel(dexKit, settings)
         if (settings.dobbyEnabled) DobbyMddHooks.install(dexKit, classLoader)
+        if (settings.dobbyEnabled && settings.dobbyRegion == DobbyRegion.PHONE) {
+            CallScreenLanguageHooks.install(dexKit, classLoader, application)
+        }
         hookDobbySettings(dexKit, settings)
         hookXatuModelDownload(dexKit, settings)
         hookXatuMddConnectivity(dexKit, settings)
@@ -466,7 +469,7 @@ object PhoneHooks: GrpcHooks() {
         // Dialer's own region flags are not reliable without the experiment overrides, so select
         // the model from the region PCS is configured for
         val regionOffset = when (settings.dobbyRegion) {
-            DobbyRegion.US -> 0
+            DobbyRegion.US, DobbyRegion.PHONE -> 0
             DobbyRegion.GB -> 1
             DobbyRegion.JP -> 2
             DobbyRegion.CA -> 3
@@ -817,7 +820,7 @@ object PhoneHooks: GrpcHooks() {
                 ?.getListManifestOrNull(settings.dobbyRegion.locale)
                 ?.reflectParseProto(originalValue?.javaClass ?: return null)
             PhoneFlag.DOBBY_IS_USER_IN_US -> if (settings.dobbyEnabled) {
-                settings.dobbyRegion == DobbyRegion.US
+                settings.dobbyRegion == DobbyRegion.US || settings.dobbyRegion == DobbyRegion.PHONE
             } else null
             PhoneFlag.DOBBY_IS_USER_IN_UK -> if (settings.dobbyEnabled) {
                 settings.dobbyRegion == DobbyRegion.GB
