@@ -31,6 +31,7 @@ interface DeviceConfigPropertiesRepository {
         const val AICORE_UNLOAD_INFERENCE = "persist.aicore.unload_inference"
         const val TTS_ENABLED = "persist.tts.pcs_enabled"
         const val AGENT_ENABLED = "persist.agent.pcs_enabled"
+        const val AGENT_SCREENSHOTS_LANGUAGE = "persist.agent.pcs_screenshots_language"
     }
 
     /**

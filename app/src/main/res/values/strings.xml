@@ -140,6 +140,9 @@
     <string name="screen_experiments_category_glance">At a Glance</string>
     <string name="screen_experiments_as_gemini_daily_brief_title">Gemini Daily Brief</string>
     <string name="screen_experiments_as_gemini_daily_brief_content">Show Gemini\'s daily brief in At a Glance on devices Google has not turned it on for yet. Requires root; restarts Android System Intelligence.</string>
+    <string name="screen_experiments_category_screenshots">Pixel Screenshots</string>
+    <string name="screen_experiments_agent_screenshots_language_title">Pixel Screenshots in Phone Language</string>
+    <string name="screen_experiments_agent_screenshots_language_content">Process screenshots in your phone\'s language. Pixel Screenshots only offers itself in a few languages and pauses every screenshot in another one. Your language is added to the languages it accepts; the ones Google lists are kept. Requires root; restarts Pixel Screenshots.</string>
     <string name="screen_experiments_as_force_gsa_title">Disable Google App Check</string>
     <string name="screen_experiments_as_force_gsa_content">Some At a Glance options, such as Sport and Finance, require the search box provider to be set to the Google App, enable this option to disable that check to allow them to work while other search providers are in use.</string>
 

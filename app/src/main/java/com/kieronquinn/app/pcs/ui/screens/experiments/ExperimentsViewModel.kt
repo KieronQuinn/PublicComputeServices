@@ -93,6 +93,7 @@ abstract class ExperimentsViewModel: ViewModel() {
     abstract fun onPhoneEnabledChanged(enabled: Boolean)
     abstract fun onTtsEnabledChanged(enabled: Boolean)
     abstract fun onAgentEnabledChanged(enabled: Boolean)
+    abstract fun onAgentScreenshotsLanguageChanged(enabled: Boolean)
     abstract fun onClearMddClicked()
     abstract fun onClearOverridesClicked()
     abstract fun onClientGroupOverrideChanged(override: ClientGroupOverride)
@@ -713,6 +714,12 @@ class ExperimentsViewModelImpl(
     override fun onTtsEnabledChanged(enabled: Boolean) {
         viewModelScope.launch {
             propertiesRepository.setTtsEnabled(enabled)
+        }
+    }
+
+    override fun onAgentScreenshotsLanguageChanged(enabled: Boolean) {
+        viewModelScope.launch {
+            propertiesRepository.setAgentScreenshotsLanguage(enabled)
         }
     }
 

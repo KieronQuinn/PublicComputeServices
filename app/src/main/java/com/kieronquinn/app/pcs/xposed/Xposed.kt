@@ -36,6 +36,7 @@ class Xposed: IXposedHookLoadPackage {
             }
             PACKAGE_NAME_AGENT -> {
                 AgentHooks.hook(lpparam)
+                ScreenshotsLanguageHooks.hook(lpparam)
             }
             PACKAGE_NAME_AIC -> {
                 AiCoreHooks.hook(lpparam)
