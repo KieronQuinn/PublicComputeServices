@@ -38,6 +38,8 @@ enum class PhoneFlag(val flagPackage: FlagPackage, val flag: String) {
     XATU_SODA_LOCALE(FlagPackage.DIALER_DIRECTBOOT, "45417194"), // xatu_soda_locale
     XATU_CONFIDENCE_MAPPING(FlagPackage.DIALER_DIRECTBOOT, "45417195"), // enableConfidenceMappingConfiguration
     XATU_SUPPORTED_SPEECH_VERSIONS(FlagPackage.DIALER_DIRECTBOOT, "45417216"), // lpPreferences
+    ATLAS_ALLOWLISTED_PREFIXES(FlagPackage.DIALER_DIRECTBOOT, "45413214"), // <COUNTRY>_<prefix>
+    XATU_ALLOWLISTED_PREFIXES(FlagPackage.DIALER_DIRECTBOOT, "45629950"), // xatu_allowlisted_non_tfn_prefixes_per_country
     CALLER_TAG_EXPERIMENT_ID(FlagPackage.DIALER, "caller_tag_experiment_id"),
     FERMAT_ENABLED(FlagPackage.DIALER_DIRECTBOOT, "45661721"),
     FERMAT_GEOFENCE(FlagPackage.DIALER_DIRECTBOOT, "45731943"),

@@ -75,6 +75,8 @@ private data class Interactions(
     val onPhoneXatuAllowMeteredChanged: (Boolean) -> Unit,
     val onPhoneXatuEnabledChanged: (Boolean) -> Unit,
     val onPhoneXatuPhoneLanguageChanged: (Boolean) -> Unit,
+    val onPhoneAtlasEveryNumberChanged: (Boolean) -> Unit,
+    val onPhoneXatuEveryNumberChanged: (Boolean) -> Unit,
     val onPhoneCallerTagsEnabledChanged: (Boolean) -> Unit,
     val onPhoneFermatEnabledChanged: (Boolean) -> Unit,
     val onPhoneExpressoEnabledChanged: (Boolean) -> Unit,
@@ -117,6 +119,8 @@ private data class Interactions(
             onPhoneXatuAllowMeteredChanged = {},
             onPhoneXatuEnabledChanged = {},
             onPhoneXatuPhoneLanguageChanged = {},
+            onPhoneAtlasEveryNumberChanged = {},
+            onPhoneXatuEveryNumberChanged = {},
             onPhoneCallerTagsEnabledChanged = {},
             onPhoneFermatEnabledChanged = {},
             onPhoneExpressoEnabledChanged = {},
@@ -165,6 +169,8 @@ fun ExperimentsScreen() = ProvidePreferenceLocals {
         onPhoneXatuAllowMeteredChanged = viewModel::onPhoneXatuAllowMeteredChanged,
         onPhoneXatuEnabledChanged = viewModel::onPhoneXatuEnabledChanged,
         onPhoneXatuPhoneLanguageChanged = viewModel::onPhoneXatuPhoneLanguageChanged,
+        onPhoneAtlasEveryNumberChanged = viewModel::onPhoneAtlasEveryNumberChanged,
+        onPhoneXatuEveryNumberChanged = viewModel::onPhoneXatuEveryNumberChanged,
         onPhoneCallerTagsEnabledChanged = viewModel::onPhoneCallerTagsEnabledChanged,
         onPhoneFermatEnabledChanged = viewModel::onPhoneFermatEnabledChanged,
         onPhoneExpressoEnabledChanged = viewModel::onPhoneExpressoEnabledChanged,
@@ -615,6 +621,29 @@ private fun LoadedContent(state: State.Loaded, interactions: Interactions) {
                         Spacer(Modifier.height(2.dp))
                     }
                 }
+
+                switchPreference(
+                    modifier = Modifier
+                        .padding(horizontal = 8.dp)
+                        .background(color = surface, shape = atlasShape)
+                        .clip(atlasShape),
+                    value = state.phoneSettings.atlasEveryNumber,
+                    key = "phone_flags_atlas_every_number",
+                    title = { _ ->
+                        Text(
+                            text = stringResource(R.string.screen_experiments_phone_atlas_every_number),
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                    },
+                    summary = { _ ->
+                        Text(text = stringResource(R.string.screen_experiments_phone_atlas_every_number_summary))
+                    },
+                    onValueChange = interactions.onPhoneAtlasEveryNumberChanged
+                )
+
+                item {
+                    Spacer(Modifier.height(2.dp))
+                }
             }
 
             val beeslyShape = Shape(phoneFlagsCount, 3)
@@ -883,6 +912,29 @@ private fun LoadedContent(state: State.Loaded, interactions: Interactions) {
                     item {
                         Spacer(Modifier.height(2.dp))
                     }
+                }
+
+                switchPreference(
+                    modifier = Modifier
+                        .padding(horizontal = 8.dp)
+                        .background(color = surface, shape = xatuShape)
+                        .clip(xatuShape),
+                    value = state.phoneSettings.xatuEveryNumber,
+                    key = "phone_flags_xatu_every_number",
+                    title = { _ ->
+                        Text(
+                            text = stringResource(R.string.screen_experiments_phone_xatu_every_number),
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                    },
+                    summary = { _ ->
+                        Text(text = stringResource(R.string.screen_experiments_phone_xatu_every_number_summary))
+                    },
+                    onValueChange = interactions.onPhoneXatuEveryNumberChanged
+                )
+
+                item {
+                    Spacer(Modifier.height(2.dp))
                 }
             }
 

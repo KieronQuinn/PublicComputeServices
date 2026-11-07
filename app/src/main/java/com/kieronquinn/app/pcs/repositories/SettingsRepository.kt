@@ -36,6 +36,8 @@ interface SettingsRepository: BaseSettingsRepository {
     val phoneBeeslyRegion: PcsSetting<BeeslyRegion>
     val phoneBeeslyPhoneLanguage: PcsSetting<Boolean>
     val phoneXatuPhoneLanguage: PcsSetting<Boolean>
+    val phoneAtlasEveryNumber: PcsSetting<Boolean>
+    val phoneXatuEveryNumber: PcsSetting<Boolean>
     val phoneNautilusEnabled: PcsSetting<Boolean>
     val phoneSonicEnabled: PcsSetting<Boolean>
     val phoneXatuAllowMetered: PcsSetting<Boolean>
@@ -200,6 +202,12 @@ class SettingsRepositoryImpl(
         private const val KEY_PHONE_XATU_PHONE_LANGUAGE = "phone_xatu_phone_language"
         private const val DEFAULT_PHONE_XATU_PHONE_LANGUAGE = false
 
+        private const val KEY_PHONE_ATLAS_EVERY_NUMBER = "phone_atlas_every_number"
+        private const val DEFAULT_PHONE_ATLAS_EVERY_NUMBER = false
+
+        private const val KEY_PHONE_XATU_EVERY_NUMBER = "phone_xatu_every_number"
+        private const val DEFAULT_PHONE_XATU_EVERY_NUMBER = false
+
         private const val KEY_PHONE_NAUTILUS_ENABLED = "phone_nautilus_enabled"
         private const val DEFAULT_PHONE_NAUTILUS_ENABLED = false
 
@@ -258,6 +266,8 @@ class SettingsRepositoryImpl(
     override val phoneBeeslyRegion = enum(KEY_PHONE_BEESLY_REGION, DEFAULT_PHONE_BEESLY_REGION)
     override val phoneBeeslyPhoneLanguage = boolean(KEY_PHONE_BEESLY_PHONE_LANGUAGE, DEFAULT_PHONE_BEESLY_PHONE_LANGUAGE)
     override val phoneXatuPhoneLanguage = boolean(KEY_PHONE_XATU_PHONE_LANGUAGE, DEFAULT_PHONE_XATU_PHONE_LANGUAGE)
+    override val phoneAtlasEveryNumber = boolean(KEY_PHONE_ATLAS_EVERY_NUMBER, DEFAULT_PHONE_ATLAS_EVERY_NUMBER)
+    override val phoneXatuEveryNumber = boolean(KEY_PHONE_XATU_EVERY_NUMBER, DEFAULT_PHONE_XATU_EVERY_NUMBER)
     override val phoneNautilusEnabled = boolean(KEY_PHONE_NAUTILUS_ENABLED, DEFAULT_PHONE_NAUTILUS_ENABLED)
     override val phoneSonicEnabled = boolean(KEY_PHONE_SONIC_ENABLED, DEFAULT_PHONE_SONIC_ENABLED)
     override val phoneXatuAllowMetered = boolean(KEY_PHONE_XATU_ALLOW_METERED, DEFAULT_PHONE_XATU_ALLOW_METERED)

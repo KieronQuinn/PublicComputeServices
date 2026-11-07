@@ -6,9 +6,11 @@ import com.kieronquinn.app.pcs.utils.DebugLogging
 import com.kieronquinn.app.pcs.repositories.SettingsRepository.CallScreenMode
 import com.kieronquinn.app.pcs.repositories.SettingsRepository.SharpieCountryMode
 import android.app.Application
+import android.telephony.TelephonyManager
 import android.content.res.Resources
 import android.util.Base64
 import com.kieronquinn.app.pcs.model.PcsManifestList
+import com.kieronquinn.app.pcs.model.phone.NumberAllowlist
 import com.kieronquinn.app.pcs.model.phone.PhoneFlag
 import com.kieronquinn.app.pcs.model.phone.FlagValueHolders
 import com.kieronquinn.app.pcs.model.phone.PhoneSettings
@@ -64,6 +66,8 @@ object PhoneHooks: GrpcHooks() {
     private var phoneSettings: PhoneSettings? = null
     /** The language Direct My Call listens in, when it runs in the phone's language. */
     private var xatuLanguageTag: String? = null
+    /** The SIM's country (or the network's without a SIM country), for "every number" allowlists. */
+    private var phoneCountry: String? = null
 
     override fun hook(loadPackageParam: LoadPackageParam) {
         DebugLogging.beginPhoneProcess()
@@ -91,6 +95,9 @@ object PhoneHooks: GrpcHooks() {
         xatuLanguageTag = phoneLocale.toLanguageTag().takeIf {
             settings.xatuEnabled && settings.xatuPhoneLanguage && MenuParser.forLocale(phoneLocale) != null
         }
+        phoneCountry = application.getSystemService(TelephonyManager::class.java)?.let { telephony ->
+            telephony.simCountryIso.takeIf { !it.isNullOrBlank() } ?: telephony.networkCountryIso
+        }?.takeIf { it.isNotBlank() }?.uppercase(Locale.ROOT)
         hookFlagDataStore(dexKit, settings)
         CallNotesHooks.install(dexKit, classLoader, settings.fermatEnabled)
         hookSharpieCountry(dexKit, settings)
@@ -833,6 +840,15 @@ object PhoneHooks: GrpcHooks() {
             })
     }
 
+    /** A number allowlist flag with every number of the phone's country added. */
+    private fun withEveryNumber(originalValue: Any?): Any? {
+        val original = originalValue ?: return null
+        val country = phoneCountry ?: return null
+        return VoicePackHooks.serialize(original)
+            ?.let { NumberAllowlist.withEveryNumber(it, country) }
+            ?.reflectParseProto(original.javaClass)
+    }
+
     private fun PhoneFlag.getValueOrNull(originalValue: Any?, settings: PhoneSettings): Any? {
         return when (this) {
             PhoneFlag.DOBBY_DOWNLOAD_PATH -> settings.dobbyUrl?.takeIf {
@@ -904,6 +920,12 @@ object PhoneHooks: GrpcHooks() {
             // Direct My Call in the phone's language: speech recognition in that language, with
             // its speech pack accepted, and English confidence tuning left off.
             PhoneFlag.XATU_SODA_LOCALE -> xatuLanguageTag
+            PhoneFlag.ATLAS_ALLOWLISTED_PREFIXES -> if (settings.atlasEnabled && settings.atlasEveryNumber) {
+                withEveryNumber(originalValue)
+            } else null
+            PhoneFlag.XATU_ALLOWLISTED_PREFIXES -> if (settings.xatuEnabled && settings.xatuEveryNumber) {
+                withEveryNumber(originalValue)
+            } else null
             PhoneFlag.XATU_CONFIDENCE_MAPPING -> if (xatuLanguageTag != null) false else null
             PhoneFlag.XATU_SUPPORTED_SPEECH_VERSIONS -> if (xatuLanguageTag != null) {
                 val original = originalValue ?: return null
