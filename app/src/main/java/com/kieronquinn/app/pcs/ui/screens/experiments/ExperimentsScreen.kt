@@ -99,6 +99,7 @@ private data class Interactions(
     val onAgentEnabledChanged: (Boolean) -> Unit,
     val onAgentScreenshotsLanguageChanged: (Boolean) -> Unit,
     val onWeatherSummaryLanguageChanged: (Boolean) -> Unit,
+    val onJournalLanguageChanged: (Boolean) -> Unit,
     val onClearOverridesClicked: () -> Unit,
     val onClientGroupOverrideChanged: (ClientGroupOverride) -> Unit,
 ) {
@@ -149,6 +150,7 @@ private data class Interactions(
             onAgentEnabledChanged = {},
             onAgentScreenshotsLanguageChanged = {},
             onWeatherSummaryLanguageChanged = {},
+            onJournalLanguageChanged = {},
             onClearOverridesClicked = {},
             onClientGroupOverrideChanged = {}
         )
@@ -205,6 +207,7 @@ fun ExperimentsScreen() = ProvidePreferenceLocals {
         onAgentEnabledChanged = viewModel::onAgentEnabledChanged,
         onAgentScreenshotsLanguageChanged = viewModel::onAgentScreenshotsLanguageChanged,
         onWeatherSummaryLanguageChanged = viewModel::onWeatherSummaryLanguageChanged,
+        onJournalLanguageChanged = viewModel::onJournalLanguageChanged,
         onClearOverridesClicked = viewModel::onClearOverridesClicked,
         onClientGroupOverrideChanged = viewModel::onClientGroupOverrideChanged
     )
@@ -1429,6 +1432,35 @@ private fun LoadedContent(state: State.Loaded, interactions: Interactions) {
             )
         }
 
+        if (state.journalAvailable) {
+            preferenceCategory(
+                key = "category_journal",
+                title = {
+                    Text(stringResource(R.string.screen_experiments_category_journal))
+                }
+            )
+
+            val journalLanguageShape = Shape(1, 0)
+            switchPreference(
+                modifier = Modifier
+                    .padding(horizontal = 8.dp)
+                    .background(color = surface, shape = journalLanguageShape)
+                    .clip(journalLanguageShape),
+                value = state.propertiesState.journalLanguage,
+                key = "journal_language",
+                title = {
+                    Text(
+                        text = stringResource(R.string.screen_experiments_journal_language_title),
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                },
+                summary = {
+                    Text(text = textResource(R.string.screen_experiments_journal_language_content))
+                },
+                onValueChange = interactions.onJournalLanguageChanged
+            )
+        }
+
         preferenceCategory(
             key = "category_advanced",
             title = {
@@ -1605,6 +1637,7 @@ private fun ContentPreviewLight() {
             phoneAvailable = true,
             agentAvailable = true,
             weatherAvailable = true,
+            journalAvailable = true,
             phoneSettings = PhoneSettings(
                 sharpieEnabled = false,
                 dobbyEnabled = false,

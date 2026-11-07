@@ -33,6 +33,7 @@ interface DeviceConfigPropertiesRepository {
         const val AGENT_ENABLED = "persist.agent.pcs_enabled"
         const val AGENT_SCREENSHOTS_LANGUAGE = "persist.agent.pcs_screenshots_language"
         const val WEATHER_SUMMARY_LANGUAGE = "persist.weather.pcs_summary_language"
+        const val JOURNAL_LANGUAGE = "persist.aurelius.pcs_journal_language"
     }
 
     /**

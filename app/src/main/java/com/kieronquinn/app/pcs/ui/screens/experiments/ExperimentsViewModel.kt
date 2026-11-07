@@ -6,6 +6,7 @@ import android.content.pm.PackageManager
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.kieronquinn.app.pcs.PcsApplication.Companion.PACKAGE_NAME_AGENT
+import com.kieronquinn.app.pcs.PcsApplication.Companion.PACKAGE_NAME_JOURNAL
 import com.kieronquinn.app.pcs.PcsApplication.Companion.PACKAGE_NAME_WEATHER
 import com.kieronquinn.app.pcs.PcsApplication.Companion.PACKAGE_NAME_AIC
 import com.kieronquinn.app.pcs.PcsApplication.Companion.PACKAGE_NAME_AS
@@ -96,6 +97,7 @@ abstract class ExperimentsViewModel: ViewModel() {
     abstract fun onAgentEnabledChanged(enabled: Boolean)
     abstract fun onAgentScreenshotsLanguageChanged(enabled: Boolean)
     abstract fun onWeatherSummaryLanguageChanged(enabled: Boolean)
+    abstract fun onJournalLanguageChanged(enabled: Boolean)
     abstract fun onClearMddClicked()
     abstract fun onClearOverridesClicked()
     abstract fun onClientGroupOverrideChanged(override: ClientGroupOverride)
@@ -109,6 +111,7 @@ abstract class ExperimentsViewModel: ViewModel() {
             val phoneAvailable: Boolean,
             val agentAvailable: Boolean,
             val weatherAvailable: Boolean,
+            val journalAvailable: Boolean,
             val phoneSettings: PhoneSettings,
             val propertiesState: PropertiesRepository.State,
             /** Regions offered for Call Screen; [DobbyRegion.PHONE] only with a translation. */
@@ -215,6 +218,15 @@ class ExperimentsViewModelImpl(
     private val isWeatherAvailable = flow {
         try {
             context.packageManager.getPackageInfo(PACKAGE_NAME_WEATHER, 0)
+            emit(true)
+        } catch (e: PackageManager.NameNotFoundException) {
+            emit(false)
+        }
+    }
+
+    private val isJournalAvailable = flow {
+        try {
+            context.packageManager.getPackageInfo(PACKAGE_NAME_JOURNAL, 0)
             emit(true)
         } catch (e: PackageManager.NameNotFoundException) {
             emit(false)
@@ -378,7 +390,8 @@ class ExperimentsViewModelImpl(
         isMagicCueAvailable,
         isNowPlayingAvailable,
         isAiCoreAvailable,
-        isWeatherAvailable
+        isWeatherAvailable,
+        isJournalAvailable
     ) {
         it
     }
@@ -410,6 +423,7 @@ class ExperimentsViewModelImpl(
         val (isAgentAvailable, isPhoneAvailable, magicCueAvailable, nowPlayingAvailable,
             isAiCoreAvailable) = packageStates
         val isWeatherAvailable = packageStates[5]
+        val isJournalAvailable = packageStates[6]
         State.Loaded(
             magicCueAvailable = magicCueAvailable,
             nowPlayingAvailable = nowPlayingAvailable,
@@ -417,6 +431,7 @@ class ExperimentsViewModelImpl(
             phoneAvailable = isPhoneAvailable,
             agentAvailable = isAgentAvailable,
             weatherAvailable = isWeatherAvailable,
+            journalAvailable = isJournalAvailable,
             phoneSettings = phoneSettings,
             propertiesState = propertiesState,
             dobbyRegions = dobbyRegions,
@@ -741,6 +756,12 @@ class ExperimentsViewModelImpl(
     override fun onWeatherSummaryLanguageChanged(enabled: Boolean) {
         viewModelScope.launch {
             propertiesRepository.setWeatherSummaryLanguage(enabled)
+        }
+    }
+
+    override fun onJournalLanguageChanged(enabled: Boolean) {
+        viewModelScope.launch {
+            propertiesRepository.setJournalLanguage(enabled)
         }
     }
 

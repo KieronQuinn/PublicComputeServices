@@ -58,6 +58,7 @@ class PcsApplication: Application() {
         const val PACKAGE_NAME_AIC = "com.google.android.aicore"
         const val PACKAGE_NAME_AGENT = "com.google.android.apps.pixel.agent"
         const val PACKAGE_NAME_WEATHER = "com.google.android.apps.weather"
+        const val PACKAGE_NAME_JOURNAL = "com.google.android.apps.pixel.aurelius"
     }
 
     private var uiInitialized = false

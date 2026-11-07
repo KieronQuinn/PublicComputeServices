@@ -146,6 +146,9 @@
     <string name="screen_experiments_category_weather">Pixel Weather</string>
     <string name="screen_experiments_weather_summary_language_title">Weather AI Summary in Phone Language</string>
     <string name="screen_experiments_weather_summary_language_content">Show Pixel Weather\'s on-device AI summary in your phone\'s language. Pixel Weather only writes it in English, German, French and Japanese and hides it in other languages. Your language is added to the ones it is offered in, and the summary is written the way Pixel Weather writes it in German, asking for your language instead. Requires root and a device Pixel Weather offers the summary on; restarts Pixel Weather.</string>
+    <string name="screen_experiments_category_journal">Pixel Journal</string>
+    <string name="screen_experiments_journal_language_title">Journal AI in Phone Language</string>
+    <string name="screen_experiments_journal_language_content">Offer Pixel Journal\'s AI features (writing suggestions, feedback, reflections) in your phone\'s language. Journal only offers them in English, German and Japanese. Generated text is still checked by Journal\'s safety classifier, but Google only publishes it for those languages, so your language is checked with the English one, which catches less in other languages. Requires root; restarts Pixel Journal.</string>
     <string name="screen_experiments_as_force_gsa_title">Disable Google App Check</string>
     <string name="screen_experiments_as_force_gsa_content">Some At a Glance options, such as Sport and Finance, require the search box provider to be set to the Google App, enable this option to disable that check to allow them to work while other search providers are in use.</string>
 
