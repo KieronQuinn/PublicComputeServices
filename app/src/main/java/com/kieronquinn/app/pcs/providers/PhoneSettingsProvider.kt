@@ -94,7 +94,8 @@ class PhoneSettingsProvider: ContentProvider() {
         sharpieCountry = settings.phoneSharpieCountry.getSync(),
         manifestHandlingEnabled = settings.phoneManifestHandlingEnabled.getSync(),
         debugLogging = settings.phoneDebugLogging.getSync(),
-        xatuAllowMetered = settings.phoneXatuAllowMetered.getSync()
+        xatuAllowMetered = settings.phoneXatuAllowMetered.getSync(),
+        sharpiePhoneLanguage = settings.phoneSharpiePhoneLanguage.getSync()
     )
 
     override fun query(

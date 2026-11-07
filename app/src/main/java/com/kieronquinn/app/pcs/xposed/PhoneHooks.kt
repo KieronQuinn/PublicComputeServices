@@ -4,6 +4,7 @@ import com.kieronquinn.app.pcs.utils.DebugLogging
 import com.kieronquinn.app.pcs.repositories.SettingsRepository.CallScreenMode
 import com.kieronquinn.app.pcs.repositories.SettingsRepository.SharpieCountryMode
 import android.app.Application
+import android.content.res.Resources
 import android.util.Base64
 import com.kieronquinn.app.pcs.model.PcsManifestList
 import com.kieronquinn.app.pcs.model.phone.PhoneFlag
@@ -26,6 +27,7 @@ import org.luckypray.dexkit.result.MethodData
 import java.lang.reflect.Method
 import java.lang.reflect.Modifier
 import java.lang.reflect.Proxy
+import java.util.Locale
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Future
 import java.util.concurrent.atomic.AtomicLong
@@ -33,6 +35,15 @@ import java.util.concurrent.atomic.AtomicLong
 object PhoneHooks: GrpcHooks() {
 
     override val tag = "PhoneHooks"
+
+    /**
+     *  Log strings that identify `SharpieCountryAllowlist`: before 244 the check took a country
+     *  code, from 244 (seen on 246) a region enum.
+     */
+    private val SHARPIE_ALLOWLIST_STRINGS = listOf(
+        arrayOf("Country %s not allowed.", "No sim country found."),
+        arrayOf("Region %s not allowed.", "No SIM region found.")
+    )
     override val applicationClassName = "com.android.dialer.Dialer_Application"
     override val activityClassName =
         "com.android.dialer.multibindingsettings.impl.DialerSettingsActivity"
@@ -75,6 +86,7 @@ object PhoneHooks: GrpcHooks() {
         hookFlagDataStore(dexKit, settings)
         CallNotesHooks.install(dexKit, classLoader, settings.fermatEnabled)
         hookSharpieCountry(dexKit, settings)
+        hookSharpieLocale(dexKit, settings, application)
         hookCallScreen(dexKit, settings)
         hookDobbyModel(dexKit, settings)
         if (settings.dobbyEnabled) DobbyMddHooks.install(dexKit, classLoader)
@@ -306,24 +318,32 @@ object PhoneHooks: GrpcHooks() {
             log("Leaving Dialer's Scam Detection country check alone")
             return
         }
-        val allowlist = dexKit.findClass {
-            matcher {
-                usingStrings("Country %s not allowed.", "No sim country found.")
-            }
-        }.singleOrNull()?.getInstance(classLoader) ?: run {
+        // Older builds pass the SIM country as a String; from 244 it is a region enum whose
+        // constant names are the ISO country codes, with reworded log strings.
+        val allowlist = SHARPIE_ALLOWLIST_STRINGS.firstNotNullOfOrNull { strings ->
+            dexKit.findClass {
+                matcher {
+                    usingStrings(*strings)
+                }
+            }.singleOrNull()
+        }?.getInstance(classLoader) ?: run {
             log("Unable to find SharpieCountryAllowlist")
             return
         }
         val isSimCountryAllowed = allowlist.declaredMethods.firstOrNull {
-            it.parameterCount == 2 && it.parameterTypes[0] == String::class.java &&
-                    it.returnType == java.lang.Boolean.TYPE
+            it.parameterCount == 2 && it.returnType == java.lang.Boolean.TYPE &&
+                    (it.parameterTypes[0] == String::class.java || it.parameterTypes[0].isEnum)
         } ?: run {
             log("Unable to find SharpieCountryAllowlist method")
             return
         }
         XposedBridge.hookMethod(isSimCountryAllowed, object: XC_MethodHook() {
             override fun afterHookedMethod(param: MethodHookParam) {
-                val country = param.args[0] as? String ?: return
+                val country = when (val arg = param.args[0]) {
+                    is String -> arg
+                    is Enum<*> -> arg.name
+                    else -> return
+                }
                 val allowed = settings.getSharpieCountryOverride(country) ?: return
                 if (param.result != allowed) {
                     log("Scam Detection country override for $country: allowed=$allowed")
@@ -332,6 +352,54 @@ object PhoneHooks: GrpcHooks() {
             }
         })
         log("Overriding the Scam Detection country check in ${allowlist.name} ($mode)")
+    }
+
+    /**
+     *  Scam Detection picks its listening language in `SharpieLocaleProviderImpl`: the system
+     *  locale if it is in a fixed list of supported locales, otherwise a locale for the SIM
+     *  region, otherwise en-US. A call in any other language is then transcribed as English.
+     *
+     *  When enabled, the provider's result is replaced with the phone's language, but only if
+     *  on-device speech recognition supports it. Dialer then downloads the speech recognition
+     *  (SODA) pack for that language itself. For a language with no speech pack Dialer's own
+     *  choice is kept, so Scam Detection keeps working as before instead of stopping with
+     *  "SODA unavailable".
+     */
+    private fun LoadPackageParam.hookSharpieLocale(
+        dexKit: DexKitBridge,
+        settings: PhoneSettings,
+        application: Application
+    ) {
+        if (!settings.sharpieEnabled || !settings.sharpiePhoneLanguage) return
+        val phoneLocale = Resources.getSystem().configuration.locales.get(0) ?: return
+        val provider = dexKit.findClass {
+            matcher {
+                usingStrings("using system locale %s for Sharpie")
+            }
+        }.singleOrNull()?.getInstance(classLoader) ?: run {
+            log("Unable to find SharpieLocaleProvider")
+            return
+        }
+        // The locale is returned from a suspend function: one Continuation parameter, Object result
+        val methods = provider.declaredMethods.filter {
+            !Modifier.isStatic(it.modifiers) && it.parameterCount == 1 &&
+                    it.returnType == Any::class.java
+        }
+        if (methods.isEmpty()) {
+            log("Unable to find SharpieLocaleProvider method")
+            return
+        }
+        val speechSupport = OnDeviceSpeechSupport(tag, phoneLocale).apply { start(application) }
+        val hook = object: XC_MethodHook() {
+            override fun afterHookedMethod(param: MethodHookParam) {
+                val selected = param.result as? Locale ?: return
+                if (selected == phoneLocale || !speechSupport.isSupported) return
+                log("Scam Detection listening in $phoneLocale instead of $selected")
+                param.result = phoneLocale
+            }
+        }
+        methods.forEach { XposedBridge.hookMethod(it, hook) }
+        log("Overriding the Scam Detection locale in ${provider.name} (${methods.size} methods)")
     }
 
     /**

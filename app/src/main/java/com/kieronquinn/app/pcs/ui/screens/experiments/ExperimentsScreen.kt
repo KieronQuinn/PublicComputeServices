@@ -57,6 +57,7 @@ private data class Interactions(
     val onPhoneSharpieCountryModeChanged: (SharpieCountryMode) -> Unit,
     val onPhoneSharpieCountryChanged: (String) -> Unit,
     val onPhoneSharpieEnabledChanged: (Boolean) -> Unit,
+    val onPhoneSharpiePhoneLanguageChanged: (Boolean) -> Unit,
     val onPhoneDobbyEnabledChanged: (Boolean) -> Unit,
     val onPhoneDobbyRegionChanged: (DobbyRegion) -> Unit,
     val onPhoneAtlasEnabledChanged: (Boolean) -> Unit,
@@ -92,6 +93,7 @@ private data class Interactions(
             onPhoneSharpieCountryModeChanged = {},
             onPhoneSharpieCountryChanged = {},
             onPhoneSharpieEnabledChanged = {},
+            onPhoneSharpiePhoneLanguageChanged = {},
             onPhoneDobbyEnabledChanged = {},
             onPhoneDobbyRegionChanged = {},
             onPhoneAtlasEnabledChanged = {},
@@ -133,6 +135,7 @@ fun ExperimentsScreen() = ProvidePreferenceLocals {
         onPhoneSharpieCountryModeChanged = viewModel::onPhoneSharpieCountryModeChanged,
         onPhoneSharpieCountryChanged = viewModel::onPhoneSharpieCountryChanged,
         onPhoneSharpieEnabledChanged = viewModel::onPhoneSharpieEnabledChanged,
+        onPhoneSharpiePhoneLanguageChanged = viewModel::onPhoneSharpiePhoneLanguageChanged,
         onPhoneDobbyEnabledChanged = viewModel::onPhoneDobbyEnabledChanged,
         onPhoneDobbyRegionChanged = viewModel::onPhoneDobbyRegionChanged,
         onPhoneAtlasEnabledChanged = viewModel::onPhoneAtlasEnabledChanged,
@@ -309,6 +312,29 @@ private fun LoadedContent(state: State.Loaded, interactions: Interactions) {
                     item {
                         Spacer(Modifier.height(2.dp))
                     }
+                }
+
+                switchPreference(
+                    modifier = Modifier
+                        .padding(horizontal = 8.dp)
+                        .background(color = surface, shape = sharpieCountryShape)
+                        .clip(sharpieCountryShape),
+                    value = state.phoneSettings.sharpiePhoneLanguage,
+                    key = "phone_flags_sharpie_phone_language",
+                    title = { _ ->
+                        Text(
+                            text = stringResource(R.string.screen_experiments_phone_sharpie_phone_language),
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                    },
+                    summary = { _ ->
+                        Text(text = stringResource(R.string.screen_experiments_phone_sharpie_phone_language_summary))
+                    },
+                    onValueChange = interactions.onPhoneSharpiePhoneLanguageChanged
+                )
+
+                item {
+                    Spacer(Modifier.height(2.dp))
                 }
             }
 

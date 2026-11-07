@@ -30,7 +30,8 @@ data class PhoneSettings(
     val sharpieCountry: String = "US",
     val manifestHandlingEnabled: Boolean = false,
     val debugLogging: Boolean = false,
-    val xatuAllowMetered: Boolean = true
+    val xatuAllowMetered: Boolean = true,
+    val sharpiePhoneLanguage: Boolean = false
 ): Parcelable {
 
     val effectiveCallScreenMode: SettingsRepository.CallScreenMode

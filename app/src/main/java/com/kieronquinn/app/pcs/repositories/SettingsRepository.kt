@@ -23,6 +23,7 @@ interface SettingsRepository: BaseSettingsRepository {
     val phoneSharpieCountryMode: PcsSetting<SharpieCountryMode>
     val phoneSharpieCountry: PcsSetting<String>
     val phoneSharpieEnabled: PcsSetting<Boolean>
+    val phoneSharpiePhoneLanguage: PcsSetting<Boolean>
     val phoneDobbyEnabled: PcsSetting<Boolean>
     val phoneDobbyUrl: PcsSetting<String>
     val phoneDobbyDuplexFiles: PcsSetting<String>
@@ -153,6 +154,9 @@ class SettingsRepositoryImpl(
         private const val KEY_PHONE_SHARPIE_ENABLED = "phone_sharpie_enabled"
         private const val DEFAULT_PHONE_SHARPIE_ENABLED = false
 
+        private const val KEY_PHONE_SHARPIE_PHONE_LANGUAGE = "phone_sharpie_phone_language"
+        private const val DEFAULT_PHONE_SHARPIE_PHONE_LANGUAGE = false
+
         private const val KEY_PHONE_DOBBY_ENABLED = "phone_dobby_enabled"
         private const val DEFAULT_PHONE_DOBBY_ENABLED = false
 
@@ -225,6 +229,7 @@ class SettingsRepositoryImpl(
     override val phoneSharpieCountryMode = enum(KEY_PHONE_SHARPIE_COUNTRY_MODE, DEFAULT_PHONE_SHARPIE_COUNTRY_MODE)
     override val phoneSharpieCountry = string(KEY_PHONE_SHARPIE_COUNTRY, DEFAULT_PHONE_SHARPIE_COUNTRY)
     override val phoneSharpieEnabled = boolean(KEY_PHONE_SHARPIE_ENABLED, DEFAULT_PHONE_SHARPIE_ENABLED)
+    override val phoneSharpiePhoneLanguage = boolean(KEY_PHONE_SHARPIE_PHONE_LANGUAGE, DEFAULT_PHONE_SHARPIE_PHONE_LANGUAGE)
     override val phoneDobbyEnabled = boolean(KEY_PHONE_DOBBY_ENABLED, DEFAULT_PHONE_DOBBY_ENABLED)
     override val phoneDobbyUrl = string(KEY_PHONE_DOBBY_URL, DEFAULT_PHONE_DOBBY_URL)
     override val phoneDobbyDuplexFiles = string(KEY_PHONE_DOBBY_DUPLEX_FILES, DEFAULT_PHONE_DOBBY_DUPLEX_FILES)
