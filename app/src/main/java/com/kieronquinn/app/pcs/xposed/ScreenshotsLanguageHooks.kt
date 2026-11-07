@@ -24,7 +24,7 @@ object ScreenshotsLanguageHooks : XposedHooks {
                 this,
                 ScreenshotsFlags.PACKAGE,
                 setOf(ScreenshotsFlags.SUPPORTED_LOCALES, ScreenshotsFlags.OCR_LANGUAGES)
-            ) { flag -> ScreenshotsFlags.entryFor(flag, maximizedLocaleTag()) }.install(loadPackageParam)
+            ) { flag -> listOfNotNull(ScreenshotsFlags.entryFor(flag, maximizedLocaleTag())) }.install(loadPackageParam)
         } catch (error: Throwable) {
             log("Pixel Screenshots language unavailable: $error")
         }

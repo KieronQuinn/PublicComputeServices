@@ -34,6 +34,7 @@ interface DeviceConfigPropertiesRepository {
         const val AGENT_SCREENSHOTS_LANGUAGE = "persist.agent.pcs_screenshots_language"
         const val WEATHER_SUMMARY_LANGUAGE = "persist.weather.pcs_summary_language"
         const val JOURNAL_LANGUAGE = "persist.aurelius.pcs_journal_language"
+        const val SAFETY_CAR_CRASH = "persist.safetyhub.pcs_car_crash"
     }
 
     /**

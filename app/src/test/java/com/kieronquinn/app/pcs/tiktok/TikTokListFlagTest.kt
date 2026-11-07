@@ -45,4 +45,18 @@ class TikTokListFlagTest {
         assertEquals(listOf("en", "tr"), entries(ProtoWire.encode(fields)))
     }
 
+    @Test
+    fun `only missing entries are added, in order`() {
+        assertEquals(
+            listOf("DE", "US", "TR", "AZ"),
+            entries(TikTokListFlag.withEntries(list("DE", "US"), listOf("TR", "US", "AZ", "TR"))!!)
+        )
+    }
+
+    @Test
+    fun `listed entries are not added again`() {
+        assertNull(TikTokListFlag.withEntries(list("TR", "AZ"), listOf("AZ", "TR")))
+        assertNull(TikTokListFlag.withEntries(list("TR"), emptyList()))
+    }
+
 }

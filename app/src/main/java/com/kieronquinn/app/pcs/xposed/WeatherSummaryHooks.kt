@@ -43,7 +43,7 @@ object WeatherSummaryHooks : XposedHooks {
         if (!SystemProperties_getBoolean(WEATHER_SUMMARY_LANGUAGE, false)) return
         try {
             TikTokListFlagHooks(this, WeatherSummary.PACKAGE, setOf(WeatherSummary.SUPPORTED_LANGUAGES)) {
-                Locale.getDefault().language.takeIf { it.isNotBlank() }
+                listOf(Locale.getDefault().language)
             }.install(loadPackageParam)
         } catch (error: Throwable) {
             log("Weather summary languages unavailable: $error")

@@ -24,14 +24,14 @@ import java.util.IdentityHashMap
  *  so the shared default holders other flags use are never changed, and each copy gets a value
  *  supplier that returns the served list with the phone's entry added.
  *
- *  @param entryFor the entry a flag of [mendelPackage] needs, read when the value is, or null for
- *  a flag that is left alone.
+ *  @param entriesFor the entries a flag of [mendelPackage] needs, read when the value is; none
+ *  leaves the flag alone.
  */
 class TikTokListFlagHooks(
     private val owner: XposedHooks,
     private val mendelPackage: String,
     private val flags: Set<String>,
-    private val entryFor: (flag: String) -> String?
+    private val entriesFor: (flag: String) -> List<String>
 ) {
 
     companion object {
@@ -116,17 +116,18 @@ class TikTokListFlagHooks(
     }
 
     private fun changedValue(flag: String, original: Any): Any? {
-        val entry = entryFor(flag) ?: return null
+        val entries = entriesFor(flag).filter { it.isNotBlank() }.distinct()
+        if (entries.isEmpty()) return null
         return synchronized(values) {
-            val changed = values.getOrPut("$flag/$entry") { IdentityHashMap() }
-            changed[original] ?: withEntry(original, entry)?.also { changed[original] = it }
+            val changed = values.getOrPut("$flag/${entries.joinToString("\u0000")}") { IdentityHashMap() }
+            changed[original] ?: withEntries(original, entries)?.also { changed[original] = it }
         }
     }
 
-    /** The served list with [entry], or null when it is listed or cannot be changed. */
-    private fun withEntry(original: Any, entry: String): Any? {
+    /** The served list with [entries], or null when they are listed or it cannot be changed. */
+    private fun withEntries(original: Any, entries: List<String>): Any? {
         val bytes = VoicePackHooks.serialize(original) ?: return null
-        return TikTokListFlag.withEntry(bytes, entry)?.reflectParseProto(original.javaClass)
+        return TikTokListFlag.withEntries(bytes, entries)?.reflectParseProto(original.javaClass)
     }
 
 }
