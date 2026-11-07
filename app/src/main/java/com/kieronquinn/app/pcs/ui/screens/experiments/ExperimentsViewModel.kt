@@ -87,6 +87,7 @@ abstract class ExperimentsViewModel: ViewModel() {
     abstract fun onAsNowPlayingChanged(enabled: Boolean)
     abstract fun onAsForceGSAChanged(enabled: Boolean)
     abstract fun onAiCoreUnloadInferenceChanged(enabled: Boolean)
+    abstract fun onAsNotificationOrganizerChanged(enabled: Boolean)
 
     abstract fun onPhoneEnabledChanged(enabled: Boolean)
     abstract fun onTtsEnabledChanged(enabled: Boolean)
@@ -678,6 +679,14 @@ class ExperimentsViewModelImpl(
     override fun onAsForceGSAChanged(enabled: Boolean) {
         viewModelScope.launch {
             propertiesRepository.setAsForceGSAEnabled(enabled)
+        }
+    }
+
+    override fun onAsNotificationOrganizerChanged(enabled: Boolean) {
+        viewModelScope.launch {
+            propertiesRepository.setAsNotificationOrganizer(enabled)
+            // Notifications are classified in English: the model is needed first.
+            if (enabled) TranslationModelWorker.enqueue(appContext)
         }
     }
 

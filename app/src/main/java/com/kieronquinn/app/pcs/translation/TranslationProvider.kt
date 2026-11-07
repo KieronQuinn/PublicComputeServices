@@ -12,6 +12,7 @@ import android.util.Log
 import androidx.core.net.toUri
 import androidx.core.os.bundleOf
 import com.kieronquinn.app.pcs.BuildConfig
+import com.kieronquinn.app.pcs.PcsApplication.Companion.PACKAGE_NAME_AS
 import com.kieronquinn.app.pcs.PcsApplication.Companion.PACKAGE_NAME_PHONE
 
 /**
@@ -27,12 +28,18 @@ class TranslationProvider : ContentProvider() {
     companion object {
         private const val TAG = "TranslationProvider"
         private const val METHOD_FROM_ENGLISH = "from_english"
+        private const val METHOD_TO_ENGLISH = "to_english"
+        private const val EXTRA_TEXT = "text"
         private const val EXTRA_LINES = "lines"
         private const val EXTRA_STATUS = "status"
 
         private val URI = "content://${BuildConfig.APPLICATION_ID}.translation".toUri()
 
-        private val PACKAGE_ALLOWLIST = setOf(PACKAGE_NAME_PHONE)
+        /** Who may call each method: Phone for Call Notes, ASI for Notification Organizer. */
+        private val PACKAGE_ALLOWLIST = mapOf(
+            METHOD_FROM_ENGLISH to setOf(PACKAGE_NAME_PHONE),
+            METHOD_TO_ENGLISH to setOf(PACKAGE_NAME_AS)
+        )
 
         /**
          *  For hooks: [lines] translated into the phone's language where they are English, or null
@@ -58,16 +65,56 @@ class TranslationProvider : ContentProvider() {
             }
             return translated.toList()
         }
+
+        /**
+         *  For hooks: [text] in English if it is in the phone's language, or null (use the original
+         *  text). Logs nothing about the text itself. Must not be called on the main thread.
+         */
+        fun toEnglish(context: Context, text: String): String? {
+            if (Looper.myLooper() == Looper.getMainLooper()) return null
+            val result = try {
+                context.contentResolver.call(URI, METHOD_TO_ENGLISH, null, bundleOf(EXTRA_TEXT to text))
+            } catch (e: Exception) {
+                return null
+            }
+            if (result?.getString(EXTRA_STATUS) != PhoneLanguageTranslator.Status.OK.name) return null
+            return result.getString(EXTRA_TEXT)?.takeIf { it.isNotBlank() }
+        }
     }
 
     override fun onCreate() = true
 
     override fun call(method: String, arg: String?, extras: Bundle?): Bundle? {
-        if (callingPackage !in PACKAGE_ALLOWLIST) {
-            Log.w(TAG, "Refused uid ${Binder.getCallingUid()}")
+        if (callingPackage !in PACKAGE_ALLOWLIST[method].orEmpty()) {
+            Log.w(TAG, "Refused $method for uid ${Binder.getCallingUid()}")
             return null
         }
-        if (method != METHOD_FROM_ENGLISH) return null
+        return when (method) {
+            METHOD_FROM_ENGLISH -> fromEnglish(extras)
+            METHOD_TO_ENGLISH -> toEnglish(extras)
+            else -> null
+        }
+    }
+
+    private fun toEnglish(extras: Bundle?): Bundle {
+        val text = extras?.getString(EXTRA_TEXT)
+            ?: return bundleOf(EXTRA_STATUS to PhoneLanguageTranslator.Status.ERROR.name)
+        val token = Binder.clearCallingIdentity()
+        try {
+            val result = PhoneLanguageTranslator.toEnglish(text)
+            if (result.status == PhoneLanguageTranslator.Status.MODEL_NOT_READY) {
+                TranslationModelWorker.enqueue(requireContext())
+            }
+            return bundleOf(
+                EXTRA_STATUS to result.status.name,
+                EXTRA_TEXT to result.lines?.single()
+            )
+        } finally {
+            Binder.restoreCallingIdentity(token)
+        }
+    }
+
+    private fun fromEnglish(extras: Bundle?): Bundle {
         val lines = extras?.getStringArray(EXTRA_LINES)?.toList()
             ?: return bundleOf(EXTRA_STATUS to PhoneLanguageTranslator.Status.ERROR.name)
         val token = Binder.clearCallingIdentity()

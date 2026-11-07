@@ -91,6 +91,7 @@ private data class Interactions(
     val onAsNowPlayingChanged: (Boolean) -> Unit,
     val onAsForceGSAChanged: (Boolean) -> Unit,
     val onAiCoreUnloadInferenceChanged: (Boolean) -> Unit,
+    val onAsNotificationOrganizerChanged: (Boolean) -> Unit,
     val onClearMddClicked: () -> Unit,
     val onPhoneEnabledChanged: (Boolean) -> Unit,
     val onTtsEnabledChanged: (Boolean) -> Unit,
@@ -137,6 +138,7 @@ private data class Interactions(
             onAsNowPlayingChanged = {},
             onAsForceGSAChanged = {},
             onAiCoreUnloadInferenceChanged = {},
+            onAsNotificationOrganizerChanged = {},
             onClearMddClicked = {},
             onPhoneEnabledChanged = {},
             onTtsEnabledChanged = {},
@@ -189,6 +191,7 @@ fun ExperimentsScreen() = ProvidePreferenceLocals {
         onAsNowPlayingChanged = viewModel::onAsNowPlayingChanged,
         onAsForceGSAChanged = viewModel::onAsForceGSAChanged,
         onAiCoreUnloadInferenceChanged = viewModel::onAiCoreUnloadInferenceChanged,
+        onAsNotificationOrganizerChanged = viewModel::onAsNotificationOrganizerChanged,
         onClearMddClicked = viewModel::onClearMddClicked,
         onPhoneEnabledChanged = viewModel::onPhoneEnabledChanged,
         onTtsEnabledChanged = viewModel::onTtsEnabledChanged,
@@ -1280,6 +1283,33 @@ private fun LoadedContent(state: State.Loaded, interactions: Interactions) {
                 onValueChange = interactions.onAiCoreUnloadInferenceChanged
             )
         }
+
+        preferenceCategory(
+            key = "category_notifications",
+            title = {
+                Text(stringResource(R.string.screen_experiments_category_notifications))
+            }
+        )
+
+        val notificationOrganizerShape = Shape(1, 0)
+        switchPreference(
+            modifier = Modifier
+                .padding(horizontal = 8.dp)
+                .background(color = surface, shape = notificationOrganizerShape)
+                .clip(notificationOrganizerShape),
+            value = state.propertiesState.asNotificationOrganizer,
+            key = "as_notification_organizer",
+            title = {
+                Text(
+                    text = stringResource(R.string.screen_experiments_as_notification_organizer_title),
+                    style = MaterialTheme.typography.bodyLarge
+                )
+            },
+            summary = {
+                Text(text = textResource(R.string.screen_experiments_as_notification_organizer_content))
+            },
+            onValueChange = interactions.onAsNotificationOrganizerChanged
+        )
 
         preferenceCategory(
             key = "category_aag",

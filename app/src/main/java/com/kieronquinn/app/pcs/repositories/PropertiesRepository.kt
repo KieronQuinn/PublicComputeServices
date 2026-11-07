@@ -9,6 +9,7 @@ import com.kieronquinn.app.pcs.model.ClientGroupOverride
 import com.kieronquinn.app.pcs.repositories.DeviceConfigPropertiesRepository.Companion.AGENT_ENABLED
 import com.kieronquinn.app.pcs.repositories.DeviceConfigPropertiesRepository.Companion.AICORE_UNLOAD_INFERENCE
 import com.kieronquinn.app.pcs.repositories.DeviceConfigPropertiesRepository.Companion.AS_FORCE_GSA
+import com.kieronquinn.app.pcs.repositories.DeviceConfigPropertiesRepository.Companion.AS_NOTIFICATION_ORGANIZER
 import com.kieronquinn.app.pcs.repositories.DeviceConfigPropertiesRepository.Companion.AS_SHOW_NOW_PLAYING_NOTIFICATION
 import com.kieronquinn.app.pcs.repositories.DeviceConfigPropertiesRepository.Companion.DEBUG_PROPERTY_NAME
 import com.kieronquinn.app.pcs.repositories.DeviceConfigPropertiesRepository.Companion.PSI_CLIENT_GROUP_OVERRIDE_PROPERTY_NAME
@@ -40,6 +41,7 @@ interface PropertiesRepository {
     suspend fun setPsiForceAdminAllowance(enabled: Boolean)
     suspend fun setAsNowPlayingNotificationEnabled(enabled: Boolean)
     suspend fun setAsForceGSAEnabled(enabled: Boolean)
+    suspend fun setAsNotificationOrganizer(enabled: Boolean)
     suspend fun setAiCoreUnloadInference(enabled: Boolean)
     suspend fun setClientGroupOverride(override: ClientGroupOverride)
     suspend fun setTtsEnabled(enabled: Boolean)
@@ -53,6 +55,7 @@ interface PropertiesRepository {
         val psiForceAdminAllowance: Boolean = false,
         val asNowPlayingNotificationEnabled: Boolean = false,
         val asForceGSAEnabled: Boolean = false,
+        val asNotificationOrganizer: Boolean = false,
         val aicoreUnloadInference: Boolean = false,
         val ttsEnabled: Boolean = false,
         val agentEnabled: Boolean = false,
@@ -110,6 +113,12 @@ class PropertiesRepositoryImpl(
         refreshBus.emit(System.currentTimeMillis())
     }
 
+    override suspend fun setAsNotificationOrganizer(enabled: Boolean) {
+        deviceConfigPropertiesRepository.setProperty(AS_NOTIFICATION_ORGANIZER, enabled.toString())
+        deviceConfigPropertiesRepository.forceStopPackage(PACKAGE_NAME_AS)
+        refreshBus.emit(System.currentTimeMillis())
+    }
+
     override suspend fun setAiCoreUnloadInference(enabled: Boolean) {
         deviceConfigPropertiesRepository.setProperty(AICORE_UNLOAD_INFERENCE, enabled.toString())
         deviceConfigPropertiesRepository.forceStopPackage(PACKAGE_NAME_AIC)
@@ -142,6 +151,7 @@ class PropertiesRepositoryImpl(
             SystemProperties_getBoolean(PSI_FORCE_ADMIN_ALLOWANCE_PROPERTY_NAME, false),
             SystemProperties_getBoolean(AS_SHOW_NOW_PLAYING_NOTIFICATION, false),
             SystemProperties_getBoolean(AS_FORCE_GSA, false),
+            SystemProperties_getBoolean(AS_NOTIFICATION_ORGANIZER, false),
             SystemProperties_getBoolean(AICORE_UNLOAD_INFERENCE, false),
             SystemProperties_getBoolean(TTS_ENABLED, false),
             SystemProperties_getBoolean(AGENT_ENABLED, false),

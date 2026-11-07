@@ -36,9 +36,11 @@ object PhoneLanguageTranslator {
     private const val IDENTIFY_TIMEOUT_SECONDS = 5L
     private const val TRANSLATE_TIMEOUT_SECONDS = 20L
     private const val CHECK_TIMEOUT_SECONDS = 10L
+    private const val TO_ENGLISH_TIMEOUT_SECONDS = 5L
 
     private val lock = Any()
     private var translator: Pair<String, Translator>? = null
+    private var toEnglish: Pair<String, Translator>? = null
     private val languageId: LanguageIdentifier by lazy {
         LanguageIdentification.getClient(
             LanguageIdentificationOptions.Builder().setConfidenceThreshold(0.01f).build()
@@ -88,6 +90,28 @@ object PhoneLanguageTranslator {
         }
     }
 
+    /**
+     *  [text] in English if Language ID reads it as the phone's language, else
+     *  [Status.UNSUPPORTED] with no text: a caller then uses its original text. For English-only
+     *  models given text in the phone's language.
+     */
+    fun toEnglish(text: String, timeoutSeconds: Long = TO_ENGLISH_TIMEOUT_SECONDS): Result {
+        val target = targetLanguage() ?: return Result(Status.UNSUPPORTED)
+        if (text.isBlank()) return Result(Status.UNSUPPORTED)
+        return try {
+            val found = Tasks.await(languageId.identifyPossibleLanguages(text), timeoutSeconds, TimeUnit.SECONDS)
+            val phone = found.filter { TranslateLanguage.fromLanguageTag(it.languageTag) == target }
+                .maxOfOrNull { it.confidence } ?: 0f
+            if (phone < TARGET_CONFIDENCE) return Result(Status.UNSUPPORTED)
+            if (!isModelDownloaded(target)) return Result(Status.MODEL_NOT_READY)
+            val english = Tasks.await(toEnglishTranslator(target).translate(text), timeoutSeconds, TimeUnit.SECONDS)
+                ?.takeIf { it.isNotBlank() } ?: return Result(Status.ERROR)
+            Result(Status.OK, listOf(english))
+        } catch (e: Exception) {
+            Result(Status.ERROR)
+        }
+    }
+
     private fun isEnglish(line: String, target: String): Boolean {
         val found = Tasks.await(languageId.identifyPossibleLanguages(line), IDENTIFY_TIMEOUT_SECONDS, TimeUnit.SECONDS)
         val best = found.maxByOrNull { it.confidence } ?: return false
@@ -95,6 +119,19 @@ object PhoneLanguageTranslator {
         val phone = found.filter { TranslateLanguage.fromLanguageTag(it.languageTag) == target }
             .maxOfOrNull { it.confidence } ?: 0f
         return best.languageTag == ENGLISH_TAG && english >= ENGLISH_CONFIDENCE && phone < TARGET_CONFIDENCE
+    }
+
+    /** The phone's language to English; the same downloaded model serves both directions. */
+    private fun toEnglishTranslator(target: String): Translator = synchronized(lock) {
+        toEnglish?.takeIf { it.first == target }?.second ?: run {
+            toEnglish?.second?.close()
+            Translation.getClient(
+                TranslatorOptions.Builder()
+                    .setSourceLanguage(target)
+                    .setTargetLanguage(TranslateLanguage.ENGLISH)
+                    .build()
+            ).also { toEnglish = target to it }
+        }
     }
 
     private fun translator(target: String): Translator = synchronized(lock) {
