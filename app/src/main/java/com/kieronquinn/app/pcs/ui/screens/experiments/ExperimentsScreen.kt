@@ -77,6 +77,7 @@ private data class Interactions(
     val onPhoneXatuPhoneLanguageChanged: (Boolean) -> Unit,
     val onPhoneAtlasEveryNumberChanged: (Boolean) -> Unit,
     val onPhoneXatuEveryNumberChanged: (Boolean) -> Unit,
+    val onPhoneStringsPhoneLanguageChanged: (Boolean) -> Unit,
     val onPhoneCallerTagsEnabledChanged: (Boolean) -> Unit,
     val onPhoneFermatEnabledChanged: (Boolean) -> Unit,
     val onPhoneExpressoEnabledChanged: (Boolean) -> Unit,
@@ -121,6 +122,7 @@ private data class Interactions(
             onPhoneXatuPhoneLanguageChanged = {},
             onPhoneAtlasEveryNumberChanged = {},
             onPhoneXatuEveryNumberChanged = {},
+            onPhoneStringsPhoneLanguageChanged = {},
             onPhoneCallerTagsEnabledChanged = {},
             onPhoneFermatEnabledChanged = {},
             onPhoneExpressoEnabledChanged = {},
@@ -171,6 +173,7 @@ fun ExperimentsScreen() = ProvidePreferenceLocals {
         onPhoneXatuPhoneLanguageChanged = viewModel::onPhoneXatuPhoneLanguageChanged,
         onPhoneAtlasEveryNumberChanged = viewModel::onPhoneAtlasEveryNumberChanged,
         onPhoneXatuEveryNumberChanged = viewModel::onPhoneXatuEveryNumberChanged,
+        onPhoneStringsPhoneLanguageChanged = viewModel::onPhoneStringsPhoneLanguageChanged,
         onPhoneCallerTagsEnabledChanged = viewModel::onPhoneCallerTagsEnabledChanged,
         onPhoneFermatEnabledChanged = viewModel::onPhoneFermatEnabledChanged,
         onPhoneExpressoEnabledChanged = viewModel::onPhoneExpressoEnabledChanged,
@@ -404,6 +407,17 @@ private fun LoadedContent(state: State.Loaded, interactions: Interactions) {
                 summary = { Text(stringResource(R.string.screen_experiments_phone_debug_logging_summary)) },
                 onValueChange = interactions.onPhoneDebugLoggingChanged
             )
+
+            if (state.phoneStringsTranslationAvailable) {
+                switchPreference(
+                    modifier = Modifier.padding(horizontal = 8.dp),
+                    value = state.phoneSettings.stringsPhoneLanguage,
+                    key = "phone_strings_phone_language",
+                    title = { Text(stringResource(R.string.screen_experiments_phone_strings_phone_language)) },
+                    summary = { Text(stringResource(R.string.screen_experiments_phone_strings_phone_language_summary)) },
+                    onValueChange = interactions.onPhoneStringsPhoneLanguageChanged
+                )
+            }
 
             val dobbyShape = Shape(phoneFlagsCount, 1)
             val dobbyDisabled = state.phoneSettings.dobbyUrl.isNullOrBlank()
@@ -1469,7 +1483,8 @@ private fun ContentPreviewLight() {
             takeAMessagePack = VoicePackRepository.State.Checking,
             holdForMeTranslationAvailable = false,
             holdForMePack = VoicePackRepository.State.Checking,
-            directMyCallMenuParserAvailable = false
+            directMyCallMenuParserAvailable = false,
+            phoneStringsTranslationAvailable = false
         )
         LoadedContent(state, Interactions.PREVIEW)
     }

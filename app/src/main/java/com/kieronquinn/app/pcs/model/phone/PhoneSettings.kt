@@ -36,7 +36,8 @@ data class PhoneSettings(
     val beeslyPhoneLanguage: Boolean = false,
     val xatuPhoneLanguage: Boolean = false,
     val atlasEveryNumber: Boolean = false,
-    val xatuEveryNumber: Boolean = false
+    val xatuEveryNumber: Boolean = false,
+    val stringsPhoneLanguage: Boolean = false
 ): Parcelable {
 
     /** Only the agentic pack can be built in the phone's language. */

@@ -208,5 +208,7 @@
     <string name="screen_experiments_phone_xatu_every_number_summary">Offer Direct My Call on calls to any number in your SIM\'s country, not only toll-free numbers and the businesses Google lists</string>
     <string name="screen_experiments_phone_xatu_phone_language_summary">Direct My Call listens to automated menus in your phone\'s language and shows their options as buttons. Needs the on-device speech pack for the language</string>
     <string name="screen_experiments_phone_debug_logging">Phone debug logging</string>
+    <string name="screen_experiments_phone_strings_phone_language">Phone Text in Phone Language</string>
+    <string name="screen_experiments_phone_strings_phone_language_summary">Show Direct My Call, Call Screen, Hold for Me and spam screens that Google ships in English only in your phone\'s language. Takes effect after Phone restarts.</string>
     <string name="screen_experiments_phone_debug_logging_summary">Log Phone diagnostics. Takes effect after Phone restarts.</string>
 </resources>

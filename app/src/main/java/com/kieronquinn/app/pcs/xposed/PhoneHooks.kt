@@ -86,6 +86,7 @@ object PhoneHooks: GrpcHooks() {
         DebugLogging.configurePhone(settings.debugLogging)
         installGrpcHooks()
         DebugHooks.hook(this)
+        if (settings.stringsPhoneLanguage) PhoneStringsHooks.install(application)
         log("Phone settings: mode=${settings.effectiveCallScreenMode}, " +
             "sharpie=${settings.sharpieCountryMode}/${settings.sharpieCountry}, " +
             "metered=${settings.xatuAllowMetered}, manifests=${settings.manifestHandlingEnabled}, " +
