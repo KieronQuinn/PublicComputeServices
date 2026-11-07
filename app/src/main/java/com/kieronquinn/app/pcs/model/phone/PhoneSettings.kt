@@ -24,5 +24,31 @@ data class PhoneSettings(
     val fermatEnabled: Boolean,
     val expressoEnabled: Boolean,
     val patrickPhase: SettingsRepository.PatrickPhase,
-    val callRecordingEnabled: Boolean
-): Parcelable
+    val callRecordingEnabled: Boolean,
+    val callScreenMode: SettingsRepository.CallScreenMode = SettingsRepository.CallScreenMode.DUPLEX,
+    val sharpieCountryMode: SettingsRepository.SharpieCountryMode = SettingsRepository.SharpieCountryMode.ALLOW_ALL,
+    val sharpieCountry: String = "US",
+    val manifestHandlingEnabled: Boolean = false,
+    val debugLogging: Boolean = false,
+    val xatuAllowMetered: Boolean = true,
+    val sharpiePhoneLanguage: Boolean = false,
+    val atlasPhoneLanguage: Boolean = false
+): Parcelable {
+
+    /** Only the agentic pack can be built in the phone's language. */
+    val effectiveCallScreenMode: SettingsRepository.CallScreenMode
+        get() = if (dobbyRegion == SettingsRepository.DobbyRegion.PHONE) {
+            SettingsRepository.CallScreenMode.FORCE_AGENTIC
+        } else callScreenMode
+
+    fun getSharpieCountryOverride(country: String): Boolean? {
+        if (!sharpieEnabled) return null
+        return when (sharpieCountryMode) {
+            SettingsRepository.SharpieCountryMode.DIALER_DEFAULT -> null
+            SettingsRepository.SharpieCountryMode.ALLOW_ALL -> true
+            SettingsRepository.SharpieCountryMode.FORCE_COUNTRY ->
+                country.equals(sharpieCountry, ignoreCase = true)
+        }
+    }
+
+}

@@ -16,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalConfiguration
@@ -28,10 +29,13 @@ import androidx.compose.ui.unit.dp
 import com.kieronquinn.app.pcs.R
 import com.kieronquinn.app.pcs.model.ClientGroupOverride
 import com.kieronquinn.app.pcs.model.phone.PhoneSettings
+import com.kieronquinn.app.pcs.repositories.CallScreenPackRepository
 import com.kieronquinn.app.pcs.repositories.PropertiesRepository
 import com.kieronquinn.app.pcs.repositories.SettingsRepository.BeeslyRegion
+import com.kieronquinn.app.pcs.repositories.SettingsRepository.CallScreenMode
 import com.kieronquinn.app.pcs.repositories.SettingsRepository.DobbyRegion
 import com.kieronquinn.app.pcs.repositories.SettingsRepository.PatrickPhase
+import com.kieronquinn.app.pcs.repositories.SettingsRepository.SharpieCountryMode
 import com.kieronquinn.app.pcs.ui.components.InfoCard
 import com.kieronquinn.app.pcs.ui.screens.experiments.ExperimentsViewModel.Event
 import com.kieronquinn.app.pcs.ui.screens.experiments.ExperimentsViewModel.State
@@ -46,16 +50,25 @@ import me.zhanghai.compose.preference.preference
 import me.zhanghai.compose.preference.preferenceCategory
 import org.koin.androidx.compose.koinViewModel
 import uk.co.bocajsolutions.cardshape.Shape
+import java.util.Locale
 
 private data class Interactions(
+    val onPhoneDebugLoggingChanged: (Boolean) -> Unit,
+    val onPhoneCallScreenModeChanged: (CallScreenMode) -> Unit,
+    val onPhoneSharpieCountryModeChanged: (SharpieCountryMode) -> Unit,
+    val onPhoneSharpieCountryChanged: (String) -> Unit,
     val onPhoneSharpieEnabledChanged: (Boolean) -> Unit,
+    val onPhoneSharpiePhoneLanguageChanged: (Boolean) -> Unit,
     val onPhoneDobbyEnabledChanged: (Boolean) -> Unit,
     val onPhoneDobbyRegionChanged: (DobbyRegion) -> Unit,
+    val onCallScreenPackClicked: () -> Unit,
     val onPhoneAtlasEnabledChanged: (Boolean) -> Unit,
+    val onPhoneAtlasPhoneLanguageChanged: (Boolean) -> Unit,
     val onPhoneBeeslyEnabledChanged: (Boolean) -> Unit,
     val onPhoneBeeslyRegionChanged: (BeeslyRegion) -> Unit,
     val onPhoneNautilusEnabledChanged: (Boolean) -> Unit,
     val onPhoneSonicEnabledChanged: (Boolean) -> Unit,
+    val onPhoneXatuAllowMeteredChanged: (Boolean) -> Unit,
     val onPhoneXatuEnabledChanged: (Boolean) -> Unit,
     val onPhoneCallerTagsEnabledChanged: (Boolean) -> Unit,
     val onPhoneFermatEnabledChanged: (Boolean) -> Unit,
@@ -78,14 +91,22 @@ private data class Interactions(
 ) {
     companion object {
         val PREVIEW = Interactions(
+            onPhoneDebugLoggingChanged = {},
+            onPhoneCallScreenModeChanged = {},
+            onPhoneSharpieCountryModeChanged = {},
+            onPhoneSharpieCountryChanged = {},
             onPhoneSharpieEnabledChanged = {},
+            onPhoneSharpiePhoneLanguageChanged = {},
             onPhoneDobbyEnabledChanged = {},
             onPhoneDobbyRegionChanged = {},
+            onCallScreenPackClicked = {},
             onPhoneAtlasEnabledChanged = {},
+            onPhoneAtlasPhoneLanguageChanged = {},
             onPhoneBeeslyEnabledChanged = {},
             onPhoneBeeslyRegionChanged = {},
             onPhoneNautilusEnabledChanged = {},
             onPhoneSonicEnabledChanged = {},
+            onPhoneXatuAllowMeteredChanged = {},
             onPhoneXatuEnabledChanged = {},
             onPhoneCallerTagsEnabledChanged = {},
             onPhoneFermatEnabledChanged = {},
@@ -114,14 +135,22 @@ fun ExperimentsScreen() = ProvidePreferenceLocals {
     val viewModel = koinViewModel<ExperimentsViewModel>()
     val state by viewModel.state.collectAsState()
     val interactions = Interactions(
+        onPhoneDebugLoggingChanged = viewModel::onPhoneDebugLoggingChanged,
+        onPhoneCallScreenModeChanged = viewModel::onPhoneCallScreenModeChanged,
+        onPhoneSharpieCountryModeChanged = viewModel::onPhoneSharpieCountryModeChanged,
+        onPhoneSharpieCountryChanged = viewModel::onPhoneSharpieCountryChanged,
         onPhoneSharpieEnabledChanged = viewModel::onPhoneSharpieEnabledChanged,
+        onPhoneSharpiePhoneLanguageChanged = viewModel::onPhoneSharpiePhoneLanguageChanged,
         onPhoneDobbyEnabledChanged = viewModel::onPhoneDobbyEnabledChanged,
         onPhoneDobbyRegionChanged = viewModel::onPhoneDobbyRegionChanged,
+        onCallScreenPackClicked = viewModel::onCallScreenPackClicked,
         onPhoneAtlasEnabledChanged = viewModel::onPhoneAtlasEnabledChanged,
+        onPhoneAtlasPhoneLanguageChanged = viewModel::onPhoneAtlasPhoneLanguageChanged,
         onPhoneBeeslyEnabledChanged = viewModel::onPhoneBeeslyEnabledChanged,
         onPhoneBeeslyRegionChanged = viewModel::onPhoneBeeslyRegionChanged,
         onPhoneNautilusEnabledChanged = viewModel::onPhoneNautilusEnabledChanged,
         onPhoneSonicEnabledChanged = viewModel::onPhoneSonicEnabledChanged,
+        onPhoneXatuAllowMeteredChanged = viewModel::onPhoneXatuAllowMeteredChanged,
         onPhoneXatuEnabledChanged = viewModel::onPhoneXatuEnabledChanged,
         onPhoneCallerTagsEnabledChanged = viewModel::onPhoneCallerTagsEnabledChanged,
         onPhoneFermatEnabledChanged = viewModel::onPhoneFermatEnabledChanged,
@@ -151,6 +180,9 @@ fun ExperimentsScreen() = ProvidePreferenceLocals {
     }
     val context = LocalContext.current
     LaunchedEffect(Unit) {
+        viewModel.onResume()
+    }
+    LaunchedEffect(Unit) {
         viewModel.events.collect {
             handleEvent(context, it)
         }
@@ -169,6 +201,34 @@ private fun handleEvent(context: Context, event: Event) {
 }
 
 @Composable
+private fun callScreenPackSummary(pack: CallScreenPackRepository.State): String {
+    fun Locale.label() = getDisplayName(this)
+    return when (pack) {
+        CallScreenPackRepository.State.Checking ->
+            stringResource(R.string.screen_experiments_phone_dobby_pack_checking)
+        is CallScreenPackRepository.State.Unsupported ->
+            stringResource(R.string.screen_experiments_phone_dobby_pack_unsupported, pack.locale.label())
+        CallScreenPackRepository.State.NoRoot ->
+            stringResource(R.string.screen_experiments_phone_dobby_pack_no_root)
+        is CallScreenPackRepository.State.NoVoice ->
+            stringResource(R.string.screen_experiments_phone_dobby_pack_no_voice, pack.locale.label())
+        is CallScreenPackRepository.State.NoSource ->
+            stringResource(R.string.screen_experiments_phone_dobby_pack_no_source)
+        is CallScreenPackRepository.State.NotBuilt -> stringResource(
+            if (pack.outdated) R.string.screen_experiments_phone_dobby_pack_outdated
+            else R.string.screen_experiments_phone_dobby_pack_not_built,
+            pack.locale.label()
+        )
+        is CallScreenPackRepository.State.Building ->
+            stringResource(R.string.screen_experiments_phone_dobby_pack_building, pack.done, pack.total)
+        is CallScreenPackRepository.State.Ready ->
+            stringResource(R.string.screen_experiments_phone_dobby_pack_ready, pack.locale.label(), pack.voice)
+        is CallScreenPackRepository.State.Failed ->
+            stringResource(R.string.screen_experiments_phone_dobby_pack_failed, pack.message)
+    }
+}
+
+@Composable
 private fun LoadingContent() {
     LoadingScreen()
 }
@@ -177,6 +237,15 @@ private fun LoadingContent() {
 private fun LoadedContent(state: State.Loaded, interactions: Interactions) {
     val surface = MaterialTheme.colorScheme.surfaceVariant
     val resources = LocalResources.current
+    val displayLocale = LocalConfiguration.current.locales[0]
+    val countryNames = remember(displayLocale) {
+        Locale.getISOCountries().associateWith {
+            Locale.Builder().setRegion(it).build().getDisplayCountry(displayLocale)
+        }
+    }
+    val countries = remember(countryNames) {
+        countryNames.keys.sortedBy { countryNames[it] }
+    }
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -228,6 +297,94 @@ private fun LoadedContent(state: State.Loaded, interactions: Interactions) {
                 Spacer(Modifier.height(2.dp))
             }
 
+            if (state.phoneSettings.sharpieEnabled) {
+                val sharpieCountryShape = Shape(phoneFlagsCount, 1)
+                listPreference(
+                    modifier = Modifier
+                        .padding(horizontal = 8.dp)
+                        .background(color = surface, shape = sharpieCountryShape)
+                        .clip(sharpieCountryShape),
+                    value = state.phoneSettings.sharpieCountryMode,
+                    values = SharpieCountryMode.entries,
+                    key = "phone_flags_sharpie_country_mode",
+                    title = { _ ->
+                        Text(
+                            text = stringResource(R.string.screen_experiments_phone_sharpie_country_mode),
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                    },
+                    valueToText = { AnnotatedString(resources.getString(it.label)) },
+                    summary = { Text(text = stringResource(it.label)) },
+                    onValueChange = interactions.onPhoneSharpieCountryModeChanged
+                )
+
+                item {
+                    Spacer(Modifier.height(2.dp))
+                }
+
+                if (state.phoneSettings.sharpieCountryMode == SharpieCountryMode.FORCE_COUNTRY) {
+                    listPreference(
+                        modifier = Modifier
+                            .padding(horizontal = 8.dp)
+                            .background(color = surface, shape = sharpieCountryShape)
+                            .clip(sharpieCountryShape),
+                        value = state.phoneSettings.sharpieCountry,
+                        values = countries,
+                        key = "phone_flags_sharpie_country",
+                        title = { _ ->
+                            Text(
+                                text = stringResource(R.string.screen_experiments_phone_sharpie_country),
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                        },
+                        valueToText = { AnnotatedString(countryNames[it] ?: it) },
+                        summary = {
+                            Text(text = stringResource(
+                                R.string.screen_experiments_phone_sharpie_country_summary,
+                                countryNames[it] ?: it
+                            ))
+                        },
+                        onValueChange = interactions.onPhoneSharpieCountryChanged
+                    )
+
+                    item {
+                        Spacer(Modifier.height(2.dp))
+                    }
+                }
+
+                switchPreference(
+                    modifier = Modifier
+                        .padding(horizontal = 8.dp)
+                        .background(color = surface, shape = sharpieCountryShape)
+                        .clip(sharpieCountryShape),
+                    value = state.phoneSettings.sharpiePhoneLanguage,
+                    key = "phone_flags_sharpie_phone_language",
+                    title = { _ ->
+                        Text(
+                            text = stringResource(R.string.screen_experiments_phone_sharpie_phone_language),
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                    },
+                    summary = { _ ->
+                        Text(text = stringResource(R.string.screen_experiments_phone_sharpie_phone_language_summary))
+                    },
+                    onValueChange = interactions.onPhoneSharpiePhoneLanguageChanged
+                )
+
+                item {
+                    Spacer(Modifier.height(2.dp))
+                }
+            }
+
+            switchPreference(
+                modifier = Modifier.padding(horizontal = 8.dp),
+                value = state.phoneSettings.debugLogging,
+                key = "phone_debug_logging",
+                title = { Text(stringResource(R.string.screen_experiments_phone_debug_logging)) },
+                summary = { Text(stringResource(R.string.screen_experiments_phone_debug_logging_summary)) },
+                onValueChange = interactions.onPhoneDebugLoggingChanged
+            )
+
             val dobbyShape = Shape(phoneFlagsCount, 1)
             val dobbyDisabled = state.phoneSettings.dobbyUrl.isNullOrBlank()
                     || state.phoneSettings.dobbyDuplexFiles.isNullOrBlank()
@@ -269,6 +426,31 @@ private fun LoadedContent(state: State.Loaded, interactions: Interactions) {
             }
 
             if (dobbyEnabled) {
+                listPreference(
+                    modifier = Modifier
+                        .padding(horizontal = 8.dp)
+                        .background(color = surface, shape = dobbyShape)
+                        .clip(dobbyShape),
+                    value = state.phoneSettings.effectiveCallScreenMode,
+                    values = CallScreenMode.entries,
+                    key = "phone_flags_call_screen_mode",
+                    title = { _ ->
+                        Text(
+                            text = stringResource(R.string.screen_experiments_phone_call_screen_mode),
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                    },
+                    valueToText = { AnnotatedString(resources.getString(it.label)) },
+                    summary = {
+                        Text(text = stringResource(it.label))
+                    },
+                    onValueChange = interactions.onPhoneCallScreenModeChanged
+                )
+
+                item {
+                    Spacer(Modifier.height(2.dp))
+                }
+
                 val dobbyRegionShape = Shape(phoneFlagsCount, 1)
                 listPreference(
                     modifier = Modifier
@@ -276,7 +458,7 @@ private fun LoadedContent(state: State.Loaded, interactions: Interactions) {
                         .background(color = surface, shape = dobbyRegionShape)
                         .clip(dobbyRegionShape),
                     value = state.phoneSettings.dobbyRegion,
-                    values = DobbyRegion.entries,
+                    values = state.dobbyRegions,
                     key = "phone_flags_dobby_region",
                     title = { _ ->
                         Text(
@@ -297,6 +479,35 @@ private fun LoadedContent(state: State.Loaded, interactions: Interactions) {
 
                 item {
                     Spacer(Modifier.height(2.dp))
+                }
+
+                if (state.phoneSettings.dobbyRegion == DobbyRegion.PHONE) {
+                    val packShape = Shape(phoneFlagsCount, 1)
+                    val pack = state.callScreenPack
+                    preference(
+                        modifier = Modifier
+                            .padding(horizontal = 8.dp)
+                            .background(color = surface, shape = packShape)
+                            .clip(packShape),
+                        key = "phone_flags_dobby_pack",
+                        enabled = pack !is CallScreenPackRepository.State.Building &&
+                                pack !is CallScreenPackRepository.State.Checking &&
+                                pack !is CallScreenPackRepository.State.Unsupported,
+                        title = {
+                            Text(
+                                text = stringResource(R.string.screen_experiments_phone_dobby_pack),
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                        },
+                        summary = {
+                            Text(text = callScreenPackSummary(pack))
+                        },
+                        onClick = interactions.onCallScreenPackClicked
+                    )
+
+                    item {
+                        Spacer(Modifier.height(2.dp))
+                    }
                 }
             }
 
@@ -337,6 +548,31 @@ private fun LoadedContent(state: State.Loaded, interactions: Interactions) {
 
             item {
                 Spacer(Modifier.height(2.dp))
+            }
+
+            if (atlasEnabled) {
+                switchPreference(
+                    modifier = Modifier
+                        .padding(horizontal = 8.dp)
+                        .background(color = surface, shape = atlasShape)
+                        .clip(atlasShape),
+                    value = state.phoneSettings.atlasPhoneLanguage,
+                    key = "phone_flags_atlas_phone_language",
+                    title = { _ ->
+                        Text(
+                            text = stringResource(R.string.screen_experiments_phone_atlas_phone_language),
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                    },
+                    summary = { _ ->
+                        Text(text = stringResource(R.string.screen_experiments_phone_atlas_phone_language_summary))
+                    },
+                    onValueChange = interactions.onPhoneAtlasPhoneLanguageChanged
+                )
+
+                item {
+                    Spacer(Modifier.height(2.dp))
+                }
             }
 
             val beeslyShape = Shape(phoneFlagsCount, 3)
@@ -501,6 +737,31 @@ private fun LoadedContent(state: State.Loaded, interactions: Interactions) {
 
             item {
                 Spacer(Modifier.height(2.dp))
+            }
+
+            if (xatuEnabled) {
+                switchPreference(
+                    modifier = Modifier
+                        .padding(horizontal = 8.dp)
+                        .background(color = surface, shape = xatuShape)
+                        .clip(xatuShape),
+                    value = state.phoneSettings.xatuAllowMetered,
+                    key = "phone_flags_xatu_allow_metered",
+                    title = { _ ->
+                        Text(
+                            text = stringResource(R.string.screen_experiments_phone_xatu_allow_metered),
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                    },
+                    summary = { _ ->
+                        Text(text = stringResource(R.string.screen_experiments_phone_xatu_allow_metered_summary))
+                    },
+                    onValueChange = interactions.onPhoneXatuAllowMeteredChanged
+                )
+
+                item {
+                    Spacer(Modifier.height(2.dp))
+                }
             }
 
             val callerTagsShape = Shape(phoneFlagsCount, 6)
@@ -869,7 +1130,7 @@ private fun LoadedContent(state: State.Loaded, interactions: Interactions) {
                     .background(color = surface, shape = enablePhoneShape)
                     .clip(enablePhoneShape),
                 key = "advanced_enable_phone",
-                value = state.propertiesState.phoneEnabled,
+                value = state.phoneSettings.manifestHandlingEnabled,
                 title = {
                     Text(
                         text = stringResource(R.string.screen_experiments_enable_phone_title),
@@ -1027,7 +1288,9 @@ private fun ContentPreviewLight() {
                 patrickPhase = PatrickPhase.PHASE_TWO,
                 callRecordingEnabled = false
             ),
-            propertiesState = PropertiesRepository.State()
+            propertiesState = PropertiesRepository.State(),
+            dobbyRegions = DobbyRegion.entries,
+            callScreenPack = CallScreenPackRepository.State.Checking
         )
         LoadedContent(state, Interactions.PREVIEW)
     }
