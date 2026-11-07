@@ -192,6 +192,8 @@
     <string name="screen_experiments_phone_sharpie_country">Scam Detection Country</string>
     <string name="screen_experiments_phone_sharpie_country_summary">Only allow %1$s; this does not change your SIM country</string>
     <string name="screen_experiments_phone_sharpie_phone_language">Listen in Phone Language</string>
+    <string name="screen_experiments_phone_atlas_phone_language">Transcribe in Phone Language</string>
+    <string name="screen_experiments_phone_atlas_phone_language_summary">Hold for Me transcribes the line in your phone\'s language instead of English. Only applies when on-device speech recognition supports the language; Phone downloads the speech pack itself</string>
     <string name="screen_experiments_phone_sharpie_phone_language_summary">Scam Detection listens to calls in your phone\'s language, even if Google does not support it there yet. Only applies when on-device speech recognition supports the language; Phone downloads the speech pack itself</string>
     <string name="screen_experiments_phone_xatu_allow_metered">Download Direct My Call Models on Mobile Data</string>
     <string name="screen_experiments_phone_xatu_allow_metered_summary">Allow model downloads on metered networks; data charges may apply</string>

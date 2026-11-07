@@ -31,7 +31,8 @@ data class PhoneSettings(
     val manifestHandlingEnabled: Boolean = false,
     val debugLogging: Boolean = false,
     val xatuAllowMetered: Boolean = true,
-    val sharpiePhoneLanguage: Boolean = false
+    val sharpiePhoneLanguage: Boolean = false,
+    val atlasPhoneLanguage: Boolean = false
 ): Parcelable {
 
     /** Only the agentic pack can be built in the phone's language. */

@@ -63,6 +63,7 @@ private data class Interactions(
     val onPhoneDobbyRegionChanged: (DobbyRegion) -> Unit,
     val onCallScreenPackClicked: () -> Unit,
     val onPhoneAtlasEnabledChanged: (Boolean) -> Unit,
+    val onPhoneAtlasPhoneLanguageChanged: (Boolean) -> Unit,
     val onPhoneBeeslyEnabledChanged: (Boolean) -> Unit,
     val onPhoneBeeslyRegionChanged: (BeeslyRegion) -> Unit,
     val onPhoneNautilusEnabledChanged: (Boolean) -> Unit,
@@ -100,6 +101,7 @@ private data class Interactions(
             onPhoneDobbyRegionChanged = {},
             onCallScreenPackClicked = {},
             onPhoneAtlasEnabledChanged = {},
+            onPhoneAtlasPhoneLanguageChanged = {},
             onPhoneBeeslyEnabledChanged = {},
             onPhoneBeeslyRegionChanged = {},
             onPhoneNautilusEnabledChanged = {},
@@ -143,6 +145,7 @@ fun ExperimentsScreen() = ProvidePreferenceLocals {
         onPhoneDobbyRegionChanged = viewModel::onPhoneDobbyRegionChanged,
         onCallScreenPackClicked = viewModel::onCallScreenPackClicked,
         onPhoneAtlasEnabledChanged = viewModel::onPhoneAtlasEnabledChanged,
+        onPhoneAtlasPhoneLanguageChanged = viewModel::onPhoneAtlasPhoneLanguageChanged,
         onPhoneBeeslyEnabledChanged = viewModel::onPhoneBeeslyEnabledChanged,
         onPhoneBeeslyRegionChanged = viewModel::onPhoneBeeslyRegionChanged,
         onPhoneNautilusEnabledChanged = viewModel::onPhoneNautilusEnabledChanged,
@@ -545,6 +548,31 @@ private fun LoadedContent(state: State.Loaded, interactions: Interactions) {
 
             item {
                 Spacer(Modifier.height(2.dp))
+            }
+
+            if (atlasEnabled) {
+                switchPreference(
+                    modifier = Modifier
+                        .padding(horizontal = 8.dp)
+                        .background(color = surface, shape = atlasShape)
+                        .clip(atlasShape),
+                    value = state.phoneSettings.atlasPhoneLanguage,
+                    key = "phone_flags_atlas_phone_language",
+                    title = { _ ->
+                        Text(
+                            text = stringResource(R.string.screen_experiments_phone_atlas_phone_language),
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                    },
+                    summary = { _ ->
+                        Text(text = stringResource(R.string.screen_experiments_phone_atlas_phone_language_summary))
+                    },
+                    onValueChange = interactions.onPhoneAtlasPhoneLanguageChanged
+                )
+
+                item {
+                    Spacer(Modifier.height(2.dp))
+                }
             }
 
             val beeslyShape = Shape(phoneFlagsCount, 3)

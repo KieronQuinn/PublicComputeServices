@@ -51,6 +51,7 @@ abstract class ExperimentsViewModel: ViewModel() {
     abstract fun onCallScreenPackClicked()
     abstract fun onResume()
     abstract fun onPhoneAtlasEnabledChanged(enabled: Boolean)
+    abstract fun onPhoneAtlasPhoneLanguageChanged(enabled: Boolean)
     abstract fun onPhoneBeeslyEnabledChanged(enabled: Boolean)
     abstract fun onPhoneBeeslyRegionChanged(region: BeeslyRegion)
     abstract fun onPhoneNautilusEnabledChanged(enabled: Boolean)
@@ -124,6 +125,7 @@ class ExperimentsViewModelImpl(
     private val phoneDobbyDuplexFiles = settingsRepository.phoneDobbyDuplexFiles
     private val phoneAtlasEnabled = settingsRepository.phoneAtlasEnabled
     private val phoneAtlasModels = settingsRepository.phoneAtlasModels
+    private val phoneAtlasPhoneLanguage = settingsRepository.phoneAtlasPhoneLanguage
     private val phoneBeeslyEnabled = settingsRepository.phoneBeeslyEnabled
     private val phoneBeeslyRegion = settingsRepository.phoneBeeslyRegion
     private val phoneBeesly = settingsRepository.phoneBeesly
@@ -207,7 +209,8 @@ class ExperimentsViewModelImpl(
         phoneXatuAllowMetered.asFlow(),
         phoneManifestHandlingEnabled.asFlow(),
         phoneDebugLogging.asFlow(),
-        phoneSharpiePhoneLanguage.asFlow()
+        phoneSharpiePhoneLanguage.asFlow(),
+        phoneAtlasPhoneLanguage.asFlow()
     ) {
         it
     }
@@ -264,7 +267,8 @@ class ExperimentsViewModelImpl(
             xatuAllowMetered = booleans[11],
             manifestHandlingEnabled = booleans[12],
             debugLogging = booleans[13],
-            sharpiePhoneLanguage = booleans[14]
+            sharpiePhoneLanguage = booleans[14],
+            atlasPhoneLanguage = booleans[15]
         )
     }
 
@@ -403,6 +407,13 @@ class ExperimentsViewModelImpl(
     override fun onPhoneAtlasEnabledChanged(enabled: Boolean) {
         viewModelScope.launch {
             phoneAtlasEnabled.set(enabled)
+            forceStopPhone()
+        }
+    }
+
+    override fun onPhoneAtlasPhoneLanguageChanged(enabled: Boolean) {
+        viewModelScope.launch {
+            phoneAtlasPhoneLanguage.set(enabled)
             forceStopPhone()
         }
     }
