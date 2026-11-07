@@ -143,6 +143,9 @@
     <string name="screen_experiments_category_screenshots">Pixel Screenshots</string>
     <string name="screen_experiments_agent_screenshots_language_title">Pixel Screenshots in Phone Language</string>
     <string name="screen_experiments_agent_screenshots_language_content">Process screenshots in your phone\'s language. Pixel Screenshots only offers itself in a few languages and pauses every screenshot in another one. Your language is added to the languages it accepts; the ones Google lists are kept. Requires root; restarts Pixel Screenshots.</string>
+    <string name="screen_experiments_category_weather">Pixel Weather</string>
+    <string name="screen_experiments_weather_summary_language_title">Weather AI Summary in Phone Language</string>
+    <string name="screen_experiments_weather_summary_language_content">Show Pixel Weather\'s on-device AI summary in your phone\'s language. Pixel Weather only writes it in English, German, French and Japanese and hides it in other languages. Your language is added to the ones it is offered in, and the summary is written the way Pixel Weather writes it in German, asking for your language instead. Requires root and a device Pixel Weather offers the summary on; restarts Pixel Weather.</string>
     <string name="screen_experiments_as_force_gsa_title">Disable Google App Check</string>
     <string name="screen_experiments_as_force_gsa_content">Some At a Glance options, such as Sport and Finance, require the search box provider to be set to the Google App, enable this option to disable that check to allow them to work while other search providers are in use.</string>
 

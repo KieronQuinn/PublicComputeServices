@@ -98,6 +98,7 @@ private data class Interactions(
     val onTtsEnabledChanged: (Boolean) -> Unit,
     val onAgentEnabledChanged: (Boolean) -> Unit,
     val onAgentScreenshotsLanguageChanged: (Boolean) -> Unit,
+    val onWeatherSummaryLanguageChanged: (Boolean) -> Unit,
     val onClearOverridesClicked: () -> Unit,
     val onClientGroupOverrideChanged: (ClientGroupOverride) -> Unit,
 ) {
@@ -147,6 +148,7 @@ private data class Interactions(
             onTtsEnabledChanged = {},
             onAgentEnabledChanged = {},
             onAgentScreenshotsLanguageChanged = {},
+            onWeatherSummaryLanguageChanged = {},
             onClearOverridesClicked = {},
             onClientGroupOverrideChanged = {}
         )
@@ -202,6 +204,7 @@ fun ExperimentsScreen() = ProvidePreferenceLocals {
         onTtsEnabledChanged = viewModel::onTtsEnabledChanged,
         onAgentEnabledChanged = viewModel::onAgentEnabledChanged,
         onAgentScreenshotsLanguageChanged = viewModel::onAgentScreenshotsLanguageChanged,
+        onWeatherSummaryLanguageChanged = viewModel::onWeatherSummaryLanguageChanged,
         onClearOverridesClicked = viewModel::onClearOverridesClicked,
         onClientGroupOverrideChanged = viewModel::onClientGroupOverrideChanged
     )
@@ -1397,6 +1400,35 @@ private fun LoadedContent(state: State.Loaded, interactions: Interactions) {
             )
         }
 
+        if (state.weatherAvailable) {
+            preferenceCategory(
+                key = "category_weather",
+                title = {
+                    Text(stringResource(R.string.screen_experiments_category_weather))
+                }
+            )
+
+            val weatherSummaryLanguageShape = Shape(1, 0)
+            switchPreference(
+                modifier = Modifier
+                    .padding(horizontal = 8.dp)
+                    .background(color = surface, shape = weatherSummaryLanguageShape)
+                    .clip(weatherSummaryLanguageShape),
+                value = state.propertiesState.weatherSummaryLanguage,
+                key = "weather_summary_language",
+                title = {
+                    Text(
+                        text = stringResource(R.string.screen_experiments_weather_summary_language_title),
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                },
+                summary = {
+                    Text(text = textResource(R.string.screen_experiments_weather_summary_language_content))
+                },
+                onValueChange = interactions.onWeatherSummaryLanguageChanged
+            )
+        }
+
         preferenceCategory(
             key = "category_advanced",
             title = {
@@ -1572,6 +1604,7 @@ private fun ContentPreviewLight() {
             aicoreAvailable = true,
             phoneAvailable = true,
             agentAvailable = true,
+            weatherAvailable = true,
             phoneSettings = PhoneSettings(
                 sharpieEnabled = false,
                 dobbyEnabled = false,
