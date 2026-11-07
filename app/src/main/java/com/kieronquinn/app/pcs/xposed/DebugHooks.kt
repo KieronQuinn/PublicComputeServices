@@ -1,8 +1,7 @@
 package com.kieronquinn.app.pcs.xposed
 
 import android.util.Log
-import com.kieronquinn.app.pcs.repositories.DeviceConfigPropertiesRepository.Companion.DEBUG_PROPERTY_NAME
-import com.kieronquinn.app.pcs.utils.extensions.SystemProperties_getBoolean
+import com.kieronquinn.app.pcs.utils.DebugLogging
 import com.kieronquinn.app.pcs.utils.extensions.loadDexKit
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XposedBridge
@@ -14,7 +13,7 @@ object DebugHooks: XposedHooks {
     override val tag = "PcsDebugHooks"
 
     override fun hook(loadPackageParam: LoadPackageParam) {
-        if (!SystemProperties_getBoolean(DEBUG_PROPERTY_NAME, false)) return
+        if (!DebugLogging.isEnabled()) return
         log("Searching for logger class in ${loadPackageParam.packageName}")
         val dexKitBridge = loadDexKit(loadPackageParam.appInfo.sourceDir)
         val logger = dexKitBridge.findClass {

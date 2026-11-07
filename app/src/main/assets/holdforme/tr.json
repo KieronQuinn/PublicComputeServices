@@ -1,0 +1,13 @@
+{
+ "version": 1,
+ "locale": "tr-TR",
+ "tts": {
+  "rate": 1.2
+ },
+ "prompts": {
+  "greeting_to_agent": "Merhaba, bir dakika bekler misiniz? Ben otomatik bir Google hizmetiyim ve bu arama kaliteyi artırmak için kaydediliyor. Sizi şimdi arayan kişiye bağlıyorum.",
+  "probing_prompt": "Alo, merhaba?",
+  "delayed_user_message": "Geciktiğim için üzgünüm. Aradığınız kişinin telefonunu çaldırıyorum, birazdan hatta olacak.",
+  "recording_refusal_ack": "Tabii, aramayı kaydetmeyi durdurup kaydı sileceğim."
+ }
+}
