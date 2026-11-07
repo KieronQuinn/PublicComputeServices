@@ -85,6 +85,9 @@ object PhoneHooks: GrpcHooks() {
         logDobbyData(settings)
         hookFlagDataStore(dexKit, settings)
         CallNotesHooks.install(dexKit, classLoader, settings.fermatEnabled)
+        if (settings.fermatEnabled || settings.callRecordingEnabled || settings.beeslyEnabled) {
+            DisclaimerCountryHooks.install(dexKit, classLoader)
+        }
         hookSharpieCountry(dexKit, settings)
         hookSharpieLocale(dexKit, settings, application)
         hookCallScreen(dexKit, settings)
