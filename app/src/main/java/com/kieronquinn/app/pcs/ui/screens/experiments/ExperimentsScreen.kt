@@ -92,6 +92,7 @@ private data class Interactions(
     val onAsForceGSAChanged: (Boolean) -> Unit,
     val onAiCoreUnloadInferenceChanged: (Boolean) -> Unit,
     val onAsNotificationOrganizerChanged: (Boolean) -> Unit,
+    val onAsGeminiDailyBriefChanged: (Boolean) -> Unit,
     val onClearMddClicked: () -> Unit,
     val onPhoneEnabledChanged: (Boolean) -> Unit,
     val onTtsEnabledChanged: (Boolean) -> Unit,
@@ -139,6 +140,7 @@ private data class Interactions(
             onAsForceGSAChanged = {},
             onAiCoreUnloadInferenceChanged = {},
             onAsNotificationOrganizerChanged = {},
+            onAsGeminiDailyBriefChanged = {},
             onClearMddClicked = {},
             onPhoneEnabledChanged = {},
             onTtsEnabledChanged = {},
@@ -192,6 +194,7 @@ fun ExperimentsScreen() = ProvidePreferenceLocals {
         onAsForceGSAChanged = viewModel::onAsForceGSAChanged,
         onAiCoreUnloadInferenceChanged = viewModel::onAiCoreUnloadInferenceChanged,
         onAsNotificationOrganizerChanged = viewModel::onAsNotificationOrganizerChanged,
+        onAsGeminiDailyBriefChanged = viewModel::onAsGeminiDailyBriefChanged,
         onClearMddClicked = viewModel::onClearMddClicked,
         onPhoneEnabledChanged = viewModel::onPhoneEnabledChanged,
         onTtsEnabledChanged = viewModel::onTtsEnabledChanged,
@@ -1318,7 +1321,31 @@ private fun LoadedContent(state: State.Loaded, interactions: Interactions) {
             }
         )
 
-        val nowPlayingShape = Shape(1, 0)
+        val glanceShape = Shape(2, 0)
+        switchPreference(
+            modifier = Modifier
+                .padding(horizontal = 8.dp)
+                .background(color = surface, shape = glanceShape)
+                .clip(glanceShape),
+            value = state.propertiesState.asGeminiDailyBrief,
+            key = "as_gemini_daily_brief",
+            title = {
+                Text(
+                    text = stringResource(R.string.screen_experiments_as_gemini_daily_brief_title),
+                    style = MaterialTheme.typography.bodyLarge
+                )
+            },
+            summary = {
+                Text(text = textResource(R.string.screen_experiments_as_gemini_daily_brief_content))
+            },
+            onValueChange = interactions.onAsGeminiDailyBriefChanged
+        )
+
+        item {
+            Spacer(Modifier.height(2.dp))
+        }
+
+        val nowPlayingShape = Shape(2, 1)
         switchPreference(
             modifier = Modifier
                 .padding(horizontal = 8.dp)

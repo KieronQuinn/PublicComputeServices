@@ -88,6 +88,7 @@ abstract class ExperimentsViewModel: ViewModel() {
     abstract fun onAsForceGSAChanged(enabled: Boolean)
     abstract fun onAiCoreUnloadInferenceChanged(enabled: Boolean)
     abstract fun onAsNotificationOrganizerChanged(enabled: Boolean)
+    abstract fun onAsGeminiDailyBriefChanged(enabled: Boolean)
 
     abstract fun onPhoneEnabledChanged(enabled: Boolean)
     abstract fun onTtsEnabledChanged(enabled: Boolean)
@@ -679,6 +680,12 @@ class ExperimentsViewModelImpl(
     override fun onAsForceGSAChanged(enabled: Boolean) {
         viewModelScope.launch {
             propertiesRepository.setAsForceGSAEnabled(enabled)
+        }
+    }
+
+    override fun onAsGeminiDailyBriefChanged(enabled: Boolean) {
+        viewModelScope.launch {
+            propertiesRepository.setAsGeminiDailyBrief(enabled)
         }
     }
 

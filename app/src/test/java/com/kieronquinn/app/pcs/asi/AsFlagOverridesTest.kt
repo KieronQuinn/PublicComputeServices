@@ -56,4 +56,12 @@ class AsFlagOverridesTest {
         assertTrue(AsFlagOverrides.Builder().build().isEmpty())
     }
 
+    @Test
+    fun `daily brief is turned on and combines with notification organizer`() {
+        val both = AsFlagOverrides.notificationOrganizer(Locale.forLanguageTag("tr-TR"), "TR")
+            .plus(AsFlagOverrides.geminiDailyBrief()).build()
+        assertEquals(true, both.boolean("EchoSmartspace__enable_gemini_ambient_data"))
+        assertEquals(true, both.boolean("SmartNotification__enable_notification_bundle"))
+    }
+
 }

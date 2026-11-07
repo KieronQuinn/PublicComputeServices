@@ -27,6 +27,10 @@ class AsFlagOverrides private constructor(
             .add("${NOTIFICATIONS}supported_languages", locale.language)
             .apply { country?.let { add("${NOTIFICATIONS}bundle_supported_countries", it) } }
 
+        /** Gemini's daily brief in At a Glance; Google turns it on per device from the server. */
+        fun geminiDailyBrief() = Builder()
+            .boolean("EchoSmartspace__enable_gemini_ambient_data", true)
+
     }
 
     class Builder {

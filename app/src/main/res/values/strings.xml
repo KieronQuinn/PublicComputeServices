@@ -138,6 +138,8 @@
     <string name="screen_experiments_as_notification_organizer_title">Notification Organizer in Your Language</string>
     <string name="screen_experiments_as_notification_organizer_content">Offer Notification Organizer in your SIM\'s country and phone\'s language. Its classifier only understands English, so notification text is translated into English on the device before it is classified (the translation model, about 30 MB, is downloaded once). Requires root; restarts Android System Intelligence.</string>
     <string name="screen_experiments_category_glance">At a Glance</string>
+    <string name="screen_experiments_as_gemini_daily_brief_title">Gemini Daily Brief</string>
+    <string name="screen_experiments_as_gemini_daily_brief_content">Show Gemini\'s daily brief in At a Glance on devices Google has not turned it on for yet. Requires root; restarts Android System Intelligence.</string>
     <string name="screen_experiments_as_force_gsa_title">Disable Google App Check</string>
     <string name="screen_experiments_as_force_gsa_content">Some At a Glance options, such as Sport and Finance, require the search box provider to be set to the Google App, enable this option to disable that check to allow them to work while other search providers are in use.</string>
 

@@ -27,6 +27,7 @@ interface DeviceConfigPropertiesRepository {
         const val AS_SHOW_NOW_PLAYING_NOTIFICATION = "persist.as.show_now_playing_notification"
         const val AS_FORCE_GSA = "persist.as.force_gsa"
         const val AS_NOTIFICATION_ORGANIZER = "persist.as.pcs_notification_organizer"
+        const val AS_GEMINI_DAILY_BRIEF = "persist.as.pcs_gemini_daily_brief"
         const val AICORE_UNLOAD_INFERENCE = "persist.aicore.unload_inference"
         const val TTS_ENABLED = "persist.tts.pcs_enabled"
         const val AGENT_ENABLED = "persist.agent.pcs_enabled"
