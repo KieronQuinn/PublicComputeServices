@@ -55,7 +55,7 @@
         <provider
             android:authorities="${applicationId}.settings.phone"
             android:name=".providers.PhoneSettingsProvider"
-            android:process=":settings"
+            android:directBootAware="true"
             android:exported="true"
             tools:ignore="ExportedContentProvider" />
 
@@ -80,6 +80,10 @@
         <package android:name="com.google.android.dialer"/>
         <package android:name="com.google.android.as"/>
         <package android:name="com.google.android.aicore"/>
+        <!-- Text-to-speech engines, to speak the Call Screen voice pack in the phone's language -->
+        <intent>
+            <action android:name="android.intent.action.TTS_SERVICE"/>
+        </intent>
     </queries>
 
 </manifest>

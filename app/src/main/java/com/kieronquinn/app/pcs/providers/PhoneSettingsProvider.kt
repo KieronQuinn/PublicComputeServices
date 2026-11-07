@@ -6,6 +6,8 @@ import android.content.Context
 import android.database.Cursor
 import android.net.Uri
 import android.os.Bundle
+import android.os.UserManager
+import android.util.Log
 import androidx.core.net.toUri
 import androidx.core.os.bundleOf
 import com.kieronquinn.app.pcs.BuildConfig
@@ -13,7 +15,6 @@ import com.kieronquinn.app.pcs.PcsApplication.Companion.PACKAGE_NAME_PHONE
 import com.kieronquinn.app.pcs.model.phone.PhoneSettings
 import com.kieronquinn.app.pcs.repositories.SettingsRepositoryImpl
 import com.kieronquinn.app.pcs.utils.extensions.callSafely
-import kotlin.system.exitProcess
 
 /**
  *  Allows access to the locally stored shared prefs which contains settings and flag data for
@@ -33,17 +34,23 @@ class PhoneSettingsProvider: ContentProvider() {
 
         fun getSettings(context: Context): PhoneSettings? {
             return try {
-                context.contentResolver
+                val result = context.contentResolver
                     .callSafely(URI_PHONE_SETTINGS, METHOD_GET, null, null)
                     ?.apply { classLoader = PhoneSettings::class.java.classLoader }
                     ?.getParcelable(EXTRA_SETTINGS, PhoneSettings::class.java)
+                if (result == null) {
+                    val unlocked = context.getSystemService(UserManager::class.java).isUserUnlocked
+                    Log.w("PhoneSettingsProvider", "No phone settings returned (userUnlocked=$unlocked)")
+                }
+                result
             }catch (e: Exception) {
+                Log.w("PhoneSettingsProvider", "Unable to read phone settings", e)
                 null
             }
         }
     }
 
-    // DI is disabled for this process, so create a repository instance for just this class
+    // No UI/DI initialization is needed. Android shares these prefs with the UI in this process.
     private val settings by lazy {
         SettingsRepositoryImpl(requireContext())
     }
@@ -59,8 +66,6 @@ class PhoneSettingsProvider: ContentProvider() {
         return when(method) {
             METHOD_GET -> bundleOf(EXTRA_SETTINGS to getSettings())
             else -> null
-        }.also {
-            killAfterDelay()
         }
     }
 
@@ -83,13 +88,21 @@ class PhoneSettingsProvider: ContentProvider() {
         settings.phoneFermatEnabled.getSync(),
         settings.phoneExpressoEnabled.getSync(),
         settings.phonePatrickPhase.getSync(),
-        settings.phoneCallRecordingEnabled.getSync()
+        settings.phoneCallRecordingEnabled.getSync(),
+        callScreenMode = settings.phoneCallScreenMode.getSync(),
+        sharpieCountryMode = settings.phoneSharpieCountryMode.getSync(),
+        sharpieCountry = settings.phoneSharpieCountry.getSync(),
+        manifestHandlingEnabled = settings.phoneManifestHandlingEnabled.getSync(),
+        debugLogging = settings.phoneDebugLogging.getSync(),
+        xatuAllowMetered = settings.phoneXatuAllowMetered.getSync(),
+        sharpiePhoneLanguage = settings.phoneSharpiePhoneLanguage.getSync(),
+        atlasPhoneLanguage = settings.phoneAtlasPhoneLanguage.getSync(),
+        beeslyPhoneLanguage = settings.phoneBeeslyPhoneLanguage.getSync(),
+        xatuPhoneLanguage = settings.phoneXatuPhoneLanguage.getSync(),
+        atlasEveryNumber = settings.phoneAtlasEveryNumber.getSync(),
+        xatuEveryNumber = settings.phoneXatuEveryNumber.getSync(),
+        stringsPhoneLanguage = settings.phoneStringsPhoneLanguage.getSync()
     )
-
-    private fun killAfterDelay() = Thread {
-        Thread.sleep(500L)
-        exitProcess(0)
-    }.start()
 
     override fun query(
         uri: Uri,

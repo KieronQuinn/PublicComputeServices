@@ -153,4 +153,18 @@
     <string name="error_no_root">Root is not granted, please grant root to Public Compute Services.</string>
     <string name="error_no_xposed">The Xposed module is not enabled. Please make sure you have enabled the Xposed module and rebooted.</string>
     <string name="error_retry">Retry</string>
+
+    <string name="screen_experiments_phone_call_screen_mode">來電篩選模型</string>
+    <string name="screen_experiments_phone_call_screen_mode_duplex">經典（Duplex）</string>
+    <string name="screen_experiments_phone_call_screen_mode_agentic">智慧代理（需要 AICore）</string>
+    <string name="screen_experiments_phone_dialer_default">Google 電話預設設定</string>
+    <string name="screen_experiments_phone_sharpie_country_mode">詐騙偵測國家政策</string>
+    <string name="screen_experiments_phone_sharpie_country_all">允許所有國家</string>
+    <string name="screen_experiments_phone_sharpie_country_selected">僅允許所選國家</string>
+    <string name="screen_experiments_phone_sharpie_country">詐騙偵測國家</string>
+    <string name="screen_experiments_phone_sharpie_country_summary">僅允許%1$s；不會變更 SIM 卡國家</string>
+    <string name="screen_experiments_phone_xatu_allow_metered">使用行動數據下載「Direct My Call」模型</string>
+    <string name="screen_experiments_phone_xatu_allow_metered_summary">允許透過按流量計費的網路下載模型，可能產生數據費用</string>
+    <string name="screen_experiments_phone_debug_logging">電話偵錯記錄</string>
+    <string name="screen_experiments_phone_debug_logging_summary">記錄電話診斷資訊，重新啟動電話應用程式後生效。</string>
 </resources>
