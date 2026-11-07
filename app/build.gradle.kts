@@ -147,6 +147,7 @@ protobuf {
 }
 
 dependencies {
+    testImplementation("junit:junit:4.13.2")
     implementation(libs.androidx.core.ktx)
     compileOnly(libs.xposed)
     implementation(libs.okhttp)
