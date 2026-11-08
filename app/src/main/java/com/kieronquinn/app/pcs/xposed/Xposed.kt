@@ -36,12 +36,14 @@ class Xposed: IXposedHookLoadPackage {
             }
             PACKAGE_NAME_AGENT -> {
                 AgentHooks.hook(lpparam)
+                ScreenshotsLanguageHooks.hook(lpparam)
             }
             PACKAGE_NAME_AIC -> {
                 AiCoreHooks.hook(lpparam)
             }
         }
-        if (lpparam.packageName != BuildConfig.APPLICATION_ID) {
+        if (lpparam.packageName != BuildConfig.APPLICATION_ID &&
+            lpparam.packageName != PACKAGE_NAME_PHONE) {
             DebugHooks.hook(lpparam)
         }
     }

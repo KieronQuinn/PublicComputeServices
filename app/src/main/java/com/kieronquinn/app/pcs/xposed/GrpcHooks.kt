@@ -59,15 +59,22 @@ abstract class GrpcHooks: XposedHooks, KoinComponent {
 
     @CallSuper
     override fun hook(loadPackageParam: LoadPackageParam) {
-        val dexKit = loadDexKit(loadPackageParam.appInfo.sourceDir)
         loadPackageParam.hookApplication()
+        if (!deferGrpcHooksUntilApplication) loadPackageParam.installGrpcHooks()
+    }
+
+    protected open val deferGrpcHooksUntilApplication = false
+
+    /** Phone waits for its Provider snapshot; other packages keep their existing startup order. */
+    protected fun LoadPackageParam.installGrpcHooks() {
         if (!isEnabled()) return
+        val dexKit = loadDexKit(appInfo.sourceDir)
         log("Begin gRPC hooking")
-        loadPackageParam.hookService()
-        loadPackageParam.hookActivity()
-        loadPackageParam.hookTrustManager()
-        loadPackageParam.hookOds(dexKit)
-        loadPackageParam.hookSsl(dexKit)
+        hookService()
+        hookActivity()
+        hookTrustManager()
+        hookOds(dexKit)
+        hookSsl(dexKit)
         log("Finished gRPC hooking")
     }
 

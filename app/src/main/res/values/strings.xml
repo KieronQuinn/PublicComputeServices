@@ -83,6 +83,20 @@
     <string name="screen_experiments_phone_feature_dobby_region_au">English (Australia)</string>
     <string name="screen_experiments_phone_feature_dobby_region_jp">Japanese</string>
     <string name="screen_experiments_phone_feature_dobby_region_in">India (English/Hindi)</string>
+    <string name="screen_experiments_phone_feature_dobby_region_phone">Phone language</string>
+    <string name="screen_experiments_phone_dobby_pack">Call Screen voice pack</string>
+    <string name="screen_experiments_phone_beesly_pack">Take a Message voice pack</string>
+    <string name="screen_experiments_phone_atlas_pack">Hold for Me voice</string>
+    <string name="screen_experiments_phone_voice_pack_checking">Checking…</string>
+    <string name="screen_experiments_phone_voice_pack_unsupported">%1$s is not translated into %2$s yet</string>
+    <string name="screen_experiments_phone_voice_pack_no_root">Root access is needed to build the voice pack. Tap to try again</string>
+    <string name="screen_experiments_phone_voice_pack_no_voice">Install a %1$s voice in text-to-speech settings, then tap to try again</string>
+    <string name="screen_experiments_phone_voice_pack_no_source">Phone has not downloaded the %1$s files yet. Keep %1$s turned on and connected to Wi-Fi, then tap to try again</string>
+    <string name="screen_experiments_phone_voice_pack_not_built">Tap to build the %1$s voice pack with the phone\'s text-to-speech voice</string>
+    <string name="screen_experiments_phone_voice_pack_outdated">The %1$s voice pack is out of date. Tap to rebuild it</string>
+    <string name="screen_experiments_phone_voice_pack_building">Recording sentences: %1$d of %2$d</string>
+    <string name="screen_experiments_phone_voice_pack_ready">%1$s voice pack is ready (%2$s). Tap to rebuild it</string>
+    <string name="screen_experiments_phone_voice_pack_failed">Building the voice pack failed: %1$s. Tap to try again</string>
     <string name="screen_experiments_phone_feature_atlas">Hold for Me</string>
     <string name="screen_experiments_phone_feature_beesly">Take a Message</string>
     <string name="screen_experiments_phone_feature_beesly_region">Take a Message Language</string>
@@ -120,7 +134,15 @@
     <string name="screen_experiments_aicore_unload_inference_title">Unload AI models when idle</string>
     <string name="screen_experiments_aicore_unload_inference_content">Unload on-device AI models after five minutes of inactivity to free memory. The first request after unloading may take longer.\n<b>Note:</b> This may break some AICore functionality such as Notification Organiser</string>
 
+    <string name="screen_experiments_category_notifications">Notifications</string>
+    <string name="screen_experiments_as_notification_organizer_title">Notification Organizer in Your Language</string>
+    <string name="screen_experiments_as_notification_organizer_content">Offer Notification Organizer in your SIM\'s country and phone\'s language. Its classifier only understands English, so notification text is translated into English on the device before it is classified (the translation model, about 30 MB, is downloaded once). Requires root; restarts Android System Intelligence.</string>
     <string name="screen_experiments_category_glance">At a Glance</string>
+    <string name="screen_experiments_as_gemini_daily_brief_title">Gemini Daily Brief</string>
+    <string name="screen_experiments_as_gemini_daily_brief_content">Show Gemini\'s daily brief in At a Glance on devices Google has not turned it on for yet. Requires root; restarts Android System Intelligence.</string>
+    <string name="screen_experiments_category_screenshots">Pixel Screenshots</string>
+    <string name="screen_experiments_agent_screenshots_language_title">Pixel Screenshots in Phone Language</string>
+    <string name="screen_experiments_agent_screenshots_language_content">Process screenshots in your phone\'s language. Pixel Screenshots only offers itself in a few languages and pauses every screenshot in another one. Your language is added to the languages it accepts; the ones Google lists are kept. Requires root; restarts Pixel Screenshots.</string>
     <string name="screen_experiments_as_force_gsa_title">Disable Google App Check</string>
     <string name="screen_experiments_as_force_gsa_content">Some At a Glance options, such as Sport and Finance, require the search box provider to be set to the Google App, enable this option to disable that check to allow them to work while other search providers are in use.</string>
 
@@ -169,4 +191,34 @@
     <string name="error_no_xposed">The Xposed module is not enabled. Please make sure you have enabled the Xposed module and rebooted.</string>
     <string name="error_retry">Retry</string>
 
+
+    <string name="screen_experiments_phone_call_screen_mode">Call Screen Model</string>
+    <string name="screen_experiments_phone_call_screen_mode_duplex">Classic (Duplex)</string>
+    <string name="screen_experiments_phone_call_screen_mode_agentic">Agentic (requires AICore)</string>
+    <string name="screen_experiments_phone_dialer_default">Google Phone default</string>
+    <string name="screen_experiments_phone_sharpie_country_mode">Scam Detection Country Policy</string>
+    <string name="screen_experiments_phone_sharpie_country_all">Allow all countries</string>
+    <string name="screen_experiments_phone_sharpie_country_selected">Allow only the selected country</string>
+    <string name="screen_experiments_phone_sharpie_country">Scam Detection Country</string>
+    <string name="screen_experiments_phone_sharpie_country_summary">Only allow %1$s; this does not change your SIM country</string>
+    <string name="screen_experiments_phone_sharpie_phone_language">Listen in Phone Language</string>
+    <string name="screen_experiments_phone_atlas_phone_language">Transcribe in Phone Language</string>
+    <string name="screen_experiments_phone_beesly_phone_language">Answer in Phone Language</string>
+    <string name="screen_experiments_phone_beesly_phone_language_summary">Take a Message greets callers and takes the message in your phone\'s language, with a voice pack built from the phone\'s text-to-speech voice</string>
+    <string name="screen_experiments_phone_atlas_phone_language_summary">Hold for Me transcribes the line in your phone\'s language instead of English, and speaks to the other party in it once its voice is recorded below. Transcription only applies when on-device speech recognition supports the language; Phone downloads the speech pack itself</string>
+    <string name="screen_experiments_phone_sharpie_phone_language_summary">Scam Detection listens to calls in your phone\'s language, even if Google does not support it there yet. Only applies when on-device speech recognition supports the language; Phone downloads the speech pack itself</string>
+    <string name="screen_experiments_phone_xatu_allow_metered">Download Direct My Call Models on Mobile Data</string>
+    <string name="screen_experiments_phone_xatu_allow_metered_summary">Allow model downloads on metered networks; data charges may apply</string>
+    <string name="screen_experiments_phone_xatu_phone_language">Menus in Phone Language</string>
+    <string name="screen_experiments_phone_atlas_every_number">Offer on Every Number</string>
+    <string name="screen_experiments_phone_atlas_every_number_summary">Offer Hold for Me on calls to any number in your SIM\'s country, not only toll-free numbers and the businesses Google lists</string>
+    <string name="screen_experiments_phone_xatu_every_number">Offer on Every Number</string>
+    <string name="screen_experiments_phone_xatu_every_number_summary">Offer Direct My Call on calls to any number in your SIM\'s country, not only toll-free numbers and the businesses Google lists</string>
+    <string name="screen_experiments_phone_xatu_phone_language_summary">Direct My Call listens to automated menus in your phone\'s language and shows their options as buttons. Needs the on-device speech pack for the language</string>
+    <string name="screen_experiments_phone_debug_logging">Phone debug logging</string>
+    <string name="screen_experiments_phone_fermat_phone_language">Suggested Tasks in Phone Language</string>
+    <string name="screen_experiments_phone_fermat_phone_language_summary">Translate suggested tasks the model writes in English into your phone\'s language, on the device. The translation model (about 30 MB) is downloaded once.</string>
+    <string name="screen_experiments_phone_strings_phone_language">Phone Text in Phone Language</string>
+    <string name="screen_experiments_phone_strings_phone_language_summary">Show Direct My Call, Call Screen, Hold for Me and spam screens that Google ships in English only in your phone\'s language. Takes effect after Phone restarts.</string>
+    <string name="screen_experiments_phone_debug_logging_summary">Log Phone diagnostics. Takes effect after Phone restarts.</string>
 </resources>

@@ -4,6 +4,7 @@ import com.kieronquinn.app.pcs.model.FlagPackage
 
 enum class PhoneFlag(val flagPackage: FlagPackage, val flag: String) {
     DOBBY_DUPLEX_FILES(FlagPackage.DIALER_DIRECTBOOT, "45381883"),
+    DOBBY_MODELS(FlagPackage.DIALER, "CallScreenI18n__default_manifest_file_flag"),
     DOBBY_DOWNLOAD_PATH(FlagPackage.DIALER_DIRECTBOOT, "45628211"),
     DOBBY_IS_USER_IN_US(FlagPackage.DIALER_DIRECTBOOT, "45628184"),
     DOBBY_IS_USER_IN_UK(FlagPackage.DIALER_DIRECTBOOT, "45628185"),
@@ -25,6 +26,8 @@ enum class PhoneFlag(val flagPackage: FlagPackage, val flag: String) {
     XATU_MODELS(FlagPackage.DIALER_DIRECTBOOT, "45417183"),
     SHARPIE_ENABLED(FlagPackage.DIALER_DIRECTBOOT, "45684804"),
     DOBBY_ENABLED(FlagPackage.DIALER_DIRECTBOOT, "45624401"), // enableModeSupportsAutoAndManualScreeningInUs
+    DOBBY_AGENTIC_ENABLED(FlagPackage.DIALER_DIRECTBOOT, "45770994"),
+    DOBBY_GACS_MANUAL_ENABLED(FlagPackage.DIALER_DIRECTBOOT, "45788921"),
     ATLAS_ENABLED(FlagPackage.DIALER_DIRECTBOOT, "45413174"),
     BEESLY_ENABLED(FlagPackage.DIALER_DIRECTBOOT, "45629794"),
     BEESLY_ACTIONS_ENABLED(FlagPackage.DIALER_DIRECTBOOT, "45684179"),
@@ -32,10 +35,16 @@ enum class PhoneFlag(val flagPackage: FlagPackage, val flag: String) {
     NAUTILUS_ENABLED(FlagPackage.DIALER_DIRECTBOOT, "45665235"),
     SONIC_ENABLED(FlagPackage.DIALER_DIRECTBOOT, "45408594"),
     XATU_ENABLED(FlagPackage.DIALER_DIRECTBOOT, "45417169"),
+    XATU_SODA_LOCALE(FlagPackage.DIALER_DIRECTBOOT, "45417194"), // xatu_soda_locale
+    XATU_CONFIDENCE_MAPPING(FlagPackage.DIALER_DIRECTBOOT, "45417195"), // enableConfidenceMappingConfiguration
+    XATU_SUPPORTED_SPEECH_VERSIONS(FlagPackage.DIALER_DIRECTBOOT, "45417216"), // lpPreferences
+    ATLAS_ALLOWLISTED_PREFIXES(FlagPackage.DIALER_DIRECTBOOT, "45413214"), // <COUNTRY>_<prefix>
+    XATU_ALLOWLISTED_PREFIXES(FlagPackage.DIALER_DIRECTBOOT, "45629950"), // xatu_allowlisted_non_tfn_prefixes_per_country
     CALLER_TAG_EXPERIMENT_ID(FlagPackage.DIALER, "caller_tag_experiment_id"),
     FERMAT_ENABLED(FlagPackage.DIALER_DIRECTBOOT, "45661721"),
     FERMAT_GEOFENCE(FlagPackage.DIALER_DIRECTBOOT, "45731943"),
     EXPRESSO_ENABLED(FlagPackage.DIALER_DIRECTBOOT, "45664158"),
+    EXPRESSO_UI_ENABLED(FlagPackage.DIALER_DIRECTBOOT, "45740418"),
     PATRICK_ENABLED(FlagPackage.DIALER_DIRECTBOOT, "45727673"),
     PATRICK_PHASE_ONE_ENABLED(FlagPackage.DIALER_DIRECTBOOT, "45661436"),
     PATRICK_PHASE_TWO_ENABLED(FlagPackage.DIALER_DIRECTBOOT, "45684622"),
@@ -45,13 +54,22 @@ enum class PhoneFlag(val flagPackage: FlagPackage, val flag: String) {
     CALL_RECORDING_FORCE_OVERRIDE_ENABLED(FlagPackage.DIALER, "G__force_within_call_recording_geofence_value"),
     CALL_RECORDING_CROSBY_ENABLED(FlagPackage.DIALER, "G__force_within_crosby_geofence_value"),
     CALL_RECORDING_FERMAT_DISABLE(FlagPackage.DIALER_DIRECTBOOT, "45730953"),
+    CALL_SCREEN_I18N_TIDEPODS(FlagPackage.DIALER, "enable_call_screen_i18n_tidepods"),
     ;
 
     companion object {
         fun getOrNull(flagPackage: String, flag: String): PhoneFlag? {
-            return entries.firstOrNull {
+            entries.firstOrNull {
                 it.flagPackage.packageName == flagPackage && it.flag == flag
+            }?.let { return it }
+            // Named flags (`CallScreenI18n__default_manifest_file_flag`, `G__enable_call_recording`,
+            // ...) belong to a single experiment, but Dialer reads them from a variety of packages
+            // (the Direct Boot and shared variants), so fall back to matching on the name alone.
+            // Numeric flags are excluded as their IDs are only unique within a package.
+            if (flag.any { it.isLetter() }) {
+                return entries.firstOrNull { it.flag == flag }
             }
+            return null
         }
     }
 }
