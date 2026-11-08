@@ -26,8 +26,12 @@ materialMotionComposeCore = "2.0.1"
 accompanistPermissions = "0.37.3"
 aboutLibraries = "13.2.1"
 markwon = "4.6.2"
+mlkitTranslate = "17.0.3"
+mlkitLanguageId = "17.0.6"
 
 [libraries]
+mlkit-translate = { group = "com.google.mlkit", name = "translate", version.ref = "mlkitTranslate" }
+mlkit-language-id = { group = "com.google.mlkit", name = "language-id", version.ref = "mlkitLanguageId" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "compose" }
 androidx-compose-material = { group = "androidx.compose.material3", name = "material3", version.ref = "material3" }
