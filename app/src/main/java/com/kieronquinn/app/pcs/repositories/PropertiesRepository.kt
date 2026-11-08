@@ -3,16 +3,15 @@ package com.kieronquinn.app.pcs.repositories
 import com.kieronquinn.app.pcs.PcsApplication.Companion.PACKAGE_NAME_AGENT
 import com.kieronquinn.app.pcs.PcsApplication.Companion.PACKAGE_NAME_AIC
 import com.kieronquinn.app.pcs.PcsApplication.Companion.PACKAGE_NAME_AS
-import com.kieronquinn.app.pcs.PcsApplication.Companion.PACKAGE_NAME_PHONE
 import com.kieronquinn.app.pcs.PcsApplication.Companion.PACKAGE_NAME_PSI
 import com.kieronquinn.app.pcs.PcsApplication.Companion.PACKAGE_NAME_TTS
 import com.kieronquinn.app.pcs.model.ClientGroupOverride
 import com.kieronquinn.app.pcs.repositories.DeviceConfigPropertiesRepository.Companion.AGENT_ENABLED
 import com.kieronquinn.app.pcs.repositories.DeviceConfigPropertiesRepository.Companion.AICORE_UNLOAD_INFERENCE
 import com.kieronquinn.app.pcs.repositories.DeviceConfigPropertiesRepository.Companion.AS_FORCE_GSA
+import com.kieronquinn.app.pcs.repositories.DeviceConfigPropertiesRepository.Companion.AS_NOTIFICATION_ORGANIZER
 import com.kieronquinn.app.pcs.repositories.DeviceConfigPropertiesRepository.Companion.AS_SHOW_NOW_PLAYING_NOTIFICATION
 import com.kieronquinn.app.pcs.repositories.DeviceConfigPropertiesRepository.Companion.DEBUG_PROPERTY_NAME
-import com.kieronquinn.app.pcs.repositories.DeviceConfigPropertiesRepository.Companion.PHONE_ENABLED
 import com.kieronquinn.app.pcs.repositories.DeviceConfigPropertiesRepository.Companion.PSI_CLIENT_GROUP_OVERRIDE_PROPERTY_NAME
 import com.kieronquinn.app.pcs.repositories.DeviceConfigPropertiesRepository.Companion.PSI_ENABLE_APPS_PROPERTY_NAME
 import com.kieronquinn.app.pcs.repositories.DeviceConfigPropertiesRepository.Companion.PSI_FORCE_ACCOUNT_PRESENCE_PROPERTY_NAME
@@ -42,9 +41,9 @@ interface PropertiesRepository {
     suspend fun setPsiForceAdminAllowance(enabled: Boolean)
     suspend fun setAsNowPlayingNotificationEnabled(enabled: Boolean)
     suspend fun setAsForceGSAEnabled(enabled: Boolean)
+    suspend fun setAsNotificationOrganizer(enabled: Boolean)
     suspend fun setAiCoreUnloadInference(enabled: Boolean)
     suspend fun setClientGroupOverride(override: ClientGroupOverride)
-    suspend fun setPhoneEnabled(enabled: Boolean)
     suspend fun setTtsEnabled(enabled: Boolean)
     suspend fun setAgentEnabled(enabled: Boolean)
 
@@ -56,8 +55,8 @@ interface PropertiesRepository {
         val psiForceAdminAllowance: Boolean = false,
         val asNowPlayingNotificationEnabled: Boolean = false,
         val asForceGSAEnabled: Boolean = false,
+        val asNotificationOrganizer: Boolean = false,
         val aicoreUnloadInference: Boolean = false,
-        val phoneEnabled: Boolean = false,
         val ttsEnabled: Boolean = false,
         val agentEnabled: Boolean = false,
         val clientGroupOverride: ClientGroupOverride = ClientGroupOverride.DISABLED
@@ -114,6 +113,12 @@ class PropertiesRepositoryImpl(
         refreshBus.emit(System.currentTimeMillis())
     }
 
+    override suspend fun setAsNotificationOrganizer(enabled: Boolean) {
+        deviceConfigPropertiesRepository.setProperty(AS_NOTIFICATION_ORGANIZER, enabled.toString())
+        deviceConfigPropertiesRepository.forceStopPackage(PACKAGE_NAME_AS)
+        refreshBus.emit(System.currentTimeMillis())
+    }
+
     override suspend fun setAiCoreUnloadInference(enabled: Boolean) {
         deviceConfigPropertiesRepository.setProperty(AICORE_UNLOAD_INFERENCE, enabled.toString())
         deviceConfigPropertiesRepository.forceStopPackage(PACKAGE_NAME_AIC)
@@ -122,12 +127,6 @@ class PropertiesRepositoryImpl(
 
     override suspend fun setClientGroupOverride(override: ClientGroupOverride) {
         deviceConfigPropertiesRepository.setProperty(PSI_CLIENT_GROUP_OVERRIDE_PROPERTY_NAME, override.name)
-        refreshBus.emit(System.currentTimeMillis())
-    }
-
-    override suspend fun setPhoneEnabled(enabled: Boolean) {
-        deviceConfigPropertiesRepository.setProperty(PHONE_ENABLED, enabled.toString())
-        deviceConfigPropertiesRepository.forceStopPackage(PACKAGE_NAME_PHONE)
         refreshBus.emit(System.currentTimeMillis())
     }
 
@@ -152,8 +151,8 @@ class PropertiesRepositoryImpl(
             SystemProperties_getBoolean(PSI_FORCE_ADMIN_ALLOWANCE_PROPERTY_NAME, false),
             SystemProperties_getBoolean(AS_SHOW_NOW_PLAYING_NOTIFICATION, false),
             SystemProperties_getBoolean(AS_FORCE_GSA, false),
+            SystemProperties_getBoolean(AS_NOTIFICATION_ORGANIZER, false),
             SystemProperties_getBoolean(AICORE_UNLOAD_INFERENCE, false),
-            SystemProperties_getBoolean(PHONE_ENABLED, false),
             SystemProperties_getBoolean(TTS_ENABLED, false),
             SystemProperties_getBoolean(AGENT_ENABLED, false),
             ClientGroupOverride.from(SystemProperties_get(PSI_CLIENT_GROUP_OVERRIDE_PROPERTY_NAME))

@@ -20,6 +20,7 @@ import androidx.work.PeriodicWorkRequest
 import androidx.work.WorkManager
 import androidx.work.WorkRequest
 import androidx.work.WorkerParameters
+import com.kieronquinn.app.pcs.PcsApplication
 import com.kieronquinn.app.pcs.BuildConfig
 import com.kieronquinn.app.pcs.R
 import com.kieronquinn.app.pcs.model.Release
@@ -69,6 +70,7 @@ class RefreshWorker(appContext: Context, workerParams: WorkerParameters):
 
     @SuppressLint("MissingPermission")
     override suspend fun doWork(): Result {
+        (applicationContext as PcsApplication).initializeUi()
         val syncVersions = syncRepository.getSyncRequired()
         return if (syncVersions != null) {
             if (syncVersions.phenotype.isNotEmpty() || syncVersions.phoneManifests.isNotEmpty()) {

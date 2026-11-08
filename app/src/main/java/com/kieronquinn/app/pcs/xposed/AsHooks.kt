@@ -1,14 +1,21 @@
 package com.kieronquinn.app.pcs.xposed
 
+import android.app.AndroidAppHelper
 import android.content.ContentResolver
+import android.content.res.Resources
 import android.provider.Settings
+import com.kieronquinn.app.pcs.asi.AsFlagOverrides
 import com.kieronquinn.app.pcs.repositories.DeviceConfigPropertiesRepository.Companion.AS_FORCE_GSA
+import com.kieronquinn.app.pcs.repositories.DeviceConfigPropertiesRepository.Companion.AS_NOTIFICATION_ORGANIZER
 import com.kieronquinn.app.pcs.repositories.DeviceConfigPropertiesRepository.Companion.AS_SHOW_NOW_PLAYING_NOTIFICATION
+import com.kieronquinn.app.pcs.utils.extensions.SystemProperties_get
 import com.kieronquinn.app.pcs.utils.extensions.SystemProperties_getBoolean
+import com.kieronquinn.app.pcs.utils.extensions.loadDexKit
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XposedHelpers
 import de.robv.android.xposed.callbacks.XC_LoadPackage.LoadPackageParam
 import java.lang.reflect.Modifier
+import java.util.Locale
 
 /**
  *  Hooks ASI, optionally:
@@ -27,6 +34,7 @@ object AsHooks: XposedHooks {
     override val tag = "AsHooks"
 
     override fun hook(loadPackageParam: LoadPackageParam) {
+        hookLanguageFeatures(loadPackageParam)
         XposedHelpers.findAndHookMethod(
             "android.provider.DeviceConfig",
             loadPackageParam.classLoader,
@@ -60,6 +68,25 @@ object AsHooks: XposedHooks {
             }
         )
     }
+
+    /** Features turned on for the phone's language and SIM country; only in ASI's main process. */
+    private fun hookLanguageFeatures(loadPackageParam: LoadPackageParam) {
+        if (loadPackageParam.processName != loadPackageParam.packageName) return
+        if (!SystemProperties_getBoolean(AS_NOTIFICATION_ORGANIZER, false)) return
+        val locale = Resources.getSystem().configuration.locales.get(0)
+        val overrides = AsFlagOverrides.notificationOrganizer(locale, simCountry()).build()
+        val dexKit = loadDexKit(loadPackageParam.appInfo.sourceDir)
+        AsFlagHooks.install(dexKit, loadPackageParam.classLoader, overrides)
+        NotificationClassifierHooks.install(dexKit, loadPackageParam.classLoader) {
+            AndroidAppHelper.currentApplication()
+        }
+    }
+
+    /** The SIM's country (first SIM), else the network's, upper case as ASI lists countries. */
+    private fun simCountry(): String? = listOf("gsm.sim.operator.iso-country", "gsm.operator.iso-country")
+        .firstNotNullOfOrNull { key ->
+            SystemProperties_get(key)?.split(',')?.firstOrNull { it.isNotBlank() }
+        }?.trim()?.uppercase(Locale.ROOT)
 
     private fun Triple<String, String, List<String>>.isNotificationClass(
         classLoader: ClassLoader
