@@ -152,7 +152,9 @@ abstract class BaseSettingsRepositoryImpl: BaseSettingsRepository {
         awaitClose {
             sharedPreferences?.unregisterOnSharedPreferenceChangeListener(listener)
         }
-    }.shareIn(scope, SharingStarted.Eagerly)
+    // Start only when the UI observes a setting, after the subclass has initialized its store.
+    // Provider-only reads need no listener or main-thread coroutine.
+    }.shareIn(scope, SharingStarted.WhileSubscribed())
 
     fun boolean(key: String, default: Boolean, onChanged: MutableSharedFlow<String>? = null) =
         PcsSettingImpl(

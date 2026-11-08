@@ -13,13 +13,12 @@ import com.google.protobuf.ByteString
 import com.kieronquinn.app.pcs.model.ClientGroupOverride
 import com.kieronquinn.app.pcs.model.PcsClient
 import com.kieronquinn.app.pcs.providers.ConfigProvider
-import com.kieronquinn.app.pcs.repositories.DeviceConfigPropertiesRepository.Companion.DEBUG_PROPERTY_NAME
+import com.kieronquinn.app.pcs.utils.DebugLogging
 import com.kieronquinn.app.pcs.repositories.DeviceConfigPropertiesRepository.Companion.PSI_CLIENT_GROUP_OVERRIDE_PROPERTY_NAME
 import com.kieronquinn.app.pcs.repositories.ManifestRepository
 import com.kieronquinn.app.pcs.repositories.PhenotypeRepositoryImpl.Companion.FLAG_REPOSITORY
 import com.kieronquinn.app.pcs.utils.extensions.DeviceConfig_getString
 import com.kieronquinn.app.pcs.utils.extensions.SystemProperties_get
-import com.kieronquinn.app.pcs.utils.extensions.SystemProperties_getBoolean
 import com.kieronquinn.app.pcs.utils.extensions.buildId
 import com.kieronquinn.app.pcs.utils.extensions.client
 import com.kieronquinn.app.pcs.utils.extensions.clientGroup
@@ -75,7 +74,7 @@ class ProtectedDownloadGrpcService(
         request: GetManifestConfigRequest,
         responseObserver: StreamObserver<GetManifestConfigResponse>
     ) {
-        if (SystemProperties_getBoolean(DEBUG_PROPERTY_NAME, false)) {
+        if (DebugLogging.isEnabled()) {
             request.logAiCore()
         }
         scope.launch(Dispatchers.IO) {
@@ -104,7 +103,7 @@ class ProtectedDownloadGrpcService(
         request: GetManifestConfigRequest,
         responseObserver: StreamObserver<GetManifestConfigResponse>
     ) {
-        if (SystemProperties_getBoolean(DEBUG_PROPERTY_NAME, false)) {
+        if (DebugLogging.isEnabled()) {
             request.logPhone()
         }
         scope.launch(Dispatchers.IO) {
@@ -126,7 +125,7 @@ class ProtectedDownloadGrpcService(
         request: GetManifestConfigRequest,
         responseObserver: StreamObserver<GetManifestConfigResponse>
     ) {
-        if (SystemProperties_getBoolean(DEBUG_PROPERTY_NAME, false)) {
+        if (DebugLogging.isEnabled()) {
             request.logTts()
         }
         scope.launch(Dispatchers.IO) {
@@ -150,7 +149,7 @@ class ProtectedDownloadGrpcService(
         request: GetManifestConfigRequest,
         responseObserver: StreamObserver<GetManifestConfigResponse>
     ) {
-        if (SystemProperties_getBoolean(DEBUG_PROPERTY_NAME, false)) {
+        if (DebugLogging.isEnabled()) {
             request.logAgent()
         }
         scope.launch(Dispatchers.IO) {

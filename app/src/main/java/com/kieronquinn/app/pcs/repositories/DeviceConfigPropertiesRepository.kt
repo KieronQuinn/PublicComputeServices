@@ -26,10 +26,14 @@ interface DeviceConfigPropertiesRepository {
         const val PSI_CLIENT_GROUP_OVERRIDE_PROPERTY_NAME = "persist.psi.client_group_override"
         const val AS_SHOW_NOW_PLAYING_NOTIFICATION = "persist.as.show_now_playing_notification"
         const val AS_FORCE_GSA = "persist.as.force_gsa"
+        const val AS_NOTIFICATION_ORGANIZER = "persist.as.pcs_notification_organizer"
+        const val AS_GEMINI_DAILY_BRIEF = "persist.as.pcs_gemini_daily_brief"
         const val AICORE_UNLOAD_INFERENCE = "persist.aicore.unload_inference"
-        const val PHONE_ENABLED = "persist.phone.pcs_enabled"
         const val TTS_ENABLED = "persist.tts.pcs_enabled"
         const val AGENT_ENABLED = "persist.agent.pcs_enabled"
+        const val AGENT_SCREENSHOTS_LANGUAGE = "persist.agent.pcs_screenshots_language"
+        const val WEATHER_SUMMARY_LANGUAGE = "persist.weather.pcs_summary_language"
+        const val JOURNAL_LANGUAGE = "persist.aurelius.pcs_journal_language"
     }
 
     /**
