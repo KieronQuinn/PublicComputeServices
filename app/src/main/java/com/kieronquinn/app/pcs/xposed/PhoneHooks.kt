@@ -325,6 +325,11 @@ object PhoneHooks: GrpcHooks() {
             PhoneFlag.CALL_RECORDING_FERMAT_DISABLE -> if (settings.callRecordingEnabled) {
                 false
             } else null
+            // Offers "Play a tone instead of the disclaimer" in Call Recording settings, which Phone
+            // otherwise only shows in some countries. The disclaimer stays the default.
+            PhoneFlag.CALL_RECORDING_BEEP_AVAILABLE -> if (settings.callRecordingEnabled) {
+                true
+            } else null
         }
     }
 

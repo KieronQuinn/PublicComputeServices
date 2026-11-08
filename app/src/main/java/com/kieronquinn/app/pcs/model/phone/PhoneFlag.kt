@@ -45,6 +45,7 @@ enum class PhoneFlag(val flagPackage: FlagPackage, val flag: String) {
     CALL_RECORDING_FORCE_OVERRIDE_ENABLED(FlagPackage.DIALER, "G__force_within_call_recording_geofence_value"),
     CALL_RECORDING_CROSBY_ENABLED(FlagPackage.DIALER, "G__force_within_crosby_geofence_value"),
     CALL_RECORDING_FERMAT_DISABLE(FlagPackage.DIALER_DIRECTBOOT, "45730953"),
+    CALL_RECORDING_BEEP_AVAILABLE(FlagPackage.DIALER_DIRECTBOOT, "45415795"), // withinBeepSoundAvailableCountriesGeofence
     ;
 
     companion object {
