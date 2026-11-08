@@ -8,6 +8,9 @@ import com.kieronquinn.app.pcs.PcsApplication.Companion.PACKAGE_NAME_PCS
 import com.kieronquinn.app.pcs.PcsApplication.Companion.PACKAGE_NAME_PHONE
 import com.kieronquinn.app.pcs.PcsApplication.Companion.PACKAGE_NAME_PSI
 import com.kieronquinn.app.pcs.PcsApplication.Companion.PACKAGE_NAME_TTS
+import com.kieronquinn.app.pcs.PcsApplication.Companion.PACKAGE_NAME_JOURNAL
+import com.kieronquinn.app.pcs.PcsApplication.Companion.PACKAGE_NAME_SAFETY
+import com.kieronquinn.app.pcs.PcsApplication.Companion.PACKAGE_NAME_WEATHER
 import de.robv.android.xposed.IXposedHookLoadPackage
 import de.robv.android.xposed.callbacks.XC_LoadPackage
 
@@ -36,12 +39,23 @@ class Xposed: IXposedHookLoadPackage {
             }
             PACKAGE_NAME_AGENT -> {
                 AgentHooks.hook(lpparam)
+                ScreenshotsLanguageHooks.hook(lpparam)
             }
             PACKAGE_NAME_AIC -> {
                 AiCoreHooks.hook(lpparam)
             }
+            PACKAGE_NAME_WEATHER -> {
+                WeatherSummaryHooks.hook(lpparam)
+            }
+            PACKAGE_NAME_JOURNAL -> {
+                JournalLanguageHooks.hook(lpparam)
+            }
+            PACKAGE_NAME_SAFETY -> {
+                CarCrashHooks.hook(lpparam)
+            }
         }
-        if (lpparam.packageName != BuildConfig.APPLICATION_ID) {
+        if (lpparam.packageName != BuildConfig.APPLICATION_ID &&
+            lpparam.packageName != PACKAGE_NAME_PHONE) {
             DebugHooks.hook(lpparam)
         }
     }

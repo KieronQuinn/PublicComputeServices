@@ -8,5 +8,8 @@
         <item>com.google.android.tts</item>
         <item>com.google.android.apps.pixel.agent</item>
         <item>com.google.android.aicore</item>
+        <item>com.google.android.apps.weather</item>
+        <item>com.google.android.apps.pixel.aurelius</item>
+        <item>com.google.android.apps.safetyhub</item>
     </string-array>
 </resources>

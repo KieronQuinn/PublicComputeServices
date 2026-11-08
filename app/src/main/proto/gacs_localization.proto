@@ -1,0 +1,12 @@
+syntax = "proto2";
+package pcs.gacs;
+option java_package = "com.kieronquinn.app.pcs.model.gacs";
+option java_outer_classname = "GacsLocalization";
+
+// MDD ClientFileGroup. A name/locale alone does not make a model available.
+// Partial schema; native objects are preserved rather than reserialized.
+message DownloadedCallScreenGroup {
+  optional string name = 1;
+  repeated bytes files = 2;
+  optional int32 version = 4;
+}
